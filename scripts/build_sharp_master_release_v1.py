@@ -139,6 +139,30 @@ def build(root):
         dictionary.append({'path': destination, 'layer': layer,
                            'description': description})
 
+    # Write explicit per-split files so nobody can train on test by accident.
+    # rl_transitions.parquet stays the canonical table; these are exact subsets.
+    import pandas as pd
+    everything = pd.read_parquet(release / 'rl_transitions/rl_transitions.parquet')
+    split_dir = release / 'rl_transitions/splits'
+    split_dir.mkdir(parents=True, exist_ok=True)
+    for split in ['train', 'validation', 'test']:
+        subset = everything[everything.split.eq(split)].reset_index(drop=True)
+        if subset.empty:
+            raise ValueError(f'{split} split is empty')
+        target = split_dir / f'{split}.parquet'
+        subset.to_parquet(target, index=False, compression='zstd')
+        destination = f'rl_transitions/splits/{split}.parquet'
+        manifest.append({'path': destination, 'layer': 'rl_transitions',
+                         'source_path': 'derived from rl_transitions.parquet',
+                         'bytes': target.stat().st_size, 'sha256': sha256(target)})
+        dictionary.append({'path': destination, 'layer': 'rl_transitions',
+                           'description': f'Exact {split} subset of rl_transitions.parquet '
+                                          f'({len(subset):,} rows).'})
+    recovered = sum(len(pd.read_parquet(split_dir / f'{s}.parquet'))
+                    for s in ['train', 'validation', 'test'])
+    if recovered != len(everything):
+        raise ValueError('Split files do not reconstruct the canonical table')
+
     if missing:
         raise FileNotFoundError(
             'Release inputs are missing; nothing has been published:\n  '
