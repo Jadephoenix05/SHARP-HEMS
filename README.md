@@ -1,31 +1,84 @@
-# SHARP verified tariff component
+# SHARP — Shielded Human-override Adaptive Reward Personalisation
 
-This completes the energy, fixed and customer-charge calculation extracted from the official APCPDCL FY2025-26 order. It is one component of the master build, not a finished master dataset or a complete utility-bill calculator.
+A 15-minute smart-home demand-response simulator and reinforcement-learning
+system for **Guntur / Vijayawada, Andhra Pradesh**, under APCPDCL.
 
-Extract this ZIP into C:\Users\SUPRIYA\SHARP_Master_Dataset. It adds a new script and config; it does not replace the existing tariff scenarios or data.
+This repository holds the **build definition**: scripts, configs, the source
+registry and validation reports. It holds no datasets. The approved data release
+lives in a private Kaggle dataset; see
+[docs/RELEASE_AND_UPLOAD_GUIDE.md](docs/RELEASE_AND_UPLOAD_GUIDE.md).
 
-Run from the project root:
+## Pipeline
 
-    python scripts\sharp_apcpdcl_tariff.py --validate
+```
+official sources and configuration
+  -> GitHub-controlled build and validation scripts
+  -> canonical processed inputs
+  -> household simulator (shield, thermal, appliance dynamics)
+  -> tariff, billing and reward
+  -> RL transitions (state, action, reward, next_state, done)
+  -> Branching Dueling Q-learning
+  -> Raspberry Pi and dashboard deployment
+```
 
-Example, 200 kWh and a 2 kW connected load:
+**Public datasets do not train the policy.** REFIT, IRES, BEE/CLASP, eMARC,
+iAWE, RESIDE-AC, TUS, NASA POWER and Grid-India define, calibrate and validate
+the simulator. BDQ trains on the generated transition layer.
 
-    python scripts\sharp_apcpdcl_tariff.py --kwh 200 --connected-kw 2
+## Key modules
 
-Expected energy Rs867, customer Rs50, fixed Rs20; subtotal Rs937. Duty, FPPCA, true-up/down and other consumer-specific adjustments are outside this subtotal.
+| Path | Role |
+|---|---|
+| `scripts/sharp_thermal_rc.py` | Lumped-RC room with a thermostat. AC setpoint is the action; compressor duty is an output. |
+| `scripts/sharp_action_shield.py` | Hard safety shield and legal-action masks. |
+| `scripts/sharp_apcpdcl_tariff.py` | APCPDCL domestic LT tariff. |
+| `scripts/sharp_reward_billing.py` | Billing ledger and reward components. |
+| `scripts/sharp_transition_core.py` | Atomic shield to dynamics to billing to reward step. |
+| `scripts/generate_sharp_rl_transitions_v1.py` | Builds the RL transition layer. |
+| `scripts/train_sharp_bdq_v1.py` | Branching Dueling Double-Q training. |
+| `scripts/build_sharp_master_release_v1.py` | Assembles the Kaggle release. |
+| `scripts/verify_sharp_release_v1.py` | Verifies a downloaded release. |
 
-## Simulator integration contract
+## Rebuild order
 
-- Use Tariff.incremental_components(consumption_before, step_import_kwh).
-- Keep cumulative billing-period consumption in the observation and checkpoint. Do not reset it to zero at every midnight or arbitrary daily episode boundary.
-- Book the fixed charge and opening customer charge once per billing period. The incremental method includes changes in customer charge when a slab boundary is crossed.
-- Use connected load from the applicable connection specification. Do not replace a missing value with zero or infer it from the appliance peak.
-- No domestic ToD tariff is specified. Experimental TOU scenarios stay explicitly separate. Shifting identical imported kWh within the billing period does not create tariff savings; grid peak reduction is a separate objective.
-- The effective period is 1 April 2025 to 31 March 2026. Applying these rates to another year's weather is a frozen-tariff simulation, not a reconstructed historical bill.
-- These rates do not establish a complete utility bill. The order itself excludes duty, FPPCA, true-up/down and other recoveries. Their applicable inputs must be resolved separately for a full-bill claim.
+```bash
+.venv\Scripts\python.exe scripts\build_reside_thermal_envelope_v1.py
+.venv\Scripts\python.exe scripts\validate_sharp_thermal_rc.py
+.venv\Scripts\python.exe scripts\generate_sharp_rl_transitions_v1.py
+.venv\Scripts\python.exe scripts\finalize_master_registry_v1.py
+.venv\Scripts\python.exe scripts\build_sharp_master_release_v1.py
+.venv\Scripts\python.exe scripts\verify_sharp_release_v1.py
+.venv\Scripts\python.exe scripts\train_sharp_bdq_v1.py
+```
 
-## Evidence and validation
+## Scientific rules this repository enforces
 
-The official source PDFs and SHA256 hashes are included. Domestic energy and fixed charges: printed page150 (PDF164); customer charges: printed page169 (PDF183); exclusions and dates: printed page149 (PDF163). The domestic table was visually checked. Seven unit tests passed, including independently calculated boundary examples, fractional load conversion, customer-charge jumps, invalid inputs and telescoping reward accounting.
+These are checked in code and recorded in the generated reports, not just
+asserted in prose:
 
-The source data and earlier generated outputs are preserved. This package does not publish, delete files, or set the master dataset to release-ready.
+- REFIT is **UK** evidence. It is never presented as Indian household data.
+- RESIDE-AC is **11 Hyderabad houses over 19 days**, never an Indian population,
+  and never Andhra Pradesh.
+- iAWE is **one New Delhi home**, never a population distribution.
+- No **causal AC cooling effect** is established. A weather-conditioned fit was
+  attempted and rejected: it lost to plain persistence in 7 of 11 houses and
+  implied envelope time constants of 9 hours to 9.5 days. Thermal parameters are
+  declared assumptions bounded by the observed RESIDE envelope.
+- Proxy wattages are **not** measured appliance ratings.
+- Experimental time-of-use multipliers are **not** official APCPDCL ToD tariffs.
+- Zero REFIT power is **not** a confirmed physical OFF event.
+- A successful training run is **not** evidence of convergence, generalisation
+  or deployability. Nothing here is approved for hardware control.
+- Splits are household-disjoint **and** date-disjoint; grid peak thresholds are
+  fitted on training years only.
+- Generated Parquet outputs are never hand-edited. Fix the script or config and
+  rebuild.
+
+## One resolved question worth noting
+
+RESIDE-AC's CSV timestamps read May 2019 while its description says May 2021.
+A pre-registered test correlated each house's daily indoor temperature against
+Hyderabad outdoor temperature for both candidate years. **2019 is supported**:
+mean r 0.524 versus 0.126, favoured by 10 of 11 houses on AC-off intervals and
+9 of 11 on all intervals. This is statistical evidence about the clock, not a
+correction from the dataset authors, and they have not been asked.
