@@ -19,22 +19,46 @@ import hashlib
 import json
 import shutil
 
-RELEASE_VERSION = 'SHARP_MASTER_V1'
+RELEASE_VERSION = 'SHARP_MASTER_V2'
 
 # (destination, source, layer, description, redistributable)
 ITEMS = [
     ('rl_transitions/rl_transitions.parquet',
-     'data/processed/sharp_rl_transitions_v1/rl_transitions.parquet',
+     'data/processed/sharp_rl_transitions_v2/rl_transitions.parquet',
      'rl_transitions', 'The RL training layer: (state, action, reward, next_state, done).', True),
     ('rl_transitions/feature_schema.json',
-     'data/processed/sharp_rl_transitions_v1/feature_schema.json',
+     'data/processed/sharp_rl_transitions_v2/feature_schema.json',
      'rl_transitions', 'Feature order, device padding and action semantics.', True),
     ('rl_transitions/episode_summary.csv',
-     'data/processed/sharp_rl_transitions_v1/episode_summary.csv',
+     'data/processed/sharp_rl_transitions_v2/episode_summary.csv',
      'rl_transitions', 'Per-episode energy, cost, comfort and violation summary.', True),
     ('rl_transitions/transition_validation.json',
-     'data/processed/sharp_rl_transitions_v1/transition_validation.json',
+     'data/processed/sharp_rl_transitions_v2/transition_validation.json',
      'rl_transitions', 'Generation report, leakage gates and declared limits.', True),
+
+    ('rl_transitions/override_preference_pairs.parquet',
+     'data/processed/sharp_rl_transitions_v2/override_preference_pairs.parquet',
+     'rl_transitions', 'Weighted override preference pairs for a Bradley-Terry reward model. Synthetic.', True),
+
+    ('simulator_inputs/household_billing_position_v1.parquet',
+     'data/processed/appliance_inputs_v1/household_billing_position_v1.parquet',
+     'simulator_inputs', 'Monthly kWh inverted from each household reported bill, setting its tariff slab position.', True),
+    ('simulator_inputs/adult_location_weekly_proxy.parquet',
+     'data/processed/location_scenarios_v1/adult_location_weekly_proxy.parquet',
+     'simulator_inputs', 'TUS adult-at-home occupancy proxy per household, weekday and 15-minute step.', True),
+
+    ('validation/dataset_provenance_v1.json',
+     'reports/dataset_provenance_v1.json',
+     'validation', 'Every input classified as reported, derived, transferred, inferred, assumed or synthetic.', True),
+    ('validation/e8_critical_load_safety_v1.json',
+     'reports/e8_critical_load_safety_v1.json',
+     'validation', 'E8: 10,000 attempts to shed a critical load, including override attacks.', True),
+    ('validation/sharp_rl_transitions_audit_v2.json',
+     'reports/sharp_rl_transitions_audit_v2.json',
+     'validation', 'Independent audit that re-derives every gate from the stored table.', True),
+    ('validation/household_billing_position_v1.json',
+     'reports/household_billing_position_v1.json',
+     'validation', 'How monthly consumption was recovered from reported bills.', True),
 
     ('simulator_inputs/ap_households_with_splits_v1.parquet',
      'data/processed/appliance_inputs_v1/ap_households_with_splits_v1.parquet',
@@ -67,6 +91,13 @@ ITEMS = [
     ('calibration/observed_temperature_response_pairs.parquet',
      'data/processed/reside_thermal_inputs_v1/observed_temperature_response_pairs.parquet',
      'calibration', 'RESIDE adjacent 15-minute temperature pairs (CC0 source).', True),
+
+    ('calibration/refit_power_library.json',
+     'data/processed/refit_power_library_v3/refit_power_library.json',
+     'calibration', 'Split-aware appliance ON-power from 47 single-appliance REFIT UK channels.', True),
+    ('calibration/refit_channel_statistics.csv',
+     'data/processed/refit_power_library_v3/refit_channel_statistics.csv',
+     'calibration', 'Per-REFIT-channel statistics behind the power library.', True),
 
     ('configs/sharp_thermal_rc_v1.json',
      'configs/thermal/sharp_thermal_rc_v1.json',
@@ -210,16 +241,32 @@ Control interval: 15 minutes. Visibility: PRIVATE.
 
 ## What to train on
 
-`rl_transitions/rl_transitions.parquet` is the only layer BDQ should train on.
-It holds {transitions['transitions']:,} transitions from {transitions['episodes']:,} episodes across
-{transitions['households']} Andhra Pradesh household templates, with
-{transitions['feature_count']} state features and up to 28 device branches.
+`rl_transitions/splits/train.parquet` is the only file BDQ should train on.
+Tune on `validation.parquet`. Do not open `test.parquet` until final reporting:
+its households AND its calendar dates appear nowhere else.
 
-Splits are household-disjoint AND date-disjoint:
-{json.dumps(transitions['households_by_split'], indent=2)}
+{transitions['transitions']:,} transitions, {transitions['episodes']:,} episodes,
+{transitions['households']} Andhra Pradesh households, {transitions['feature_count']}
+state features, up to 28 device branches.
 
 Public source datasets do NOT train the policy. They define, calibrate and
 validate the simulator that generated these transitions.
+
+## What makes this SHARP rather than a load scheduler
+
+  Override evidence ...... {transitions.get('override_events', 0):,} weighted preference pairs in
+                           `rl_transitions/override_preference_pairs.parquet`,
+                           for a Bradley-Terry reward model. Occupancy gated:
+                           no override exists without attention.
+  Operating modes ........ grid_import, self_sufficient and islanded_outage, so a
+                           policy can learn that user preference inverts during
+                           an outage.
+  Sink-aware shedding .... where shedding self-generated load has zero value
+                           (battery full, export blocked) the SHIELD removes the
+                           action rather than penalising it.
+  Tariff position ........ each household opens its billing month where its
+                           reported bill says it sits, so the telescopic slab
+                           structure is actually visible to the agent.
 
 ## Verified gates
 
@@ -227,26 +274,31 @@ validate the simulator that generated these transitions.
   state / next-state continuity ... {transitions['state_continuity']}
   household split leakage ......... {transitions['household_split_leakage']}
   context date split leakage ...... {transitions['context_date_split_leakage']}
-  capacity violation steps ........ {transitions['capacity_violation_steps']}
+  E8 critical-load safety ......... see validation/e8_critical_load_safety_v1.json
 
 ## What this dataset is NOT
 
-  * Appliance power values are proxies and declared assumptions. They are NOT
-    measured Indian appliance ratings.
+  * Override and attention evidence is SYNTHETIC, generated from a stated
+    behavioural rule. No SHARP source dataset records a real user overriding a
+    demand-response action, because no such deployment has happened yet.
+  * Occupancy is a one-adult TUS location proxy, not whole-household presence.
+  * Outage DURATION is IRES-reported. Outage PLACEMENT within the day is an
+    assumption: the survey's power-cut pattern codes are not decoded publicly.
+  * Rooftop PV is a scenario overlay. IRES shows almost no rooftop solar in
+    Andhra Pradesh: 3 of 498 households, at 20-25 W.
+  * Monthly opening kWh is inverted from a reported bill, not metered.
+  * Appliance power values are proxies and declared assumptions, NOT measured
+    Indian appliance ratings.
   * The thermal model uses DECLARED parameters bounded by the observed RESIDE
-    envelope. No causal AC cooling effect is established anywhere in this
-    pipeline. A fitted coefficient was attempted and rejected because it lost
-    to plain persistence in 7 of 11 houses.
-  * REFIT is UK evidence used for appliance behaviour. It is NOT Indian data.
-  * RESIDE-AC is 11 Hyderabad houses over 19 May-2019 days. It is NOT an Indian
-    population distribution, and it is NOT Andhra Pradesh.
-  * iAWE is a single New Delhi home. It is NOT a population.
-  * The FY2025-26 APCPDCL tariff is applied as a scenario to other-year context.
-    Experimental time-of-use multipliers are NOT official APCPDCL ToD tariffs.
-  * There is no solar, battery or outage model, and no export compensation.
-  * Human attention is not modelled, so all non-override feedback stays censored.
-  * A successful training run on this data is not evidence of real-world
-    performance, and nothing here is approved for hardware control decisions.
+    envelope. No causal AC cooling effect is established. A fitted coefficient
+    was attempted and rejected: it lost to plain persistence in 7 of 11 houses.
+  * REFIT is 20 UK homes and is NOT Indian data. iAWE is one New Delhi home and
+    is NOT a population. RESIDE-AC is 11 Hyderabad houses over 19 days in May
+    2019, and is NOT Andhra Pradesh.
+  * APCPDCL FY2025-26 has no domestic time-of-day tariff, and none is invented.
+    The TOU scenarios elsewhere in the repo are marked is_official=false.
+  * A successful training run is not evidence of real-world performance, and
+    nothing here is approved for hardware control.
 
 ## Not redistributed
 
@@ -255,7 +307,8 @@ MANIFEST.json. Derived, aggregated products are included instead.
 
 ## Integrity
 
-Every file has a SHA-256 in MANIFEST.json. Verify after download.
+Every file has a SHA-256 in MANIFEST.json. Verify after download with
+`verify_sharp_release_v1.py --release <path>`.
 """
     (release / 'README.md').write_text(readme, encoding='utf-8')
 

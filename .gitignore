@@ -11,3 +11,4 @@ sharp_build_context.zip
 reports/_*.log
 reports/emarc_daily_reconciliation_v1.csv
 data_registry/sources_backup_*.yaml
+raw_archive/

@@ -40,6 +40,15 @@ BASELINE = {
 EMPIRICAL = {'air_conditioner':[4,5], 'refrigerator':[3],
              'laptop_tablet':[7], 'television':[10]}
 
+# Power source precedence, highest first:
+#   1. REFIT single-appliance channels from the SAME split (canonical electrical
+#      source per the project registry; split-aware so no split informs another).
+#   2. iAWE observed proxy channels (Indian, but one household only).
+#   3. The explicit engineering assumptions above.
+# A REFIT value is a measured UK appliance applied to an Indian household: a
+# documented transfer assumption, never a measured Indian rating.
+REFIT_LIBRARY = ('data/processed/refit_power_library_v3/refit_power_library.json')
+
 
 def build(root):
     base=root/'data/processed/simulator_devices_v1/unknown_quantity_one'
@@ -57,12 +66,30 @@ def build(root):
         value=float(row.above_threshold_median_w)
         if not math.isfinite(value) or value<=0 or row.above_threshold_intervals<=0:
             raise ValueError(f'Invalid calibration channel {channel}')
+    refit_path=root/REFIT_LIBRARY
+    refit={} 
+    if refit_path.exists():
+        refit=json.loads(refit_path.read_text(encoding='utf-8'))['library']
+        print('REFIT split-aware library loaded:',sorted(refit))
+    else:
+        print('No REFIT library found; falling back to iAWE proxies and assumptions')
     rows=[]
     for r in devices.to_dict('records'):
         app=r['appliance_type']; watt,mode,service=BASELINE[app]
         provenance='EXPLICIT_ILLUSTRATIVE_SIMULATION_ASSUMPTION'
         channel=None
-        if app in EMPIRICAL:
+        low,high=0.75,1.25
+        sensitivity='ILLUSTRATIVE_STRESS_TEST_NOT_CONFIDENCE_INTERVAL'
+        refit_entry=refit.get(app,{}).get(r['split'])
+        if refit_entry:
+            watt=float(refit_entry['median_on_power_w'])
+            if not math.isfinite(watt) or watt<=0:
+                raise ValueError(f'Invalid REFIT power for {app}/{r["split"]}')
+            provenance='REFIT_SAME_SPLIT_SINGLE_APPLIANCE_MEDIAN_ON_POWER_TRANSFER'
+            low=float(refit_entry['p25_on_power_w'])/watt
+            high=float(refit_entry['p75_on_power_w'])/watt
+            sensitivity='REFIT_SAME_SPLIT_ON_POWER_P25_TO_P75'
+        elif app in EMPIRICAL:
             options=EMPIRICAL[app]
             channel=options[int(hashlib.sha256(r['device_id'].encode()).hexdigest(),16)%len(options)]
             watt=float(lookup.loc[channel,'above_threshold_median_w'])
@@ -70,8 +97,12 @@ def build(root):
         rows.append({**r,'scenario_model_version':'baseline_power_v1',
             'operating_power_proxy_w':float(watt),'power_parameter_basis':provenance,
             'calibration_channel_id':channel,'is_measured_device_rating':False,
-            'power_sensitivity_low_multiplier':0.75,'power_sensitivity_high_multiplier':1.25,
-            'sensitivity_range_basis':'ILLUSTRATIVE_STRESS_TEST_NOT_CONFIDENCE_INTERVAL',
+            'power_sensitivity_low_multiplier':low,'power_sensitivity_high_multiplier':high,
+            'sensitivity_range_basis':sensitivity,
+            'trace_assignment_status':('REFIT_SAME_SPLIT_TYPE_MATCHED' if refit_entry
+                                       else 'NO_SAME_SPLIT_REFIT_EQUIVALENT'),
+            'refit_grounded':bool(refit_entry),
+            'refit_channels_used':int(refit_entry['refit_channels']) if refit_entry else 0,
             'dynamics_family':mode,'service_role':service,
             'power_model_status':'PROXY_PARAMETER_ASSIGNED_NOT_VALIDATED',
             'control_permission':'SIMULATION_ONLY_POLICY_PENDING',
@@ -95,7 +126,8 @@ def build(root):
         'Laptop readings are a proxy for the broader laptop/tablet category.',
         'Water-filter observations are not used as a universal water-purifier model.',
         'Engineering values and sensitivity ranges are explicit development assumptions.',
-        'REFIT traces are not assigned or consumed by this baseline power configuration.',
+        'REFIT power is a same-split UK single-appliance median, not an Indian rating.',
+        'Appliance and split combinations with no REFIT channel keep declared assumptions.',
         'Power parameters alone do not specify cycle timing, thermal behaviour or usage schedules.'],
       'units':'electrical watts','hardware_control_authorized':False,
       'full_simulator_ready':False,'master_release_ready':False}

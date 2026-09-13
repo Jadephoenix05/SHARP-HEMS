@@ -132,6 +132,6 @@ def verify(release):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--release', type=Path,
-                   default=Path(__file__).resolve().parents[1] / 'release/SHARP_MASTER_V1')
+                   default=Path(__file__).resolve().parents[1] / 'release/SHARP_MASTER_V2')
     a = p.parse_args()
     verify(a.release.resolve())

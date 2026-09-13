@@ -1,0 +1,184 @@
+{
+  "status": "DATASET_PROVENANCE_ACCOUNTED",
+  "tier_counts": {
+    "ASSUMPTION": 6,
+    "INFERRED": 1,
+    "SOURCE_DERIVED": 3,
+    "SOURCE_REPORTED": 13,
+    "SYNTHETIC": 3,
+    "TRANSFER": 2
+  },
+  "tiers": {
+    "SOURCE_REPORTED": [
+      {
+        "component": "household population",
+        "source": "IRES 2020",
+        "note": "498 Andhra Pradesh households with their reported characteristics."
+      },
+      {
+        "component": "appliance ownership and counts",
+        "source": "IRES 2020",
+        "note": "Which appliances each household owns, and how many."
+      },
+      {
+        "component": "sanctioned connection load",
+        "source": "IRES 2020",
+        "note": "The kW limit each household is connected at."
+      },
+      {
+        "component": "grid supply hours and outage duration",
+        "source": "IRES 2020",
+        "note": "358 of 498 households report under 24 h supply; minimum 12 h."
+      },
+      {
+        "component": "inverter battery ownership",
+        "source": "IRES 2020",
+        "note": "35 of 498 households own an inverter battery."
+      },
+      {
+        "component": "solar home system ownership",
+        "source": "IRES 2020",
+        "note": "3 of 498, at 20-25 W. Essentially no rooftop PV in this population."
+      },
+      {
+        "component": "reported monthly bill",
+        "source": "IRES 2020",
+        "note": "Used to place each household on the tariff curve."
+      },
+      {
+        "component": "AC and pump daily usage hours",
+        "source": "IRES 2020",
+        "note": "Seasonal reported hours, where the household answered."
+      },
+      {
+        "component": "tariff slabs and charges",
+        "source": "APERC/APCPDCL FY2025-26 order",
+        "note": "Verified against the official order with page numbers and PDF SHA-256."
+      },
+      {
+        "component": "outdoor weather and irradiance",
+        "source": "NASA POWER",
+        "note": "Guntur 15-minute weather; LST to IST offset empirically verified."
+      },
+      {
+        "component": "regional grid demand",
+        "source": "Grid-India historical",
+        "note": "Southern-region demand; peak thresholds fitted on training years only."
+      },
+      {
+        "component": "indoor temperature envelope bounds",
+        "source": "RESIDE-AC",
+        "note": "20,041 observed 15-minute temperature pairs, used only to reject parameters."
+      },
+      {
+        "component": "occupancy diaries",
+        "source": "MoSPI TUS 2024",
+        "note": "Adult location diaries behind the at-home proxy."
+      }
+    ],
+    "SOURCE_DERIVED": [
+      {
+        "component": "grid peak severity",
+        "source": "Grid-India",
+        "note": "Percentile of reported demand within training years."
+      },
+      {
+        "component": "billing and cost",
+        "source": "APCPDCL order",
+        "note": "Telescopic slabs applied to simulated consumption; reconciled every episode."
+      },
+      {
+        "component": "occupancy at-home fraction",
+        "source": "TUS 2024",
+        "note": "One adult per household, not whole-household presence."
+      }
+    ],
+    "TRANSFER": [
+      {
+        "component": "appliance power, 512 devices",
+        "source": "REFIT CLEANED (UK)",
+        "note": "Median ON power from same-split single-appliance channels. UK measurement."
+      },
+      {
+        "component": "appliance power, 173 devices",
+        "source": "iAWE (one Delhi home)",
+        "note": "Median above-threshold power. One household, not a population."
+      }
+    ],
+    "INFERRED": [
+      {
+        "component": "monthly consumption position",
+        "source": "IRES bill + APCPDCL tariff",
+        "note": "Tariff inverted from the reported bill. Not a metered reading."
+      }
+    ],
+    "ASSUMPTION": [
+      {
+        "component": "appliance power, 3,439 devices",
+        "source": "engineering values",
+        "note": "No REFIT or iAWE equivalent exists for fans, lighting, geysers, pumps."
+      },
+      {
+        "component": "thermal time constant and cooling",
+        "source": "declared, envelope-bounded",
+        "note": "A fitted RESIDE coefficient was attempted and rejected: it lost to persistence."
+      },
+      {
+        "component": "battery capacity and efficiency",
+        "source": "declared",
+        "note": "Typical inverter unit; IRES reports ownership but not capacity."
+      },
+      {
+        "component": "outage placement within the day",
+        "source": "declared",
+        "note": "Duration is reported; the pattern code 1-5 has no published meaning."
+      },
+      {
+        "component": "comfort band and setpoint",
+        "source": "policy choice",
+        "note": "RESIDE house metadata holds homeowner setpoints and is the future source."
+      },
+      {
+        "component": "rooftop PV overlay",
+        "source": "scenario, default off",
+        "note": "Off by default precisely because IRES shows it does not exist here."
+      }
+    ],
+    "SYNTHETIC": [
+      {
+        "component": "override events",
+        "source": "stated behavioural rule",
+        "note": "No SHARP source records a real demand-response override; none exists yet."
+      },
+      {
+        "component": "attention",
+        "source": "occupancy threshold",
+        "note": "Derived from the occupancy proxy by a declared rule."
+      },
+      {
+        "component": "service schedules",
+        "source": "survey durations, synthetic clock",
+        "note": "Reported daily hours do not say WHEN an appliance runs."
+      }
+    ]
+  },
+  "appliance_power_devices": {
+    "total": 4124,
+    "measurement_grounded": 685,
+    "measurement_grounded_fraction": 0.1661,
+    "by_basis": {
+      "EXPLICIT_ILLUSTRATIVE_SIMULATION_ASSUMPTION": 3439,
+      "REFIT_SAME_SPLIT_SINGLE_APPLIANCE_MEDIAN_ON_POWER_TRANSFER": 512,
+      "IAWE_15MIN_ABOVE_5W_MEDIAN_USED_AS_SIMULATION_PROXY": 173
+    }
+  },
+  "headline": "Household population, appliance ownership, connection load, outage hours, inverter and solar ownership, tariff, weather, grid demand and occupancy diaries are all REAL reported data. Appliance power is measured but TRANSFERRED from UK and Delhi homes for 685 of 4,124 devices and ASSUMED for the rest. Override behaviour and service clock times are SYNTHETIC because no source records them.",
+  "what_would_reduce_synthetic_content": [
+    "A real deployment logging user overrides would replace the synthetic override rule with observed preference pairs. That is the whole point of the Raspberry Pi stage.",
+    "Indian appliance-level metering at scale would replace REFIT transfer power. None is publicly available; iAWE is one home.",
+    "RESIDE house metadata records homeowner AC setpoints and could replace the assumed comfort setpoint.",
+    "A decoded IRES power-cut pattern codebook would replace assumed outage placement with reported placement."
+  ],
+  "transitions": 400896,
+  "override_events_synthetic": 47915
+}

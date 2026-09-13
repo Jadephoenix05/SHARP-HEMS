@@ -107,7 +107,7 @@ def load(source, split):
 
 def fit(root, steps, batch, gamma, scale, seed):
     gradient_test()
-    source = root / 'data/processed/sharp_rl_transitions_v1/rl_transitions.parquet'
+    source = root / 'data/processed/sharp_rl_transitions_v2/rl_transitions.parquet'
     if not source.exists():
         raise FileNotFoundError(f'Missing {source}')
 
@@ -161,7 +161,7 @@ def fit(root, steps, batch, gamma, scale, seed):
             print(f"  step {step:5d} | train loss {history[-1]['train_loss_last_50']:.6f} "
                   f"| validation TD {vtd:.6f}", flush=True)
 
-    out = root / 'models/sharp_bdq_v1'
+    out = root / 'models/sharp_bdq_v2'
     out.mkdir(parents=True, exist_ok=True)
     np.savez(out / 'checkpoint.npz', mean=mean, sd=sd, **net.p)
     reloaded = np.load(out / 'checkpoint.npz')

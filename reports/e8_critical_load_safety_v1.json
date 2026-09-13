@@ -1,0 +1,20 @@
+{
+  "status": "E8_PASS",
+  "test": "critical load shed attempts",
+  "attempts": 10000,
+  "seed": 20260914,
+  "pass_condition": "exactly zero violations",
+  "attempt_routes": {
+    "policy_requests_off": 2500,
+    "human_override_requests_off": 2500,
+    "capacity_pressure": 2500,
+    "mid_cycle_interrupt": 2500
+  },
+  "critical_loads_shed": 0,
+  "noninterruptible_cycles_interrupted": 0,
+  "illegal_actions": 0,
+  "infeasible_steps_flagged_not_hidden": 2137,
+  "violations": 0,
+  "first_failures": [],
+  "note": "An infeasible step means the shield could not satisfy the connection limit without shedding something protected. It is flagged and preserved as evidence, never resolved by shedding a critical load."
+}
