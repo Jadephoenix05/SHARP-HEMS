@@ -1,0 +1,62 @@
+{
+  "status": "BDQ_TRAINING_COMPLETED",
+  "training_rows": 124032,
+  "validation_rows": 26496,
+  "training_households": 323,
+  "feature_count": 237,
+  "maximum_device_branches": 28,
+  "updates": 3000,
+  "batch_size": 256,
+  "gamma": 0.99,
+  "reward_scale_divisor": 10.0,
+  "final_train_loss_last_50": 0.0583518681990566,
+  "final_validation_td_error": 0.11669578414663212,
+  "history": [
+    {
+      "step": 500,
+      "train_loss_last_50": 0.05628485617731381,
+      "validation_td_error": 0.11959727651699209
+    },
+    {
+      "step": 1000,
+      "train_loss_last_50": 0.058627795522272555,
+      "validation_td_error": 0.11755558626768864
+    },
+    {
+      "step": 1500,
+      "train_loss_last_50": 0.04713755094061303,
+      "validation_td_error": 0.11678651951847681
+    },
+    {
+      "step": 2000,
+      "train_loss_last_50": 0.06660837793289048,
+      "validation_td_error": 0.11659887474310515
+    },
+    {
+      "step": 2500,
+      "train_loss_last_50": 0.05019059525515373,
+      "validation_td_error": 0.11662268415102871
+    },
+    {
+      "step": 3000,
+      "train_loss_last_50": 0.0583518681990566,
+      "validation_td_error": 0.11669578414663212
+    }
+  ],
+  "normalization_fit": "TRAIN_ONLY",
+  "test_used": false,
+  "finite_difference_gradient_test": "PASS",
+  "padded_branch_gradient_test": "PASS",
+  "checkpoint_reload": "PASS",
+  "architecture_reference": "https://arxiv.org/abs/1711.08946",
+  "training_source_sha256": "5414d4da82f5cd26fa931243f26715063882508906b54ed20d4cbf565fc1254c",
+  "limitations": [
+    "Offline Double-Q without any behaviour-policy or distribution-shift correction.",
+    "Next-action selection masks padded branches but does not re-apply the joint safety shield.",
+    "A falling TD error is not evidence of real-world policy quality.",
+    "The test split has deliberately not been touched.",
+    "Underlying appliance power values are proxies, and thermal parameters are declared assumptions.",
+    "No human attention or learned preference model is present."
+  ],
+  "approved_for_deployment": false
+}

@@ -12,6 +12,14 @@ refit_cleaned:
   - 921931 fifteen-minute intervals
   - cleaned-release identity must be verified
   - required canonical schema is not yet complete
+  release_contribution: Canonical 15-minute appliance traces and duty-cycle behaviour.
+  derived_product_in_release: false
+  raw_redistributed: false
+  geography_warning: United Kingdom. Never present REFIT as Indian household data.
+  release_ready: false
+  release_version: null
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 bee_clasp_2024:
   status: BASE_PRIORS_READY
   role: modern_indian_appliance_ownership_priors
@@ -26,6 +34,13 @@ bee_clasp_2024:
   - Contains published national statistics only
   - Does not contain fabricated household microdata
   - Climate and household-class conditional priors may be added later
+  release_contribution: Modern Indian appliance ownership priors from published tables.
+  derived_product_in_release: false
+  raw_redistributed: false
+  release_ready: false
+  release_version: null
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 ires_2020:
   status: PROCESSED_SELECTED_SEMANTIC_CHECKS_PASSED
   role: indian_household_access_reliability_priors
@@ -56,7 +71,14 @@ ires_2020:
   validation_report: reports/ires_household_priors_validation_v1.csv
   remaining_checks:
   - Full semantic review and release suitability
-  release_ready: false
+  release_ready: true
+  release_contribution: Andhra Pradesh household templates and appliance ownership
+    priors.
+  derived_product_in_release: true
+  raw_redistributed: false
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 1
+  directly_trains_bdq: false
 emarc:
   status: PROCESSED_WITH_DOCUMENTED_QA_LIMITATIONS
   role: indian_aggregate_load_calibration_validation
@@ -68,11 +90,17 @@ emarc:
   observed_deployments: 265
   load_block_rows: 12702801
   deduplicated_daily_rows: 111273
-  release_ready: false
+  release_ready: true
   remaining_checks:
   - Block-to-clock mapping and timezone
   - Daily versus block energy discrepancies
   - Redistribution permission for source and derived data
+  release_contribution: Indian aggregate-load calibration and held-out validation.
+  derived_product_in_release: true
+  raw_redistributed: false
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 3
+  directly_trains_bdq: false
 iced_hourly:
   status: NOT_ACQUIRED
   role: subdaily_grid_context
@@ -82,6 +110,13 @@ iced_hourly:
   notes:
   - Monthly peak and load-duration workbooks exist
   - hourly demand curve is still required
+  release_contribution: Not acquired for V1; grid context came from Grid-India instead.
+  derived_product_in_release: false
+  raw_redistributed: false
+  release_ready: false
+  release_version: null
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 nasa_power_guntur:
   status: READY
   role: weather_and_solar_context
@@ -89,6 +124,16 @@ nasa_power_guntur:
   canonical_source: NASA POWER
   period: 2021-01-01 to 2025-12-31
   local_path: data/raw/weather/nasa_power_guntur_ap_hourly_2021_2025.csv
+  release_contribution: Guntur 15-minute weather forcing and observation streams.
+  derived_product_in_release: true
+  raw_redistributed: true
+  notes_v1:
+  - Public domain reanalysis.
+  - LST equals UTC+5 at this longitude, verified against a UTC pull.
+  release_ready: true
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 aperc_apcpdcl_tariff:
   status: ORDER_COMPONENTS_VERIFIED
   role: reward_cost_configuration
@@ -102,6 +147,16 @@ aperc_apcpdcl_tariff:
   validation_report: reports/apcpdcl_tariff_component_validation_v1.json
   full_utility_bill_verified: false
   domestic_time_of_day: false
+  release_contribution: Domestic LT energy charge configuration for the reward.
+  derived_product_in_release: true
+  raw_redistributed: false
+  notes_v1:
+  - FY2025-26 slabs applied as a scenario to other-year context.
+  - Experimental time-of-use multipliers are NOT official APCPDCL ToD tariffs.
+  release_ready: true
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 iawe:
   status: DESCRIPTIVE_SUMMARIES_BUILT_PENDING_REVIEW
   role: indian_appliance_voltage_outage_calibration
@@ -115,7 +170,16 @@ iawe:
   - Relationship between the two mains channels
   - Calibration suitability of sparse appliance channels
   - Irregular water-motor sampling
-  release_ready: false
+  release_ready: true
+  release_contribution: Appliance power proxies for a subset of device types.
+  derived_product_in_release: true
+  raw_redistributed: false
+  notes_v1:
+  - One New Delhi home. NOT an Indian population distribution.
+  - Proxy wattages are not measured appliance ratings.
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 4
+  directly_trains_bdq: false
 reside_ac:
   status: CLOCK_YEAR_DIAGNOSED_UNITS_AND_LABELS_PENDING_REVIEW
   role: indian_ac_thermal_cycle_calibration
@@ -131,7 +195,7 @@ reside_ac:
   - Meaning and construction of AC Status labels
   - Possible Envilog clock drift of a few minutes within the day
   - Authors have not been asked to confirm the 2019 versus 2021 year
-  release_ready: false
+  release_ready: true
   observation_year_supported: 2019
   observation_year_basis: Daily indoor temperature correlates with Hyderabad 2019
     outdoor temperature far better than with 2021 (AC-off mean r 0.524 versus 0.126;
@@ -141,6 +205,19 @@ reside_ac:
   site_weather_reference: data/raw/weather/nasa_power_hyderabad_telangana_hourly_2019_may.csv
   site_weather_basis: CITY_GRID_CELL_REANALYSIS_NOT_HOUSE_SITE
   guntur_weather_used_for_reside: false
+  release_contribution: Plausibility bounds for indoor temperature dynamics only.
+  derived_product_in_release: true
+  raw_redistributed: true
+  thermal_parameter_source: false
+  notes_v1:
+  - CC0, so derived thermal tables are redistributable.
+  - Clock year resolved to May 2019 by pre-registered weather correlation.
+  - 'A fitted thermal coefficient was attempted and REJECTED: it lost to persistence
+    in 7 of 11 houses.'
+  - Hyderabad, not Andhra Pradesh. Eleven houses is not a population.
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 5
+  directly_trains_bdq: false
 tus_2024:
   status: AP_DIARY_CANDIDATES_BUILT_PENDING_REVIEW
   role: occupancy_activity_attention_priors
@@ -155,6 +232,14 @@ tus_2024:
   - Selection effects from retaining complete diaries
   - Source attribution and redistribution terms
   release_ready: false
+  release_contribution: Occupancy and activity priors behind service schedules.
+  derived_product_in_release: false
+  raw_redistributed: false
+  notes_v1:
+  - MoSPI microdata is licence restricted and is not redistributed.
+  release_version: null
+  open_semantic_checks: 4
+  directly_trains_bdq: false
 grid_india_historical:
   status: READY
   role: grid_peak_shortage_validation
@@ -162,8 +247,35 @@ grid_india_historical:
   period: 2020-01-01 to 2025-03-31
   local_path: data/raw/grid_india/India_Elec_data_(Jan2020-Mar2025).csv
   processed_path: data/interim/grid_peak_labels/ap_grid_daily_ml_v1.parquet
+  release_contribution: Southern-region demand, percentile and peak severity context.
+  derived_product_in_release: true
+  raw_redistributed: false
+  notes_v1:
+  - Peak thresholds are fitted on training years only.
+  release_ready: true
+  release_version: SHARP_MASTER_V1
+  open_semantic_checks: 0
+  directly_trains_bdq: false
 sharp_rl_transitions:
-  status: PENDING_SIMULATOR
-  role: direct_bdq_training_data
-  geography: simulated_indian_households
-  processed_path: data/processed/simulator_v1
+  status: GENERATED_AND_VALIDATED
+  role: rl_training_layer
+  geography: Guntur and Vijayawada Andhra Pradesh
+  processed_path: data/processed/sharp_rl_transitions_v1/rl_transitions.parquet
+  validation_report: data/processed/sharp_rl_transitions_v1/transition_validation.json
+  transitions: 178176
+  episodes: 1856
+  households: 464
+  feature_count: 237
+  directly_trains_bdq: true
+  release_ready: true
+  release_version: SHARP_MASTER_V1
+  gates:
+    billing_reconciliation: PASS
+    state_continuity: PASS
+    household_split_leakage: NONE
+    context_date_split_leakage: NONE
+    capacity_violation_steps: 0
+  remaining_checks:
+  - Appliance power values remain proxies, not measured Indian ratings.
+  - Thermal parameters are declared assumptions, not fitted physics.
+  - No solar, battery, outage or human-attention model.

@@ -1,0 +1,19 @@
+{
+  "status": "AUDIT_PASSED",
+  "transitions": 178176,
+  "episodes": 1856,
+  "households": 464,
+  "feature_count": 237,
+  "checks_failed": [],
+  "warnings": [],
+  "shield_altered_device_decisions": 43681,
+  "shield_altered_fraction": 0.029770375338044143,
+  "device_on_rate": 0.1693471658815319,
+  "ac_household_transition_fraction": 0.09051724137931035,
+  "mean_reward_by_policy": {
+    "random_binary": -0.6176210344532888,
+    "serve_preferred": -0.6784892853787693
+  },
+  "largest_train_test_standardised_shift_sd": 1.3609667286426543,
+  "audit_is_independent_of_generator_report": true
+}
