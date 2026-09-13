@@ -1,0 +1,13 @@
+metric,value
+status,BUILT_PENDING_REVIEW
+source_activity_rows,370205
+missing_key_rows_excluded,0
+under_6_groups_excluded,2330
+profiles_created,15574
+complete_location_diaries,13813
+profiles_with_unknown_minutes,1761
+profiles_with_location_conflicts,1761
+invalid_intervals,0
+metadata_conflict_profiles,0
+survey_weighting,PENDING
+release_ready,False

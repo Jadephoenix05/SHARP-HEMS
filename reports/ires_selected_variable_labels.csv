@@ -1,0 +1,70 @@
+variable,label
+hhid,Household unique id (respondent id)
+s_name,State
+state_abbv,State abbreviation
+q103_survey_type,Survey Type (Rural-1; Urban-2)
+q213_no_members,Total number of family members
+q216_house_pucca_kachha,"House type - Pucca, Kuchha or Mixed"
+q217_house_type,Type of pucca house - Independent or multi-storey building
+q223_house_no_bedrooms,Number of bedrooms in the house
+q234_month_exp,Average monthly expenditure (in INR)
+q236_income_category,Monthly income category
+q301_grid_yn,Grid electricity supply
+q302_grid_hrs_no,Hours of power supply in a day
+q303_grid_hrs_even_no,Hours of power supply between sunset and midnight
+q304_grid_patternpowercut,Pattern of power cuts in past one month
+q305_grid_knownpattern_yn,Aware about power cut beforehand (Dummy)
+q306_grid_rural_powercut_days_20,Number of days with power cut of more than 20 hours in past one month - Rural
+q307_grid_urban_powercut_days_10,Number of days with power cut of more than 12 hours in past one month - Urban
+q308_grid_voltage_low_app,Number of days with low voltage in past one month
+q309_grid_voltage_low_app_fail,Number of days with volt fluctuation casuing equipment damage in past one month
+q310_volt_stab_yn,Do you have voltage stabilisers in your house? (Dummy)
+avg_monthly_bill,avg_monthly_bill
+q316_invertor_battery_yn,Do you use electricity from Invertor/Battery
+q317_genset_yn,Do you use electricity from diesel generator set? (Dummy)
+q319_shs_use_yn,Do you use solar home system (SHS) in your home? (Dummy)
+q319_b_shs_capacity_watts,Capacity (in watts) of the solar home system (SHS)
+q324_prim_source_electricity,What is the primary source of electricity for your household?
+q405_c_led_bulb_no,Number of LED bulbs in your home
+q405_d_led_tube_light_no,Number of LED tube lights in your home
+q409_ceiling_fan_yn,Do you have ceiling fans in your home? (Dummy)
+q410_ceiling_fan_no,Number of ceiling fans used in your home
+q411_celing_fan_use_months_no,Number of months of ceiling fan use in a year
+q415_table_fan_yn,Do you use table/pedestal/wall mounted fan in your home? (Dummy)
+q416_table_fan_no,Number of table/pedestal/wall mounted fans in your home
+q421_air_coolers_yn,Do you use air coolers in your home? (dummy)
+q422_air_coolers_no,Number of air coolers in your home
+q427_ac_yn,Do you use air conditioner (AC) in your home? (Dummy)
+q428_ac_no,Number of air conditioners used in your home
+q431_ac_most_capacity_tons,Capacity of most used AC (in tons)
+q436_ac_most_hrs_mar_jun,Number of hours of AC use (Mar-June)
+q436_ac_most_hrs_jul_oct,Number of hours of AC use (July-Oct)
+q436_ac_most_hrs_nov_feb,Number of hours of AC use (Nov-Feb)
+q453_geyser_no,Number of electric geysers used
+q459_tv_yn,Does you have Television (TV) in your home? (Dummy)
+q460_tv_no,How many TV sets do you have in your home?
+q465_desktop_yn,Do you have desktop computer in your home? (Dummy)
+q465_laptop_yn,Do you have laptop/tablet in your home? (Dummy)
+q465_modem_yn,Do you have modem/router in your home? (Dummy)
+q466_fridge_yn,Do you have refrigerator in your household? (Dummy)
+q467_fridge_no,How many refrigerators do you have in your home?
+q471_elec_water_purifier_1_yn,Do you use electric water purifier atleast once in a month in your home? (Dummy)
+q471_mixer_grinder_2_yn,Do you use blender/juicer/mixer/grinder at least once a month in home? (Dummy)
+q471_elec_kettle_3_yn,Do you use electric kettle at least once a month in home? (Dummy)
+q472_wash_mach_yn,Do you use washing machine in your home? (Dummy)
+q473_wash_mach_week_use_no,How many times in a week do you use washing machine?
+q476_iron_yn,Do you use electric iron in your home? (Dummy)
+q477_water_pump_yn,Do you have a water pump in your house? (Dummy)
+q480_water_pump_cap_hp,What is the capacity of this water pump (in hp)?
+q481_water_pump_hrs,Daily water pump usage - Hours
+q481_water_pump_min,Daily Water pump usage - Minutes
+q526_a_ecoil_yn,Do you use electric coil for cooking? (Dummy)
+q526_b_induc_cookstove_yn,Do you induction cook-stove for cooking? (Dummy)
+q526_c_oven_yn,Do you use micro-wave oven for cooking? (Dummy)
+q526_d_grill_toast_yn,Do you use electric oven/griller/toaster for cooking? (Dummy)
+q526_e_elec_rice_cooker_yn,Do you use electric rice cooker for cooking? (Dummy)
+q610_d_sanctioned_load,q610_d_sanctioned_load
+sw_dist,Survey weights - district level
+sw_state,Survey weights - state level
+asset_decile_1,Wealth decile with LPG variable
+asset_decile_2,Wealth decile without LPG variable (for cooking energy analysis)

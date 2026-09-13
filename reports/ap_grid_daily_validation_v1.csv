@@ -1,0 +1,10 @@
+metric,value
+rows,1917
+duplicate_dates_removed,0
+start_date,2020-01-01
+end_date,2025-03-31
+missing_demand,43
+invalid_demand,0
+train_rows,1461
+validation_rows,366
+test_rows,90

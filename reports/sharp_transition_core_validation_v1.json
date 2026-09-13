@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "module": "integrated_transition_core_v1",
+  "tested": [
+    "shield-to-dynamics execution",
+    "power-to-energy conversion",
+    "billing-to-reward integration",
+    "unseen feedback censoring",
+    "open response-window censoring",
+    "constrained human override",
+    "failed-step billing rollback",
+    "actual versus estimated capacity",
+    "time-limit versus terminal flags"
+  ],
+  "test_data": "synthetic fixtures only; not training transitions",
+  "household_appliance_models_integrated": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

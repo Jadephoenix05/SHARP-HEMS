@@ -1,0 +1,14 @@
+{
+  "dataset_name": "SHARP Master Dataset",
+  "dataset_version": "1.0.0-draft",
+  "control_interval_minutes": 15,
+  "random_seed": 42,
+  "deployment_scenario": "APCPDCL_Guntur_Andhra_Pradesh",
+  "refit_release": "cleaned_pending_verification",
+  "simulator_version": "not_built",
+  "created_by": [
+    "Supriya",
+    "Pranitha"
+  ],
+  "release_status": "building"
+}

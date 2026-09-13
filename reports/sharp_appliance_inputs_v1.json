@@ -1,0 +1,171 @@
+{
+  "status": "INPUT_CATALOG_BUILT",
+  "households": 498,
+  "inventory_rows": 12948,
+  "refit_channels": 200,
+  "iawe_channels": 12,
+  "split_counts": {
+    "EMARC:calibration": 115,
+    "EMARC:heldout": 29,
+    "IRES_AP:test": 76,
+    "IRES_AP:train": 348,
+    "IRES_AP:validation": 74,
+    "REFIT:test": 3,
+    "REFIT:train": 14,
+    "REFIT:validation": 3
+  },
+  "refit_house_checks": [
+    {
+      "house": 1,
+      "all_ten_channels_present": true,
+      "rows": 539700
+    },
+    {
+      "house": 2,
+      "all_ten_channels_present": true,
+      "rows": 450930
+    },
+    {
+      "house": 3,
+      "all_ten_channels_present": true,
+      "rows": 524470
+    },
+    {
+      "house": 4,
+      "all_ten_channels_present": true,
+      "rows": 533750
+    },
+    {
+      "house": 5,
+      "all_ten_channels_present": true,
+      "rows": 572240
+    },
+    {
+      "house": 6,
+      "all_ten_channels_present": true,
+      "rows": 472050
+    },
+    {
+      "house": 7,
+      "all_ten_channels_present": true,
+      "rows": 516050
+    },
+    {
+      "house": 8,
+      "all_ten_channels_present": true,
+      "rows": 479340
+    },
+    {
+      "house": 9,
+      "all_ten_channels_present": true,
+      "rows": 462600
+    },
+    {
+      "house": 10,
+      "all_ten_channels_present": true,
+      "rows": 508800
+    },
+    {
+      "house": 11,
+      "all_ten_channels_present": true,
+      "rows": 336070
+    },
+    {
+      "house": 12,
+      "all_ten_channels_present": true,
+      "rows": 438760
+    },
+    {
+      "house": 13,
+      "all_ten_channels_present": true,
+      "rows": 375510
+    },
+    {
+      "house": 15,
+      "all_ten_channels_present": true,
+      "rows": 476900
+    },
+    {
+      "house": 16,
+      "all_ten_channels_present": true,
+      "rows": 438050
+    },
+    {
+      "house": 17,
+      "all_ten_channels_present": true,
+      "rows": 424630
+    },
+    {
+      "house": 18,
+      "all_ten_channels_present": true,
+      "rows": 401050
+    },
+    {
+      "house": 19,
+      "all_ten_channels_present": true,
+      "rows": 425160
+    },
+    {
+      "house": 20,
+      "all_ten_channels_present": true,
+      "rows": 416050
+    },
+    {
+      "house": 21,
+      "all_ten_channels_present": true,
+      "rows": 427200
+    }
+  ],
+  "master_release_ready": false,
+  "remaining": [
+    "Review and match source channels to Indian appliance types",
+    "Assign documented simulation ratings and usage models where measured traces are unavailable",
+    "Build and test action constraints, reward, transitions and BDQ training",
+    "Verify redistribution scope and clean-download reproducibility"
+  ],
+  "notes": [
+    "Splits are household-disjoint and frozen; temporal context splits must also be enforced.",
+    "Catalog statistics include all available nonnegative interval means, including low-coverage bins.",
+    "Zero readings are not asserted to be physical OFF states.",
+    "REFIT remains UK data; iAWE remains one Indian calibration household.",
+    "No electrical trace has yet been assigned to an AP household."
+  ],
+  "source_sha256": {
+    "data/processed/household_templates/ap_household_templates_v2.parquet": "4f7c73d92298b9b2c16a14276ce1e6a21f62e111b6d4f8613d030d3c988b0925",
+    "data/processed/household_templates/ap_appliance_ownership_v3.parquet": "c7dbe43d7de750eda0d85172c6d10e6d6e5106402761c45a34da096602539b9f",
+    "data/registry/refit_appliance_mapping.csv": "ec3146fbc6a43d5c214caa65cc2fc09483d0a2af34af5f576a2e8121cb27962c",
+    "data/interim/emarc/emarc_deployment_registry_v1.csv": "1f50d449cf7466da0166a6d5fae7dd5e2eaf8140a5fab9fc88a6a361ac461404",
+    "data/processed/refit_canonical_v1/refit_house_01_channels_v1.parquet": "679b7dc4c97257bf79196400b6d0a2fb5ca0e73fd3422be7129afd17f60d7938",
+    "data/processed/refit_canonical_v1/refit_house_02_channels_v1.parquet": "bfdfb80e36acb86a8b65b4717d8c75f00bf0e1042b5aa7dc13f1730a5bfd3694",
+    "data/processed/refit_canonical_v1/refit_house_03_channels_v1.parquet": "3c74f39e23a76348b8a90945f79504cbb14fe8635aa7d06c483d0e76e6231d2d",
+    "data/processed/refit_canonical_v1/refit_house_04_channels_v1.parquet": "df392d14676dfcd29aafddbcecd09e33f8db705aecfb82745bd837a46b799b83",
+    "data/processed/refit_canonical_v1/refit_house_05_channels_v1.parquet": "66ba6973955162170fa05631f3139cc38c532c1c90be5dc74ff0fd28be787f74",
+    "data/processed/refit_canonical_v1/refit_house_06_channels_v1.parquet": "f25056b81fd1de4f1bde3033a5dad738f4d24c26c498efba34989fd21c361e06",
+    "data/processed/refit_canonical_v1/refit_house_07_channels_v1.parquet": "3e78acbc3c6c3aa65980bc5aa2e3934f0e9e94a9ae4ab916acacd4fb99a4fe5b",
+    "data/processed/refit_canonical_v1/refit_house_08_channels_v1.parquet": "48ea0d9215f9b7bc891a5bcb2a13b055662457a257b0f66a01131211f2a1148e",
+    "data/processed/refit_canonical_v1/refit_house_09_channels_v1.parquet": "2bf0b91820ec9d2847e5cfa000e98de11c108e576caf2bd2c4750a73163f2089",
+    "data/processed/refit_canonical_v1/refit_house_10_channels_v1.parquet": "b9d0ee71c043b56ea3207c69d9b6c46b8e1528818fc3cd403a767342756de12e",
+    "data/processed/refit_canonical_v1/refit_house_11_channels_v1.parquet": "8dc2bbb0d7232b0472fb2956d07cd772855cda6a6abccaec8b9a2459eb9cae88",
+    "data/processed/refit_canonical_v1/refit_house_12_channels_v1.parquet": "0837c97f93be46fac852a90b954132ad7f97caa924dca78277ad9f7c4a855423",
+    "data/processed/refit_canonical_v1/refit_house_13_channels_v1.parquet": "2021e34b33567223d67ae1eddcf70c9249389cf6065687f54accb03ff5a7d5fd",
+    "data/processed/refit_canonical_v1/refit_house_15_channels_v1.parquet": "c071105a8f4cce3728594cb209febfca4c12b76b7f22e666c8fd3393a2bdb999",
+    "data/processed/refit_canonical_v1/refit_house_16_channels_v1.parquet": "d8334d181c202eb2434bf3f03e8db97a573cfbc339459cfeb4d9f0776f398677",
+    "data/processed/refit_canonical_v1/refit_house_17_channels_v1.parquet": "cdd154a9f66c271853179687eeecf559c93a9a857bf4d2418946b8323697c238",
+    "data/processed/refit_canonical_v1/refit_house_18_channels_v1.parquet": "2938de13c6938f29f8c8331d290130fc9bb82f33c7a382709e6a9424215a4d0e",
+    "data/processed/refit_canonical_v1/refit_house_19_channels_v1.parquet": "d768f108bb8e2e4dc53107e3a326b2fcc2043afcec501ae7facfb4c11496a035",
+    "data/processed/refit_canonical_v1/refit_house_20_channels_v1.parquet": "6531c867e9d4e0f61d32749f9722ee2ebc5fc3554a15f420184e7a8565636ee6",
+    "data/processed/refit_canonical_v1/refit_house_21_channels_v1.parquet": "6b42c9dbce66a5812cada772b395ae443db52a8d32b4f9b1a6ae7cf68a529a9f",
+    "data/interim/iawe/15min/iawe_channel_01_15min_v1.parquet": "306dde822d46cad1280766d21c3129d3b0a119010e2ce9a8c4d7f5900c420866",
+    "data/interim/iawe/15min/iawe_channel_02_15min_v1.parquet": "c5a14bbdb2e1423b1bb34e60932a9538bb09f668995207fa798cccae37d791ab",
+    "data/interim/iawe/15min/iawe_channel_03_15min_v1.parquet": "412aef5d2e20b3dafc0b18c026f15033aac474ac740c300fcd1b21cb508aeab5",
+    "data/interim/iawe/15min/iawe_channel_04_15min_v1.parquet": "d0b8bd2184d70c8c93baf22765d2073d38284bb0043e5ae84e6c5add646a3e88",
+    "data/interim/iawe/15min/iawe_channel_05_15min_v1.parquet": "4b3e6387fb41291dea2044589a778eda1fa8d27dd0c4ce8dee5db1533673937e",
+    "data/interim/iawe/15min/iawe_channel_06_15min_v1.parquet": "b6f6d1919f8995a9f2888fa6796e4b2711e4e2ac5b26a59cc835f556728f1eac",
+    "data/interim/iawe/15min/iawe_channel_07_15min_v1.parquet": "c0036ea08939cfdd24185a64d5cf46907559845e0af573e339ed2de763b691d8",
+    "data/interim/iawe/15min/iawe_channel_08_15min_v1.parquet": "4321edf5a34620ccee0f7bd16494a7815ab7578429e001355a141b2dd4d911ff",
+    "data/interim/iawe/15min/iawe_channel_09_15min_v1.parquet": "28bfa19ca00cdceb7a666eac2c7a8bef0c327cc18ab39d8659d2142bcc5ae5f8",
+    "data/interim/iawe/15min/iawe_channel_10_15min_v1.parquet": "736e9f5c3a2d46f1c4cac499dee3841ebe11ffa91046262080d0a5756b019656",
+    "data/interim/iawe/15min/iawe_channel_11_15min_v1.parquet": "a9e4731f16e0f298f451ca269b921c9832a7b942c217b2a1246307e424efad59",
+    "data/interim/iawe/15min/iawe_channel_12_15min_v1.parquet": "7f96393cb0aa53d27d5a3e971b9f3b50ae31b05c094b7864aca809ee5892f9f8"
+  }
+}

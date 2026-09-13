@@ -1,0 +1,169 @@
+refit_cleaned:
+  status: PROCESSED_NEEDS_SCHEMA_UPGRADE
+  role: empirical_appliance_temporal_traces
+  geography: United Kingdom
+  canonical_source: University of Strathclyde
+  doi: 10.15129/9ab14b0e-19ac-9f88a
+  license: CC-BY-4.0
+  local_path: data/raw/refit
+  processed_path: data/interim/refit_15min
+  notes:
+  - 20 houses processed
+  - 921931 fifteen-minute intervals
+  - cleaned-release identity must be verified
+  - required canonical schema is not yet complete
+bee_clasp_2024:
+  status: BASE_PRIORS_READY
+  role: modern_indian_appliance_ownership_priors
+  geography: India
+  canonical_source: BEE and CLASP
+  local_path: data/raw/bee_clasp
+  processed_path: data/interim/indian_priors/bee_clasp_national_priors_v1.csv
+  license: CC-BY-SA-4.0
+  survey_year: 2024
+  sample_households: 4321
+  notes:
+  - Contains published national statistics only
+  - Does not contain fabricated household microdata
+  - Climate and household-class conditional priors may be added later
+ires_2020:
+  status: PROCESSED_SELECTED_SEMANTIC_CHECKS_PASSED
+  role: indian_household_access_reliability_priors
+  geography: India
+  canonical_source: Harvard Dataverse
+  doi: 10.7910/DVN/U8NYUP
+  local_path: data/raw/ires
+  processed_path: data/interim/indian_priors/ires_household_priors_v1.parquet
+  notes:
+  - 14851 unique household records observed
+  - README states 14850 households
+  - Original household ID replaced by deterministic pseudonymous ID
+  - District village and enumerator fields excluded
+  - 'Q301: 0=no supply; 1=supply available; 2=connection without electricity yet'
+  - Q302-Q316 skipped unless Q301 equals 1; missing values preserved
+  - Dummy source codes retained; 99 becomes missing in derived dummy fields
+  - Fan totals use explicit nonownership structural zeros; source counts retained
+  - LED totals still require both components; no inferred geyser absence
+  - Pump duration derived as hours*60+minutes only with valid complete components
+  - Q236=88 and Q304=99 masked in derived categories; originals retained
+  - Q610.d sanctioned load in kW; nonpositive and 9999 excluded in derived field
+  - State and district weights retained separately; never multiply them
+  - Q307 urban severe power cuts use questionnaire threshold over 12 hours
+  - Variable-specific missing codes units ranges and survey weights need semantic
+    QA
+  - Structural PASS is not final simulator or release approval
+  andhra_pradesh_processed_path: data/interim/indian_priors/ires_andhra_pradesh_priors_v1.parquet
+  validation_report: reports/ires_household_priors_validation_v1.csv
+  remaining_checks:
+  - Full semantic review and release suitability
+  release_ready: false
+emarc:
+  status: PROCESSED_WITH_DOCUMENTED_QA_LIMITATIONS
+  role: indian_aggregate_load_calibration_validation
+  geography: India
+  canonical_source: Prayas Energy Group
+  local_path: data/raw/emarc
+  processed_path: data/interim/emarc
+  observed_households: 140
+  observed_deployments: 265
+  load_block_rows: 12702801
+  deduplicated_daily_rows: 111273
+  release_ready: false
+  remaining_checks:
+  - Block-to-clock mapping and timezone
+  - Daily versus block energy discrepancies
+  - Redistribution permission for source and derived data
+iced_hourly:
+  status: NOT_ACQUIRED
+  role: subdaily_grid_context
+  geography: Andhra Pradesh
+  canonical_source: India Climate and Energy Dashboard
+  local_path: data/raw/grid_india
+  notes:
+  - Monthly peak and load-duration workbooks exist
+  - hourly demand curve is still required
+nasa_power_guntur:
+  status: READY
+  role: weather_and_solar_context
+  geography: Guntur Andhra Pradesh
+  canonical_source: NASA POWER
+  period: 2021-01-01 to 2025-12-31
+  local_path: data/raw/weather/nasa_power_guntur_ap_hourly_2021_2025.csv
+aperc_apcpdcl_tariff:
+  status: ORDER_COMPONENTS_VERIFIED
+  role: reward_cost_configuration
+  geography: Guntur Andhra Pradesh
+  canonical_source: Andhra Pradesh Electricity Regulatory Commission
+  local_path: data/raw/tariff_ap
+  notes:
+  - ICED actual tariff workbook obtained
+  - official APERC tariff order and complete YAML still required
+  config_path: configs/tariffs/apcpdcl_2025_26_verified_components.json
+  validation_report: reports/apcpdcl_tariff_component_validation_v1.json
+  full_utility_bill_verified: false
+  domestic_time_of_day: false
+iawe:
+  status: DESCRIPTIVE_SUMMARIES_BUILT_PENDING_REVIEW
+  role: indian_appliance_voltage_outage_calibration
+  geography: New Delhi India
+  canonical_source: iAWE
+  local_path: data/raw/iawe
+  processed_path: data/interim/iawe/15min
+  validation_report: reports/iawe_15min_validation_v1.csv
+  remaining_checks:
+  - Mirror provenance and redistribution terms
+  - Relationship between the two mains channels
+  - Calibration suitability of sparse appliance channels
+  - Irregular water-motor sampling
+  release_ready: false
+reside_ac:
+  status: CLOCK_YEAR_DIAGNOSED_UNITS_AND_LABELS_PENDING_REVIEW
+  role: indian_ac_thermal_cycle_calibration
+  geography: Hyderabad India
+  canonical_source: Figshare
+  license: CC0
+  local_path: data/raw/reside_ac
+  processed_path: data/interim/reside_ac_clean/timezone_aligned
+  validation_report: reports/reside_ac_time_validation_v1.csv
+  remaining_checks:
+  - Measurement units
+  - Sensor-to-house mapping
+  - Meaning and construction of AC Status labels
+  - Possible Envilog clock drift of a few minutes within the day
+  - Authors have not been asked to confirm the 2019 versus 2021 year
+  release_ready: false
+  observation_year_supported: 2019
+  observation_year_basis: Daily indoor temperature correlates with Hyderabad 2019
+    outdoor temperature far better than with 2021 (AC-off mean r 0.524 versus 0.126;
+    10 of 11 houses favour 2019). Statistical evidence about the clock, not an author
+    correction.
+  observation_year_report: reports/reside_year_hypothesis_v1.json
+  site_weather_reference: data/raw/weather/nasa_power_hyderabad_telangana_hourly_2019_may.csv
+  site_weather_basis: CITY_GRID_CELL_REANALYSIS_NOT_HOUSE_SITE
+  guntur_weather_used_for_reside: false
+tus_2024:
+  status: AP_DIARY_CANDIDATES_BUILT_PENDING_REVIEW
+  role: occupancy_activity_attention_priors
+  geography: India
+  canonical_source: MoSPI NSO
+  local_path: data/raw/tus_india/tus_2024
+  processed_path: data/interim/occupancy_profiles/tus2024_ap_complete_location_diaries_v1.parquet
+  validation_report: reports/tus2024_ap_location_validation.csv
+  remaining_checks:
+  - Survey weighting
+  - Activity-location mapping and overlapping activity interpretation
+  - Selection effects from retaining complete diaries
+  - Source attribution and redistribution terms
+  release_ready: false
+grid_india_historical:
+  status: READY
+  role: grid_peak_shortage_validation
+  geography: Andhra Pradesh
+  period: 2020-01-01 to 2025-03-31
+  local_path: data/raw/grid_india/India_Elec_data_(Jan2020-Mar2025).csv
+  processed_path: data/interim/grid_peak_labels/ap_grid_daily_ml_v1.parquet
+sharp_rl_transitions:
+  status: PENDING_SIMULATOR
+  role: direct_bdq_training_data
+  geography: simulated_indian_households
+  processed_path: data/processed/simulator_v1

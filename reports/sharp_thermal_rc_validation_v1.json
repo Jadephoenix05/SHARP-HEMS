@@ -1,0 +1,150 @@
+{
+  "status": "THERMAL_COMPONENT_TESTS_PASSED",
+  "config_id": "sharp_thermal_rc_v1",
+  "deterministic_tests": {
+    "directionality": {
+      "ac_off_change_c": 0.2699999999999996,
+      "ac_on_change_c": -0.28000000000000114,
+      "cool_outside_change_c": -0.2925000000000004
+    },
+    "finite_and_bounded": {
+      "sweep_min_c": 10.02,
+      "sweep_max_c": 50.02
+    },
+    "repeatability": {
+      "value_c": 30.62625
+    },
+    "fifteen_minute_stepping": {
+      "hour_end_temperature_c": 33.43411273956299,
+      "minutes": 60
+    },
+    "thermostat": {
+      "no_undershoot_temperature_c": 24.0,
+      "saturated_duty": 1.0
+    },
+    "holds_setpoint_at_design_condition": {
+      "design_condition_temperature_c": 24.0
+    },
+    "saturates_beyond_capacity": {
+      "saturation_reachable": true,
+      "outdoor_c": 55.0,
+      "setpoint_c": 36.04,
+      "saturated_temperature_c": 38.03999951843673,
+      "duty": 1.0
+    },
+    "duty_semantics": {
+      "mild_duty": 1.0,
+      "harsh_duty": 1.0
+    },
+    "stability": {
+      "settled_c": 34.6400000000006,
+      "equilibrium_c": 34.64
+    },
+    "config_guards": {
+      "scenarios_refused": 2
+    }
+  },
+  "envelope_conformance": {
+    "intervals": 14410,
+    "observed_mean_c": 0.038871154291001624,
+    "modelled_mean_c": 0.10476215157298174,
+    "mean_bias_c": 0.06589099728198011,
+    "observed_p01_c": -0.9333333333333332,
+    "observed_p99_c": 0.5333333333333347,
+    "modelled_p01_c": -0.20531250000000004,
+    "modelled_p99_c": 0.36655312499999987,
+    "modelled_min_c": -0.2935416666666666,
+    "modelled_max_c": 0.4135416666666667,
+    "within_observed_extremes": true,
+    "mean_bias_acceptable": true,
+    "observed_p01_p99_spread_c": 1.466666666666668,
+    "modelled_p01_p99_spread_c": 0.5718656249999999,
+    "spread_acceptable": true,
+    "conformant": true,
+    "mean_bias_is_pass_criterion": false,
+    "interpretation": "RESIDE bounds can only reject parameters. Conformance is not evidence that these declared parameters are correct. The AC-off subset is selection biased toward cooler conditions, so mean bias is reported as a diagnostic rather than used as a pass criterion."
+  },
+  "sensitivity_scenarios": [
+    {
+      "scenario": "baseline",
+      "tau_hours": 8.0,
+      "coupling_per_step": 0.03125,
+      "full_cooling_c": 0.55,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": true,
+      "ac_off_equilibrium_c": 38.64,
+      "modelled_mean_bias_c": 0.06589099728198011,
+      "envelope_conformant": true,
+      "modelled_spread_c": 0.5718656249999999
+    },
+    {
+      "scenario": "slow_envelope",
+      "tau_hours": 24.0,
+      "coupling_per_step": 0.010416666666666666,
+      "full_cooling_c": 0.55,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": true,
+      "ac_off_equilibrium_c": 39.92,
+      "modelled_mean_bias_c": 0.009382896233325617,
+      "envelope_conformant": true,
+      "modelled_spread_c": 0.19062187499999994
+    },
+    {
+      "scenario": "fast_envelope",
+      "tau_hours": 4.0,
+      "coupling_per_step": 0.0625,
+      "full_cooling_c": 0.55,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": false,
+      "ac_off_equilibrium_c": 38.32,
+      "modelled_mean_bias_c": 0.15065314885496187,
+      "envelope_conformant": true,
+      "modelled_spread_c": 1.1437312499999996
+    },
+    {
+      "scenario": "weak_ac",
+      "tau_hours": 8.0,
+      "coupling_per_step": 0.03125,
+      "full_cooling_c": 0.25,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": false,
+      "ac_off_equilibrium_c": 38.64,
+      "modelled_mean_bias_c": 0.06589099728198011,
+      "envelope_conformant": true,
+      "modelled_spread_c": 0.5718656249999999
+    },
+    {
+      "scenario": "strong_ac",
+      "tau_hours": 8.0,
+      "coupling_per_step": 0.03125,
+      "full_cooling_c": 1.2,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": true,
+      "ac_off_equilibrium_c": 38.64,
+      "modelled_mean_bias_c": 0.06589099728198011,
+      "envelope_conformant": true,
+      "modelled_spread_c": 0.5718656249999999
+    },
+    {
+      "scenario": "high_internal_gain",
+      "tau_hours": 8.0,
+      "coupling_per_step": 0.03125,
+      "full_cooling_c": 0.55,
+      "duty_at_32in_38out": 1.0,
+      "holds_design_setpoint": true,
+      "ac_off_equilibrium_c": 39.92,
+      "modelled_mean_bias_c": 0.10589099728198009,
+      "envelope_conformant": true,
+      "modelled_spread_c": 0.5718656249999998
+    }
+  ],
+  "action_semantics": "AC_SETPOINT_NOT_BINARY_SWITCH",
+  "compressor_duty_is_output_not_action": true,
+  "parameter_basis": "DECLARED_ENGINEERING_ASSUMPTIONS_NOT_FITTED",
+  "fitted_to_reside": false,
+  "causal_cooling_effect_established": false,
+  "integrated_into_transition_core": false,
+  "approved_for_hardware_control": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

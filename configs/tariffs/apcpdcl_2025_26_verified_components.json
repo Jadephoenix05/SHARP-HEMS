@@ -1,0 +1,74 @@
+{
+  "tariff_id": "APCPDCL_CAT_IA_LT_FY2025_26_ORDER_COMPONENTS_V1",
+  "effective_from": "2025-04-01",
+  "effective_to": "2026-03-31",
+  "category": "I(A): Domestic LT, individual residential service",
+  "method": "telescopic",
+  "billing_period": "monthly",
+  "time_of_day_rates": false,
+  "fixed_inr_per_kw_or_part_month": "10",
+  "slabs": [
+    {
+      "upper_kwh": 30,
+      "energy_inr_kwh": "1.90",
+      "customer_inr_month": 25
+    },
+    {
+      "upper_kwh": 75,
+      "energy_inr_kwh": "3.00",
+      "customer_inr_month": 30
+    },
+    {
+      "upper_kwh": 125,
+      "energy_inr_kwh": "4.50",
+      "customer_inr_month": 45
+    },
+    {
+      "upper_kwh": 225,
+      "energy_inr_kwh": "6.00",
+      "customer_inr_month": 50
+    },
+    {
+      "upper_kwh": 400,
+      "energy_inr_kwh": "8.75",
+      "customer_inr_month": 55
+    },
+    {
+      "upper_kwh": null,
+      "energy_inr_kwh": "9.75",
+      "customer_inr_month": 55
+    }
+  ],
+  "source_order_printed_pages": {
+    "energy_and_fixed": 150,
+    "customer": 169,
+    "exclusions": 149
+  },
+  "source_pdf_pages_one_based": {
+    "energy_and_fixed": 164,
+    "customer": 183,
+    "exclusions": 163
+  },
+  "excluded_components": [
+    "electricity_duty",
+    "FPPCA",
+    "true_up_true_down",
+    "consumer_specific_subsidies",
+    "other_recoveries",
+    "late_payment_charges"
+  ],
+  "full_utility_bill_verified": false,
+  "scenario_rule": "Application outside the effective period must be labelled a frozen-tariff simulation, not historical billing.",
+  "sources": [
+    {
+      "file": "docs/tariff_evidence/APCPDCL_RST_2025_26.pdf",
+      "source_url": "https://www.apcpdcl.in/pdf/RST-Order-for-FY-2025-26.pdf",
+      "sha256": "4222e32e8a423b76854e68bc1efcefab64ba396531988ebf8575f8aa78fb817e"
+    },
+    {
+      "file": "docs/tariff_evidence/APCPDCL_corrigendum_2025_26.pdf",
+      "source_url": "https://www.apcpdcl.in/pdf/Corrigendum-RST-Order-for-FY-2025-26.pdf",
+      "sha256": "56c665af79fb32f3b66843e1ab6fe05481a718ad5dfecf55c5973ec2311c0d75"
+    }
+  ]
+}

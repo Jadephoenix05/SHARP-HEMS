@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "module": "reward_billing_v1",
+  "tested": [
+    "monthly slab reconciliation",
+    "opening fees booked once",
+    "checkpoint restore",
+    "duplicate-step rejection",
+    "negative-import rejection",
+    "warm-start slab crossing",
+    "explicit new billing period",
+    "reward arithmetic"
+  ],
+  "full_utility_bill_verified": false,
+  "reward_weights_selected": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

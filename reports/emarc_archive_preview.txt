@@ -1,0 +1,56 @@
+
+FILE: Prayas Energy/Household-Deployment basic info.xlsx
+Sheets: ['Sheet1']
+
+SHEET: Sheet1
+deployment_id household_id Deployment type    Region          Household type
+        D0001         H001       appliance Pune city                   Basic
+        D0002         H001        Mainline Pune city                   Basic
+        D0003         H002       appliance Pune city   With Air Conditioners
+        D0004         H002        Mainline Pune city   With Air Conditioners
+        D0005         H003       appliance Pune city Water Heaters but no AC
+        D0006         H003        Mainline Pune city Water Heaters but no AC
+        D0007         H004       appliance Pune city Water Heaters but no AC
+
+FILE: Prayas Energy/eMAR daily consumption.csv
+Region,Household type,household_id,Deployment type,deployment_id,Date,Daily consumption (kWh)
+Pune city,With Air Conditioners,H002,appliance,D0003,12/22/2019,1.039917000
+Pune city,With Air Conditioners,H002,appliance,D0003,12/23/2019,0.930054000
+Pune city,With Air Conditioners,H002,appliance,D0003,12/24/2019,1.059936000
+Pune city,With Air Conditioners,H002,appliance,D0003,12/25/2019,1.270020000
+Pune city,With Air Conditioners,H002,appliance,D0003,12/26/2019,1.010010000
+
+
+FILE: Prayas Energy/eMARC household survey summary.xlsx
+Sheets: ['Survey summary']
+
+SHEET: Survey summary
+HHID    Region Rooms No. of People Area in Sqft Inverter Lights Ceiling Fans Air Coolers Air-Conditioners Fridge TV Water heaters Washing Machine Mixer Iron Micro-wave
+H001 Pune city     3             3          625        0     19            3           0                0      1  1             0               1     1    1          1
+H002 Pune city     5             4         1100        0     14            5           0                3      1  1             1               1     1    1          1
+H003 Pune city     5             2         1000        0     16            6           0                0      1  1             3               1     1    1          1
+H004 Pune city     3             7          550        0     10            2           0                0      1  1             1               1     1    1          1
+H005 Pune city     4             5          NaN        0      4            3           0                1      1  0             0               0     0    1          1
+H006 Pune city     3             4          530        0      0            0           0                0      0  0             0               0     0    0          0
+H007 Pune city     4             5          700        0      4            4           0                0      1  1             1               1     1    1          0
+
+FILE: Prayas Energy/eMARC load blocks.csv
+deployment_id,block,date,Load (kW)
+D0020,35,2/3/2018,0.113429467
+D0020,35,2/22/2018,0.017000067
+D0020,35,3/4/2018,0.162748
+D0020,35,3/5/2018,0.784349533
+D0020,35,3/13/2018,0.114381867
+
+
+FILE: Prayas Energy/links.txt
+https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/YJ5SP1
+https://dataverse.harvard.edu/file.xhtml?fileId=4877316&version=1.0 survey data
+
+FILE: Prayas Energy/survey data.csv
+HHID,Region,Rooms,No. of People,Area in Sqft,Inverter,Lights,Ceiling Fans,Air Coolers,Air-Conditioners,Fridge,TV,Water heaters,Washing Machine,Mixer,Iron,Micro-wave
+H001,Pune city,3,3,625,0,19,3,0,0,1,1,0,1,1,1,1
+H002,Pune city,5,4,1100,0,14,5,0,3,1,1,1,1,1,1,1
+H003,Pune city,5,2,1000,0,16,6,0,0,1,1,3,1,1,1,1
+H004,Pune city,3,7,550,0,10,2,0,0,1,1,1,1,1,1,1
+H005,Pune city,4,5,,0,4,3,0,1,1,0,0,0,0,1,1

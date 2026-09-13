@@ -1,0 +1,47 @@
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\Actual Tariff Rate.xlsx
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\bee_clasp\BEE_CLASP_Residential_Energy_Survey_India_2024.pdf
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\grid_india\India_Elec_data_(Jan2020-Mar2025).csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\grid_india\Load Duration (in % duration of year).xlsx
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\grid_india\Monthly_Peak_Demand_(MW).xlsx
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_data.tab
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_design_and_quality.pdf
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_questionnaire.pdf
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_readme.txt
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_variable_dictionary.tab
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_2020_variable_dictionary.xlsx
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\ires\ires_dataset_metadata.json
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_1.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_10.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_11.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_12.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_13.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_15.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_16.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_17.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_18.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_19.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_2.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_20.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_21.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_3.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_4.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_5.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_6.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_7.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_8.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\House_9.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\REFIT_Readme.txt
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House1.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House11.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House2.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House3.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House4.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\refit\zenodo_subset\CLEAN_House5.csv
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\archives\Date of Survey_TUS2024(which has the household level file structure).zip
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\archives\TUS2024.zip
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\extracted\main_data\Guide to dowdload microdata.pdf
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\extracted\main_data\NesstarExplorerInstaller.exe
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\extracted\main_data\TUS2024.Nesstar
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\extracted\survey_date\TUS24DOS_DDMMYYYY.TXT
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\tus_india\tus_2024\extracted\survey_date\TUS24DOS_YYYYMMDD.TXT
+C:\Users\SUPRIYA\SHARP_Master_Dataset\data\raw\weather\nasa_power_guntur_ap_hourly_2021_2025.csv

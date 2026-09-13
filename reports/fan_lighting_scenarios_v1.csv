@@ -1,0 +1,8 @@
+metric,value
+status,EXPERIMENTAL_SCENARIOS_BUILT
+scenarios,3
+parameter_rows,21
+fan_scenario_rows,2937
+lighting_scenario_rows,7470
+empirically_calibrated,False
+rl_transitions_generated,False

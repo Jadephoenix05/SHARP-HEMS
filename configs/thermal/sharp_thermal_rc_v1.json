@@ -1,0 +1,95 @@
+{
+  "config_id": "sharp_thermal_rc_v1",
+  "model": "LUMPED_RC_WITH_THERMOSTAT",
+  "step_minutes": 15,
+  "basis": "DECLARED_ENGINEERING_ASSUMPTIONS_BOUNDED_BY_OBSERVED_ENVELOPE",
+  "why_not_fitted": [
+    "Weather-conditioned regressions on RESIDE-AC lost to plain persistence in 7 of 11 houses and implied envelope time constants of 9 hours to 9.5 days.",
+    "RESIDE AC labels were assigned using current AND temperature change, so no cooling coefficient fitted to them is an identified causal effect.",
+    "Outdoor forcing available for RESIDE is city-cell reanalysis held hourly, which carries almost no information at a 15-minute step.",
+    "Per project rule, a parameter that cannot be established from the sources stays a declared, versioned scenario parameter."
+  ],
+  "parameters": {
+    "envelope_time_constant_hours": {
+      "value": 8.0,
+      "unit": "hours",
+      "provenance": "ASSUMPTION_DIRECTED_BY_OBSERVED_ENVELOPE",
+      "plausible_range": [
+        2.0,
+        24.0
+      ],
+      "basis": "Lumped time constant for a conditioned room. Two independent diagnostics on RESIDE-AC indicated a SLOWER envelope than a conventional 4 h: per-house regressions implied 9 h to 9.5 days, and replaying a 4 h model on observed AC-off intervals over-warmed by 0.15 C per 15 min. RESIDE is used here only to direct and bound this value, never to fit it. 8 h is a declared assumption."
+    },
+    "internal_gain_c_per_15min": {
+      "value": 0.02,
+      "unit": "celsius_per_15min",
+      "provenance": "ENGINEERING_ASSUMPTION",
+      "plausible_range": [
+        0.0,
+        0.06
+      ],
+      "basis": "Lumped occupancy, lighting and appliance gain. No occupancy model is wired in yet."
+    },
+    "ac_full_cooling_c_per_15min": {
+      "value": 0.55,
+      "unit": "celsius_per_15min",
+      "provenance": "ASSUMPTION_SIZED_FROM_DESIGN_CONDITION",
+      "plausible_range": [
+        0.25,
+        1.2
+      ],
+      "basis": "Temperature drop over one interval at continuous compressor operation. Sized by the standard convention that a correctly specified unit holds its setpoint at a design outdoor condition: coupling * (design_outdoor_c - design_setpoint_c) + internal gain. At tau 8 h, 39 C outdoor and a 24 C setpoint this is 0.49 C per 15 min; 0.55 adds a small sizing margin. The upper bound stays below the observed RESIDE AC-on first-percentile change of -1.367 C per 15 min, itself a net change not a cooling rate.",
+      "design_outdoor_c": 39.0,
+      "design_setpoint_c": 24.0
+    },
+    "default_setpoint_c": {
+      "value": 24.0,
+      "unit": "celsius",
+      "provenance": "ENGINEERING_ASSUMPTION",
+      "plausible_range": [
+        18.0,
+        30.0
+      ],
+      "basis": "Placeholder household setpoint. RESIDE house metadata records homeowner-stated setpoints per house and is the intended future source for this."
+    },
+    "comfort_band_c": {
+      "value": [
+        22.0,
+        30.0
+      ],
+      "unit": "celsius",
+      "provenance": "POLICY_ASSUMPTION",
+      "plausible_range": [
+        16.0,
+        34.0
+      ],
+      "basis": "Comfort band used for discomfort reward and shield masking. A policy choice, not a measurement."
+    }
+  },
+  "sensitivity_scenarios": {
+    "baseline": {},
+    "slow_envelope": {
+      "envelope_time_constant_hours": 24.0
+    },
+    "fast_envelope": {
+      "envelope_time_constant_hours": 4.0
+    },
+    "weak_ac": {
+      "ac_full_cooling_c_per_15min": 0.25
+    },
+    "strong_ac": {
+      "ac_full_cooling_c_per_15min": 1.2
+    },
+    "high_internal_gain": {
+      "internal_gain_c_per_15min": 0.06
+    }
+  },
+  "action_semantics": "AC_SETPOINT_NOT_BINARY_SWITCH",
+  "compressor_duty_is_output_not_action": true,
+  "causal_cooling_effect_established": false,
+  "fitted_to_reside": false,
+  "reside_role": "PLAUSIBILITY_BOUNDS_ONLY",
+  "approved_for_hardware_control": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

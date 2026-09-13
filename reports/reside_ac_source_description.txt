@@ -1,0 +1,6 @@
+The RESIDE-AC dataset is available as well-structured and easy-to-use
+.CSV (Comma Separated Values) files. The data set contains 19 summer days data
+from 10/05/2021 IST to 28/05/2021 IST for 8 single-AC homes and 3 homes with
+more than one AC. Garud and Envilog captured datetime values in IST (Indian
+Standard Time) which can be converted to UTC by subtracting 5:30 hours. Each
+home has 27360 Garud records and 5472 Envilog records.

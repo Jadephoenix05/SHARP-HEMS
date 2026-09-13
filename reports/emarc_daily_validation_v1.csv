@@ -1,0 +1,17 @@
+metric,value
+status,AUDIT_COMPLETE_REVIEW_RESULTS
+duplicate_block_rows,0
+duplicate_block_keys,0
+conflicting_block_keys,0
+observed_deployment_days,133256
+complete_unique_days,127951
+daily_file_rows,111280
+daily_invalid_dates,0
+daily_invalid_or_missing_energy,0
+daily_duplicate_key_rows,14
+paired_complete_days,107899
+days_within_tolerance,76893
+median_absolute_difference_kwh,0.013192183249999934
+maximum_absolute_difference_kwh,22.2659228505
+tolerance,"max(0.01 kWh, 1 percent of reported daily kWh)"
+clock_mapping,NOT_ESTABLISHED_BY_THIS_CHECK

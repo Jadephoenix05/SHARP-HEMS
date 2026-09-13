@@ -1,0 +1,22 @@
+field,source_column,nonmissing_source_rows,missing_source_rows,numeric_parse_failures,flagged_rows,candidate_min,candidate_max,range_rule
+incandescent_bulb_count,q405_a_incadescent_bulb_no,498,0,0,0,0.0,8.0,Nonnegative integer; special codes not yet verified
+cfl_bulb_count,q405_b_cfl_bulb_no,498,0,0,0,0.0,8.0,Nonnegative integer; special codes not yet verified
+led_bulb_count,q405_c_led_bulb_no,498,0,0,0,0.0,10.0,Nonnegative integer; special codes not yet verified
+led_tube_count,q405_d_led_tube_light_no,498,0,0,0,0.0,6.0,Nonnegative integer; special codes not yet verified
+cfl_tube_count,q405_e_cfl_tube_light_no,498,0,0,0,0.0,7.0,Nonnegative integer; special codes not yet verified
+ceiling_fan_count,q410_ceiling_fan_no,484,14,0,0,1.0,6.0,Nonnegative integer; special codes not yet verified
+ceiling_fan_months_per_year,q411_celing_fan_use_months_no,484,14,0,0,4.0,12.0,0 to 12 months
+star_rated_ceiling_fan_count,q414_b_bee_ceiling_fans_no,37,461,0,0,0.0,3.0,Nonnegative integer; special codes not yet verified
+table_fan_count,q416_table_fan_no,60,438,0,0,1.0,1.0,Nonnegative integer; special codes not yet verified
+table_fan_months_per_year,q417_table_fan_use_months_no,60,438,0,0,0.0,12.0,0 to 12 months
+ceiling_fan_1_hours_daily,q412_fan_1_hrs,484,14,0,0,1.0,24.0,0 to 24 hours
+ceiling_fan_2_hours_daily,q412_fan_2_hrs,318,180,0,0,1.0,15.0,0 to 24 hours
+ceiling_fan_3_hours_daily,q412_fan_3_hrs,89,409,0,0,1.0,15.0,0 to 24 hours
+ceiling_fan_4_hours_daily,q412_fan_4_hrs,22,476,0,0,1.0,10.0,0 to 24 hours
+ceiling_fan_5_hours_daily,q412_fan_5_hrs,5,493,0,0,1.0,5.0,0 to 24 hours
+ceiling_fan_6_hours_daily,q412_fan_6_hrs,1,497,0,0,5.0,5.0,0 to 24 hours
+ceiling_fan_7_hours_daily,q412_fan_7_hrs,0,498,0,0,,,0 to 24 hours
+ceiling_fan_8_hours_daily,q412_fan_8_hrs,0,498,0,0,,,0 to 24 hours
+table_fan_1_hours_daily,q418_table_fan_1_hrs,60,438,0,0,1.0,12.0,0 to 24 hours
+table_fan_2_hours_daily,q418_table_fan_2_hrs,0,498,0,0,,,0 to 24 hours
+table_fan_3_hours_daily,q418_table_fan_3_hrs,0,498,0,0,,,0 to 24 hours

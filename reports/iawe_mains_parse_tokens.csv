@@ -1,0 +1,15 @@
+channel,column,source_token,count
+1,W,\N,20
+1,VAR,\N,24
+1,VA,\N,18
+1,f,\N,15
+1,VLN,\N,14
+1,PF,\N,25
+1,A,\N,42
+2,W,\N,48
+2,VAR,\N,50
+2,VA,\N,45
+2,f,\N,15
+2,VLN,\N,14
+2,PF,\N,52
+2,A,\N,55

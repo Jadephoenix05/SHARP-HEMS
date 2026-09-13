@@ -1,0 +1,13 @@
+# Large source and derived data never enter Git. Kaggle holds the data release.
+data/
+release/
+.venv/
+__pycache__/
+*.pyc
+*.7z
+*.zip
+sharp_integration_inputs.zip
+sharp_build_context.zip
+reports/_*.log
+reports/emarc_daily_reconciliation_v1.csv
+data_registry/sources_backup_*.yaml

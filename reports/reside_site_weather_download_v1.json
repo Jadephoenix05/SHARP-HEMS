@@ -1,0 +1,28 @@
+{
+  "status": "RESIDE_SITE_CANDIDATE_WEATHER_DOWNLOADED",
+  "city": "hyderabad_telangana",
+  "latitude": 17.385,
+  "longitude": 78.4867,
+  "source": "NASA POWER hourly MERRA-2 / CERES, LST",
+  "downloads": [
+    {
+      "year": 2019,
+      "path": "data/raw/weather/nasa_power_hyderabad_telangana_hourly_2019_may.csv",
+      "hourly_rows": 864,
+      "sha256": "e9874c3f22a2ca9cfe906f31bf71951d638c94499ec2df0e4432ad0710f1e470"
+    },
+    {
+      "year": 2021,
+      "path": "data/raw/weather/nasa_power_hyderabad_telangana_hourly_2021_may.csv",
+      "hourly_rows": 864,
+      "sha256": "7bfcb7189d3bcbca7bc0cc833e7bb0b41f527b438515ab97ace9af387304efa1"
+    }
+  ],
+  "year_discrepancy_resolved": false,
+  "site_measured_weather": false,
+  "spatial_basis": "CITY_GRID_CELL_REANALYSIS_NOT_HOUSE_SITE",
+  "used_to_fit_thermal_model": false,
+  "guntur_weather_used_for_reside_fitting": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

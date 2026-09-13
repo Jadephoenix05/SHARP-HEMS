@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "module": "binary_device_action_shield_v1",
+  "exhaustive_three_device_action_vectors": 8,
+  "tested": [
+    "protected loads",
+    "minimum off time",
+    "cycle protection",
+    "fault precedence",
+    "infeasible capacity",
+    "human override constrained by cap",
+    "solar offset",
+    "standby demand",
+    "state timers",
+    "determinism",
+    "invalid actions"
+  ],
+  "scope": "simulation decision logic only",
+  "hardware_safety_certified": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

@@ -1,0 +1,3 @@
+datetime,temperature_source_value,relative_humidity_source_value,source_row,datetime_source,timestamp_source_clock
+19-05-2019 07:59,31.2,41,2400,19-05-2019 07:59,2019-05-19 07:59:00
+19-05-2019 07:59,31.6,42,2688,19-05-2019 07:59,2019-05-19 07:59:00

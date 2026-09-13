@@ -1,0 +1,17 @@
+metric,value
+status,PREPARED_PENDING_TEMPORAL_QA
+source_rows,12702801
+output_rows,12702801
+observed_deployments,265
+observed_households,140
+mainline_rows,6768674
+appliance_rows,5934127
+first_source_date,2018-01-01
+last_source_date,2020-06-30
+unmatched_deployment_rows,0
+duplicate_key_check,PENDING
+daily_consumption_reconciliation,PENDING
+block_clock_mapping,UNCONFIRMED
+timezone,UNCONFIRMED
+redistribution_license,UNVERIFIED
+release_ready,False

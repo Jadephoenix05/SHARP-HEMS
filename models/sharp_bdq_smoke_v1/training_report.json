@@ -1,0 +1,31 @@
+{
+  "status": "TRAINING_COMPATIBILITY_PASS",
+  "training_rows": 288,
+  "training_households": 1,
+  "feature_count": 205,
+  "maximum_device_branches": 28,
+  "updates": 100,
+  "last_batch_huber_loss": 0.0012236819639111825,
+  "mean_last_20_batch_loss": 0.049738804258856836,
+  "normalization_fit": "TRAIN_ONLY",
+  "validation_used": false,
+  "test_used": false,
+  "padded_branch_gradient_test": "PASS",
+  "finite_difference_gradient_test": "PASS",
+  "checkpoint_reload": "PASS",
+  "reward_scale_divisor": 10,
+  "gamma": 0.99,
+  "action_semantics": "EXECUTED_ACTION_WITH_SHIELD_REPLAY_EQUIVALENCE_CHECK",
+  "next_action_selection": "LOCAL_MASKS_THEN_JOINT_SHIELD_PROJECTION",
+  "training_source_sha256": "9edf7ef87bc004e68f08bf46402993f802117eed1ab77884a5519df562baed77",
+  "architecture_reference": "https://arxiv.org/abs/1711.08946",
+  "limitations": [
+    "Offline smoke test, not evidence of convergence or generalisation.",
+    "Pilot has one training household; heldout behaviour is not evaluated.",
+    "No prioritised replay or offline extrapolation correction.",
+    "Device slot ordering is household-specific; appliance-type-aware shared modelling still needs design.",
+    "Underlying appliance dynamics and human preference models are incomplete."
+  ],
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

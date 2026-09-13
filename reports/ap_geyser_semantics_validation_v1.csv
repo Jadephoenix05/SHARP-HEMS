@@ -1,0 +1,9 @@
+metric,value
+status,GEYSER_SEMANTICS_PATCHED
+matched_households,498
+reported_geyser_use,13
+explicit_geyser_nonuse,386
+geyser_question_unanswered,99
+geyser_ownership_not_established,498
+inventory_rows,11454
+simulator_ready,False

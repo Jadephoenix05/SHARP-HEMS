@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "scope": "official_order_energy_fixed_customer_components",
+  "full_utility_bill_verified": false,
+  "domestic_time_of_day": false,
+  "energy_boundary_examples": 8,
+  "billing_state": "cumulative_per_billing_period"
+}

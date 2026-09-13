@@ -1,0 +1,9 @@
+metric,value
+status,PASS
+total_rows,15
+ownership_rows,9
+end_use_rows,4
+end_use_sum_percent,100
+ownership_values_in_range,True
+duplicate_prior_ids,0
+missing_provenance,0

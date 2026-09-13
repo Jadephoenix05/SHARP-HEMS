@@ -1,0 +1,109 @@
+{
+  "status": "CONTEXT_BUILT_WITH_DECLARED_ASSUMPTIONS",
+  "master_release_ready": false,
+  "rows": 116640,
+  "complete_days": 1215,
+  "split_rows": {
+    "test": 11616,
+    "train": 69984,
+    "validation": 35040
+  },
+  "first_timestamp_ist": "2021-01-02 00:00:00+05:30",
+  "last_timestamp_ist": "2024-04-30 23:45:00+05:30",
+  "grid_geography": "Southern Region India, not AP or Guntur measurements",
+  "grid_timezone_assumption": "Asia/Kolkata",
+  "grid_source_timezone_verified": false,
+  "grid_absolute_unit": "unverified; excluded from policy feature allowlist",
+  "grid_source": "https://www.kaggle.com/datasets/shubhamvashisht/hourly-load-india-electrical-load-forecasting",
+  "weather_lst_minus_utc_hours": 5,
+  "weather_clock_comparison_hours": 168,
+  "holding_convention": "source label treated as interval start; values held for one hour; not measured 15-minute data",
+  "policy_availability": "one-hour delay after source label; conservative simulation convention, not actual publication latency",
+  "forcing_columns": "environment/reference use only; forbidden in policy observations",
+  "policy_context_allowlist": [
+    "obs_T2M",
+    "obs_RH2M",
+    "obs_ALLSKY_SFC_SW_DWN",
+    "obs_WS10M",
+    "obs_grid_percentile",
+    "obs_grid_peak_severity"
+  ],
+  "solar_unit": "Wh/m2 over source hour; numerically equivalent to hourly-mean W/m2, not instantaneous irradiance",
+  "threshold_fit_period": "2021-01-01 through 2022-12-31, training only",
+  "splits": {
+    "train": "2021-2022",
+    "validation": "2023",
+    "test": "2024 Jan-Apr; partial-year evaluation"
+  },
+  "excluded_incomplete_days": {
+    "2021-01-01": 90
+  },
+  "source_sha256": {
+    "data\\raw\\grid_india\\regional_hourly\\hourlyLoadDataIndia.xlsx": "968d5a26fdb783bd9fceb1b0d5ab1798d06017efbdc6a57210f96692fc0ee92d",
+    "data\\raw\\weather\\nasa_power_guntur_ap_hourly_2021_2025.csv": "430f8a7a1e23dceefe06ad299e3b1316f19722c281bf4192e8e929ff49d74a7e",
+    "data\\raw\\weather\\guntur_utc_clock_check.json": "61e19a1772bfd47e0722131db5fd002c0927fa88cd287d86d76da761c4229adf"
+  },
+  "builder_sha256": "6ddb95dff609f8f9774da2e5f39df658061fbc457f704f3edc18a85fc542974c",
+  "monthly_thresholds": {
+    "1": {
+      "p90": 48462.473,
+      "p99": 51597.633299999994,
+      "training_hours": 1488
+    },
+    "2": {
+      "p90": 52454.394,
+      "p99": 55513.903399999996,
+      "training_hours": 1344
+    },
+    "3": {
+      "p90": 56353.504,
+      "p99": 58631.9174,
+      "training_hours": 1488
+    },
+    "4": {
+      "p90": 54787.548,
+      "p99": 58482.7825,
+      "training_hours": 1440
+    },
+    "5": {
+      "p90": 45535.895,
+      "p99": 50082.157699999996,
+      "training_hours": 1488
+    },
+    "6": {
+      "p90": 45803.879,
+      "p99": 49361.451999999976,
+      "training_hours": 1440
+    },
+    "7": {
+      "p90": 44350.655,
+      "p99": 47340.737199999996,
+      "training_hours": 1488
+    },
+    "8": {
+      "p90": 47803.003,
+      "p99": 50801.8462,
+      "training_hours": 1488
+    },
+    "9": {
+      "p90": 47135.736000000004,
+      "p99": 50917.7832,
+      "training_hours": 1440
+    },
+    "10": {
+      "p90": 42655.99,
+      "p99": 44584.620500000005,
+      "training_hours": 1488
+    },
+    "11": {
+      "p90": 43214.21600000001,
+      "p99": 46310.321599999996,
+      "training_hours": 1440
+    },
+    "12": {
+      "p90": 46770.916000000005,
+      "p99": 51989.415199999974,
+      "training_hours": 1488
+    }
+  }
+}

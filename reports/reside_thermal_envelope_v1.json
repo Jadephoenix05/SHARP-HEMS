@@ -1,0 +1,46 @@
+{
+  "status": "RESIDE_THERMAL_ENVELOPE_BUILT",
+  "role": "PLAUSIBILITY_BOUNDS_ONLY_NOT_PARAMETER_SOURCE",
+  "houses": 11,
+  "total_pairs": 20041,
+  "observation_year_supported": 2019,
+  "geography": "Hyderabad India",
+  "step_minutes": 15,
+  "indoor_temperature_c": {
+    "min": 23.866666666666664,
+    "p01": 27.2,
+    "median": 32.5,
+    "p99": 38.43333333333333,
+    "max": 40.2
+  },
+  "ac_off_change": {
+    "pairs": 14410,
+    "mean_c_per_15min": 0.038871154291001624,
+    "sd_c_per_15min": 0.2474534319531742,
+    "p01_c_per_15min": -0.9333333333333332,
+    "p50_c_per_15min": 0.03333333333333499,
+    "p99_c_per_15min": 0.5333333333333347,
+    "min_c_per_15min": -4.466666666666669,
+    "max_c_per_15min": 2.1333333333333364
+  },
+  "ac_on_change": {
+    "pairs": 4831,
+    "mean_c_per_15min": -0.08137721658731802,
+    "sd_c_per_15min": 0.4724231164183262,
+    "p01_c_per_15min": -1.3666666666666707,
+    "p50_c_per_15min": -0.09999999999999787,
+    "p99_c_per_15min": 1.5233333333333283,
+    "min_c_per_15min": -3.5666666666666664,
+    "max_c_per_15min": 5.266666666666673
+  },
+  "source_sha256": "05a3efbf149b165dc54ee5f4808a1d197628bddc0d3920d2a3974e4b876a80fb",
+  "interpretation_warnings": [
+    "AC labels were assigned using current AND temperature change, so the AC-on distribution is not an independent measurement of cooling.",
+    "An AC-on bin includes thermostat cycling, so a near-zero change means the room was being held at setpoint, not that cooling was weak.",
+    "Eleven houses in one city over nineteen summer days; not a population.",
+    "These are bounds for rejecting implausible parameters, not evidence that any parameter set inside them is correct."
+  ],
+  "causal_cooling_effect_established": false,
+  "full_simulator_ready": false,
+  "master_release_ready": false
+}

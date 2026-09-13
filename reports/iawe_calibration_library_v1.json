@@ -1,0 +1,63 @@
+{
+  "status": "CALIBRATION_INTERVALS_BUILT",
+  "rows": 10653,
+  "channels": [
+    {
+      "channel_id": 3,
+      "appliance": "refrigerator",
+      "selected_intervals": 4949,
+      "segments": 284,
+      "longest_segment_intervals": 265,
+      "segments_at_least_4_intervals": 170
+    },
+    {
+      "channel_id": 4,
+      "appliance": "air_conditioner",
+      "selected_intervals": 664,
+      "segments": 73,
+      "longest_segment_intervals": 95,
+      "segments_at_least_4_intervals": 58
+    },
+    {
+      "channel_id": 5,
+      "appliance": "air_conditioner",
+      "selected_intervals": 514,
+      "segments": 101,
+      "longest_segment_intervals": 30,
+      "segments_at_least_4_intervals": 55
+    },
+    {
+      "channel_id": 7,
+      "appliance": "laptop",
+      "selected_intervals": 2745,
+      "segments": 193,
+      "longest_segment_intervals": 69,
+      "segments_at_least_4_intervals": 149
+    },
+    {
+      "channel_id": 10,
+      "appliance": "television",
+      "selected_intervals": 299,
+      "segments": 113,
+      "longest_segment_intervals": 9,
+      "segments_at_least_4_intervals": 25
+    },
+    {
+      "channel_id": 11,
+      "appliance": "water_filter",
+      "selected_intervals": 1482,
+      "segments": 272,
+      "longest_segment_intervals": 60,
+      "segments_at_least_4_intervals": 94
+    }
+  ],
+  "limitations": [
+    "One measured household; not population-representative.",
+    "Sample-count screening does not establish continuous coverage.",
+    "Selected segments may contain OFF or standby observations.",
+    "Water-filter readings do not represent every purifier type.",
+    "No gap filling, energy estimation or rated-power inference.",
+    "No assignments to AP households have been made."
+  ],
+  "master_release_ready": false
+}

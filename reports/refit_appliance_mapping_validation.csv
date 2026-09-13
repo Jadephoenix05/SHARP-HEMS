@@ -1,0 +1,9 @@
+metric,value
+status,PASS
+expected_houses,20
+houses_found,20
+expected_mapping_rows,200
+mapping_rows,200
+duplicate_channels,0
+missing_houses,none
+incomplete_houses,none

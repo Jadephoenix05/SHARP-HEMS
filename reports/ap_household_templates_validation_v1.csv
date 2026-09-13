@@ -1,0 +1,13 @@
+metric,value
+status,TEMPLATES_BUILT
+household_templates,498
+appliance_types_per_template,23
+ownership_table_rows,11454
+review_required_rows,0
+simulator_ready,False
+geographic_scope,Andhra Pradesh survey sample
+guntur_household_assignment,NOT_MADE
+not_owned_rows,8758
+owned_quantity_known_rows,1743
+ownership_unknown_rows,485
+owned_quantity_unknown_rows,468

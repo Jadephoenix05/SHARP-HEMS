@@ -1,0 +1,15 @@
+{
+  "bundle_version": "1",
+  "files": {
+    "household_templates": "data/processed/household_templates/ap_household_templates_v2.parquet",
+    "appliance_inventory": "data/processed/household_templates/ap_appliance_ownership_v3.parquet",
+    "fan_usage": "data/processed/household_templates/ap_fan_usage_units_v1.parquet",
+    "lighting_inventory": "data/processed/household_templates/ap_lighting_inventory_v1.parquet",
+    "geyser_use": "data/processed/household_templates/ap_geyser_use_by_profile_v1.parquet"
+  },
+  "household_templates": 498,
+  "appliance_types": 26,
+  "inventory_rows": 12948,
+  "geography": "Andhra Pradesh survey sample",
+  "simulator_ready": false
+}

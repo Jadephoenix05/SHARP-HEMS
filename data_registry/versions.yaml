@@ -1,0 +1,7 @@
+dataset_name: SHARP Master Dataset
+current_build_version: 0.1.0
+target_release_version: 1.0.0
+control_interval_minutes: 15
+random_seed: 42
+deployment_scenario: APCPDCL_Guntur_Andhra_Pradesh
+release_status: BUILDING

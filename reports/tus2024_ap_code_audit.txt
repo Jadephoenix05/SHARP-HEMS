@@ -1,0 +1,85 @@
+TUS 2024 ANDHRA PRADESH EXTRACTION
+Source rows scanned: 10211478
+AP activity rows: 370205
+Scope: extraction and code inventory; occupancy QA pending
+
+Source state labels and activity-row counts:
+a & n islands: 27103
+andhra pradesh: 370205
+arunachal pradesh: 102107
+assam: 339237
+bihar: 689037
+chandigarh: 18121
+chhattisgarh: 185305
+d & n haveli and daman & diu: 38625
+delhi: 98657
+goa: 19864
+gujarat: 511260
+haryana: 209394
+himachal pradesh: 86999
+jammu  & kashmir: 95965
+jharkhand: 258999
+karnataka: 514622
+kerala: 349836
+ladakh: 37167
+lakshadweep: 17511
+madhya pradesh: 559591
+maharashtra: 898273
+manipur: 186471
+meghalaya: 99984
+mizoram: 95522
+nagaland: 77547
+odisha: 337868
+puducherry: 30688
+punjab: 253013
+rajasthan: 582417
+sikkim: 67917
+tamil nadu: 625497
+telangana: 248546
+tripura: 213203
+uttar pradesh: 1122088
+uttarakhand: 121430
+west bengal: 721409
+
+survey_year
+  2024: 370205
+
+sector
+  'Rural': 231280
+  'Urban': 138925
+
+activity_location
+  'Unknown (nan)': 2330
+  'fixed location': 91458
+  'home': 276259
+  'non-fixed location': 158
+
+multiple_activity
+  1.0: 141813
+  2.0: 226062
+  None: 2330
+
+simultaneous_activity
+  1.0: 67901
+  2.0: 73912
+  None: 228392
+
+is_major_activity
+  1.0: 292714
+  2.0: 75161
+  None: 2330
+
+day_of_week
+  'Friday': 53154
+  'Monday': 53042
+  'Saturday': 54209
+  'Sunday': 47557
+  'Thursday': 53365
+  'Tuesday': 52981
+  'Unknown (nan)': 2330
+  'Wednesday': 53567
+
+day_type
+  'Normal day': 326054
+  'Other day': 41821
+  'Unknown (nan)': 2330
