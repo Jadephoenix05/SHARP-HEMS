@@ -137,7 +137,42 @@ yours before wiring, because an inverted board energises every load at boot.
 | Washing machine | 20 | Deferrable | 0 / 1, min-on 4 steps |
 | Television | 21 | Interruptible | 0 / 1 |
 | Mixer grinder | 26 | Interruptible | 0 / 1 |
-| Override button (optional) | 6 | input, pull-up | physical override capture |
+| Override switch, per appliance | one input each | pull-up | the resident's own switch |
+| OLED (I2C) | 2, 3 | SDA / SCL | status display |
+| Buzzer | 18 | digital out | peak onset only |
+
+### Two overrides, in series
+
+```
+appliance runs = physical switch ON  AND  power available
+```
+
+A wall switch and the supply are physically in series, so both must be closed.
+The resident may switch anything off, including a fan - it is their house, and
+the shield protects essential service from the CONTROLLER, not from the person
+living there. Neither the switch nor the dashboard can FORCE power on, which is
+why a peak lockout cannot be defeated from either side.
+
+Wire the switch in series with the relay output and the AND is free in hardware;
+the Pi reads the switch only so it can report and log the override.
+
+### The OLED sequence
+
+`handover/sharp_rl_v1/oled_display.py` implements it and runs with no hardware
+attached, printing the panel to the terminal so wording and timing can be
+checked before anything is wired.
+
+```
+BOOT ........ welcome, then the self-test result
+NORMAL ...... rotates every 4 s: live load -> supply -> appliances
+PEAK_ALERT .. BUZZER, inverted full-screen banner, 3 s
+PEAK_ACTIVE . protected and shed lists, held for the event
+RECOVER ..... "peak over", 2 s, back to NORMAL
+```
+
+The buzzer sounds on the TRANSITION into a peak, three short beeps, never a
+continuous tone. A buzzer that runs for forty minutes gets disconnected, and
+then it is not there for the one event it existed to announce.
 
 All plain digital outputs. **GPIO12 and GPIO13 are left free** — they are the
 hardware-PWM channels, and keeping them unused means dimming can be added later

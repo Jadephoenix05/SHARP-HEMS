@@ -81,11 +81,30 @@ HIDDEN = 128
 BATCH = 256
 GAMMA = 0.99
 LEARNING_RATE = 3e-4              # Adam, not plain SGD
-REWARD_SCALE = 10.0               # terminal rewards are ~77x step rewards
+REWARD_SCALE = 2.0               # terminal rewards are ~77x step rewards
 WARM_START_UPDATES = 2000         # behaviour cloning
 CONSERVATIVE_UPDATES = 15000
-CQL_ALPHA = 1.0                    # 0.5 and 1.0 both tested; 1.0 scored better
+CQL_ALPHA = 0.1                    # 0.5 and 1.0 both tested; 1.0 scored better
 USE_LEVEL_BALANCE = True
+
+# Reward reweighting, applied at load time from the recorded components so the
+# dataset does not have to be regenerated.
+#
+# As shipped, the peak term is 3.9 per cent of the cost-plus-peak signal - cost
+# outweighs it 25 to 1. Under a telescopic tariff with no time-of-day rate a
+# kWh saved at 4 a.m. is worth exactly as much as one saved at noon, so the
+# policy learned to shed whenever, which is useless to the grid and maximally
+# annoying to the resident. Measured: five of its eight busiest shedding hours
+# were between 3 and 7 a.m., when grid severity is exactly zero.
+PEAK_WEIGHT = 8.0                  # lifts peak from 3.9% to roughly a quarter of the signal
+COST_WEIGHT = 1.0
+
+# Penalty on Q for actions the deployment mask forbids. Without it the policy
+# never learns the rule, because the shield silently repairs every violation -
+# measured, the raw policy wanted to shed a protected ceiling fan 1,733 times
+# and a television 56 times. Safety then rests entirely on one module.
+ILLEGAL_ACTION_PENALTY = 0.30      # at 0.5 the policy learned 'ON is always safe'
+ILLEGAL_ACTION_MARGIN = 0.25       # how far below the best legal action is enough
 
 SHOULD_RUN_ABLATIONS = True
 
@@ -145,6 +164,9 @@ here, or validation leaks into the input scaling.
     code("""
 def load_split(split):
     frame = pd.read_parquet(DATASET / f'rl_transitions/splits/{split}.parquet')
+    for column in ['reward_cost_inr', 'reward_grid_peak_kwh', 'reward_discomfort']:
+        if column not in frame.columns:
+            raise ValueError(f'{split} is missing {column}; cannot reweight the reward')
     if frame.empty:
         raise ValueError(f'No rows in {split}')
 
@@ -161,7 +183,16 @@ def load_split(split):
             raise ValueError(f'Action level outside 0..{N_LEVELS - 1} in {split}')
         actions[row, :levels.size] = levels
 
-    reward = frame.reward.to_numpy(dtype=np.float64)
+    # Recompose the reward from its components so peak can be weighted up.
+    # residual carries the switching and unmet-service terms, which are not
+    # broken out separately in the release and are left untouched.
+    cost = frame.reward_cost_inr.to_numpy(dtype=np.float64)
+    peak = frame.reward_grid_peak_kwh.to_numpy(dtype=np.float64)
+    discomfort = frame.reward_discomfort.to_numpy(dtype=np.float64)
+    shipped = frame.reward.to_numpy(dtype=np.float64)
+    residual = shipped + (cost + peak + 0.5 * discomfort)
+    reward = residual - (COST_WEIGHT * cost + PEAK_WEIGHT * peak
+                         + 0.5 * discomfort)
     done = frame.done.to_numpy(dtype=bool)
     for name, array in [('state', state), ('next_state', next_state),
                         ('reward', reward)]:
@@ -299,6 +330,7 @@ for data, name in [(train, 'train'), (validation, 'validation')]:
     deployment[:, :, 2] &= ~necessity         # never dim a critical load, ever
     deployment[:, :, 0] &= ~entitled          # never shed one that is in use
     data['deployment_legal'] = deployment
+    data['forbidden'] = ~deployment
     data['necessity'] = necessity
     data['entitled'] = entitled
 
@@ -374,7 +406,8 @@ class BranchingDuelingNetwork:
                 'a': h.T @ da, 'ab': da.sum(0)}
 
     def loss_and_gradient(self, x, actions, target, present, legal, alpha,
-                          use_td=True, level_weight=None):
+                          use_td=True, level_weight=None, forbidden=None,
+                          illegal_penalty=0.0):
         q, h = self.forward(x)
         weight = present / (present.sum(1, keepdims=True) * len(x))
         dq = np.zeros_like(q)
@@ -413,13 +446,32 @@ class BranchingDuelingNetwork:
                 np.take_along_axis(gradient, actions[:, :, None], axis=2) - 1.0, axis=2)
             dq += alpha * gradient * cql_weight[:, :, None]
 
+        if forbidden is not None and illegal_penalty > 0:
+            # A HINGE, not a linear penalty. The goal is only that a forbidden
+            # action ranks below every permitted one - not that its Q value runs
+            # off to minus infinity, which is what a linear penalty does because
+            # it has no floor and the loss simply keeps decreasing.
+            #
+            # The reference is the best PERMITTED action, held constant (no
+            # gradient flows into it), so the penalty cannot be satisfied by
+            # dragging the legal actions down instead.
+            block = forbidden & (present[:, :, None] > 0)
+            permitted = np.where(~forbidden, q, -np.inf)
+            best_legal = permitted.max(axis=2, keepdims=True)
+            best_legal = np.where(np.isfinite(best_legal), best_legal, 0.0)
+            violation = np.maximum(0.0, q - (best_legal - ILLEGAL_ACTION_MARGIN))
+            loss += illegal_penalty * float((violation * block).sum() / len(x))
+            dq = dq + illegal_penalty * ((violation > 0) & block) / len(x)
+
         return loss, self.backward(x, h, dq)
 
     def update(self, x, actions, target, present, legal, alpha,
                lr=LEARNING_RATE, use_td=True, level_weight=None,
+               forbidden=None, illegal_penalty=0.0,
                beta1=0.9, beta2=0.999, eps=1e-8):
         loss, gradient = self.loss_and_gradient(
-            x, actions, target, present, legal, alpha, use_td, level_weight)
+            x, actions, target, present, legal, alpha, use_td, level_weight,
+            forbidden, illegal_penalty)
         norm = np.sqrt(sum(np.square(g).sum() for g in gradient.values()))
         if not np.isfinite(norm) or not np.isfinite(loss):
             raise ValueError('Nonfinite training update')
@@ -531,7 +583,7 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     deployment = data['deployment_legal']
     entitled = data['entitled']
     necessity = data['necessity']
-    necessity_touched = necessity_dimmed = 0
+    necessity_touched = necessity_dimmed = would_violate = 0
     reward, done = data['scaled_reward'], data['done']
 
     absolute = np.zeros(len(state))
@@ -551,6 +603,13 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
         counted[index] = present[index].sum(1)
 
         # Select under the DEPLOYMENT mask: this is what would actually happen.
+        # What the policy would do with NO deployment mask at all. This is the
+        # number that says whether it has learned the rule or is merely being
+        # restrained by the shield.
+        unshielded = np.argmax(np.where(present[index][:, :, None] > 0, q, -np.inf), axis=2)
+        would_violate += int((~np.take_along_axis(
+            deployment[index], unshielded[:, :, None], axis=2)[:, :, 0]
+            & (present[index] > 0)).sum())
         allowed = (present[index][:, :, None] > 0) & deployment[index]
         greedy = np.argmax(np.where(allowed, q, -np.inf), axis=2)
         live = present[index] > 0
@@ -573,6 +632,7 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     return {
         'balanced_accuracy': float(recall.mean()),
         'raw_agreement': float(agree.sum() / total),
+        'unshielded_violations': would_violate,
         'critical_shed_while_in_use': necessity_touched,
         'critical_dimmed_ever': necessity_dimmed,
         'td_error_non_terminal': td(~done),
@@ -637,6 +697,7 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
     next_state = train_data['normalised_next']
     actions, present, legal = (train_data['actions'], train_data['present'],
                                train_data['legal'])
+    forbidden = train_data['forbidden']
     reward, done = train_data['scaled_reward'], train_data['done']
 
     best = {'balanced_accuracy': -1.0}
@@ -683,7 +744,9 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
             index = rng.integers(0, len(state), BATCH)
             recent.append(net.update(
                 state[index], actions[index], reward[index], present[index],
-                legal[index], alpha=1.0, use_td=False, level_weight=weights))
+                legal[index], alpha=1.0, use_td=False, level_weight=weights,
+                forbidden=forbidden[index],
+                illegal_penalty=ILLEGAL_ACTION_PENALTY))
             if step % 1000 == 0 or step == warm_start:
                 target_net.p = {k: v.copy() for k, v in net.p.items()}
                 snapshot(step, 'warm_start')
@@ -696,7 +759,8 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
                             reward, done, GAMMA, index)
         recent.append(net.update(
             state[index], actions[index], y, present[index], legal[index],
-            alpha=alpha, use_td=True, level_weight=weights))
+            alpha=alpha, use_td=True, level_weight=weights,
+            forbidden=forbidden[index], illegal_penalty=ILLEGAL_ACTION_PENALTY))
         if step % 250 == 0:
             target_net.p = {k: v.copy() for k, v in net.p.items()}
         if step % 2500 == 0 or step == steps:

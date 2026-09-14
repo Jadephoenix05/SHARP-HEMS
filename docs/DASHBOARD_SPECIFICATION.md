@@ -10,6 +10,25 @@ wins, because it was written against the validated model.
 
 ---
 
+## 0. Three screens, not one
+
+| Screen | Audience | Shows |
+|---|---|---|
+| **Resident** | the citizen | appliances, protected vs shed, overrides |
+| **Grid controller** | the DISCOM | declare peak, severity, homes responding, MW relieved |
+| Rig OLED | the room | what the hardware itself believes |
+
+The grid controller view and the peak-event mechanism are specified in
+`GRID_CONTROLLER_AND_TARIFF.md`, along with the tariff basis and the opt-out
+billing. Read that before building Panel 2 or Panel 7.
+
+**Run the demo peak at MIDDAY.** The measured grid peak in the shipped data is
+08:00-17:00; severity is exactly 0.000 after 18:00. Household load peaks at
+19:00, which is a different event. Any script that says "evening, severity
+crosses 0.5" contradicts the data.
+
+---
+
 ## 1. What this dashboard is for
 
 It makes a cyber-physical control loop **legible**. It does not make the control
@@ -56,6 +75,23 @@ renders as ON with no control at all.
 The protection is conditional, and the UI must reflect that: a fridge nobody is
 asking for at 3 a.m. is legitimately off. Protecting essential service does not
 mean running it around the clock.
+
+### The two overrides are in series
+
+```
+appliance runs = physical switch ON  AND  power available
+```
+
+A resident may switch anything off, including their own fan. Neither the switch
+nor the dashboard can force power ON. So the override button is a **request**,
+and the UI must never imply it is a command - during a peak, tapping "keep the
+TV on" returns a refusal with a reason, not a state change.
+
+| Actor | Action | Allowed |
+|---|---|---|
+| SHARP | shed or dim a critical load in use | **never** |
+| Resident | switch off their own fan | **yes** |
+| Resident | switch on a locked-out luxury | **no - no power there** |
 
 ### The air conditioner is a special case
 
