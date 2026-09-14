@@ -43,8 +43,9 @@ from sharp_transition_core import transition_step
 from sharp_thermal_rc import load_config, thermal_step
 from sharp_human_model import decide_overrides, attention_available
 from sharp_power_system import (build_household_power, dispatch, outage_schedule,
-                                pv_generation_kw, shed_value_per_kw,
-                                MODE_GRID_IMPORT, MODE_SELF_SUFFICIENT, MODE_ISLANDED)
+                                on_inverter_circuit, pv_generation_kw,
+                                shed_value_per_kw, MODE_GRID_IMPORT,
+                                MODE_SELF_SUFFICIENT, MODE_ISLANDED)
 
 OBS = ['obs_T2M', 'obs_RH2M', 'obs_ALLSKY_SFC_SW_DWN', 'obs_WS10M',
        'obs_grid_percentile', 'obs_grid_peak_severity']
@@ -120,6 +121,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
     protected = ds.service_role.eq('protected_service').to_numpy(bool)
     cycle = ds.dynamics_family.eq('cycle').to_numpy(bool)
     is_ac = ds.appliance_type.eq('air_conditioner').to_numpy(bool)
+    on_inverter = ds.appliance_type.map(on_inverter_circuit).to_numpy(bool)
     device_ids = ds.device_id.astype(str).tolist()
     has_ac = bool(is_ac.any())
     limit = float(home.sanctioned_load_kw) * 1000
@@ -249,9 +251,12 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         elif policy == 'random_binary':
             wanted = np.where(is_ac, rng_local.random(n) < 0.5,
                               (rng_local.random(n) < 0.5) & (budget > 1e-9))
-        # During an outage the home runs on its battery, so luxury loads go off.
+        # During an outage only the inverter circuit is alive: fans, lights and
+        # the router. Everything else is unpowered, which is what the occupant
+        # wants anyway, because it is what makes the battery last.
         if grid_absent:
-            wanted = wanted & (protected | is_ac)
+            wanted = wanted & on_inverter
+            user_wanted = user_wanted & on_inverter
 
         step_indoor = indoor
         step_battery = battery_kwh

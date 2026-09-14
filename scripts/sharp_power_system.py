@@ -52,6 +52,30 @@ ROUND_TRIP_EFFICIENCY = 0.85
 SELF_SUFFICIENT_RHO = 0.5          # at or above this the home counts as self-sufficient
 PV_PERFORMANCE_RATIO = 0.75        # module, inverter and soiling losses combined
 
+# Which appliances an Indian inverter circuit actually carries. In practice the
+# inverter is wired to fans, lights and the router: low-power loads that make a
+# blackout liveable and that a ~0.9 kWh battery can sustain for hours. High-power
+# and surge loads are not on that circuit, so during an outage they are simply
+# UNPOWERED - not "shed" by the agent, but physically dead.
+#
+# This matters for the override model too. The idea book is explicit: "During an
+# outage, users want the luxury loads off so the fans and lights last until the
+# grid returns." Preference inverts in islanded mode, and a policy trained with
+# the air conditioner running on battery would learn the opposite.
+#
+# Declared assumption about typical wiring, not a measured circuit survey.
+INVERTER_CIRCUIT_APPLIANCES = frozenset({
+    'ceiling_fan', 'table_fan',
+    'led_bulb', 'led_tube', 'cfl_bulb', 'cfl_tube', 'incandescent_bulb',
+    'modem_router',
+})
+
+
+def on_inverter_circuit(appliance_type):
+    """Whether this appliance can run at all while the grid is absent."""
+    return str(appliance_type) in INVERTER_CIRCUIT_APPLIANCES
+
+
 MODE_GRID_IMPORT = 0
 MODE_SELF_SUFFICIENT = 1
 MODE_ISLANDED = 2
@@ -299,6 +323,12 @@ def self_test():
     partial = dict(full, self_sufficient_fraction=0.4)
     value = shed_value_per_kw(flows=partial, import_rate_inr_kwh=10.0)
     assert abs(value['shed_value_inr_per_kwh'] - 6.0) < 1e-9, value
+    # The inverter circuit carries what makes a blackout liveable, nothing more.
+    assert on_inverter_circuit('ceiling_fan') and on_inverter_circuit('led_bulb')
+    assert on_inverter_circuit('modem_router')
+    for luxury in ['air_conditioner', 'geyser', 'water_pump', 'washing_machine',
+                   'electric_iron', 'television', 'refrigerator']:
+        assert not on_inverter_circuit(luxury), luxury
     print('SHARP POWER SYSTEM SELF-TEST PASSED')
     print('  outage duration is source-reported; placement is a declared assumption')
     print('  rooftop PV is a scenario overlay, not an Andhra Pradesh ownership rate')

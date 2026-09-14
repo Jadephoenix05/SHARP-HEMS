@@ -4,13 +4,13 @@
   "episodes": 4176,
   "households": 464,
   "feature_count": 305,
-  "preference_pairs": 47915,
+  "preference_pairs": 46884,
   "checks_failed": [],
   "warnings": [],
   "operating_mode_steps": {
-    "grid_import": 369689,
+    "grid_import": 369747,
     "islanded_outage": 28116,
-    "self_sufficient": 3091
+    "self_sufficient": 3033
   },
   "marginal_rate_steps": {
     "1.9": 31178,
@@ -20,10 +20,10 @@
     "8.75": 8812,
     "9.75": 576
   },
-  "device_on_rate": 0.15993819486851416,
+  "device_on_rate": 0.16000119951147168,
   "attention_fraction": 0.7480393917624522,
   "outage_steps": 28116,
   "infeasible_steps_all_during_outage": 0,
-  "preference_pairs_honoured": 18392,
+  "preference_pairs_honoured": 18148,
   "audit_is_independent_of_generator_report": true
 }
