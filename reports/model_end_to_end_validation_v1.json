@@ -1,0 +1,125 @@
+{
+  "status": "MODEL_REJECTED",
+  "checkpoint": "C:\\Users\\SUPRIYA\\SHARP_Master_Dataset\\models\\kaggle_run_20260914\\checkpoint.npz",
+  "validated_at": "2026-09-14T20:23:30.832934+05:30",
+  "gates": [
+    {
+      "gate": "weights present",
+      "passed": true,
+      "detail": "all of ['w', 'b', 'v', 'vb', 'a', 'ab', 'mean', 'sd']",
+      "fatal": true
+    },
+    {
+      "gate": "shapes agree",
+      "passed": true,
+      "detail": "305 features, 84 outputs = 28 branches x 3 levels",
+      "fatal": true
+    },
+    {
+      "gate": "normalisation shipped",
+      "passed": true,
+      "detail": "mean and sd finite and positive - the Pi cannot normalise without them",
+      "fatal": true
+    },
+    {
+      "gate": "fits on a Pi",
+      "passed": true,
+      "detail": "50,133 parameters, 196 KB in float32",
+      "fatal": true
+    },
+    {
+      "gate": "Q reproduces",
+      "passed": true,
+      "detail": "max absolute difference 1.44e-15",
+      "fatal": true
+    },
+    {
+      "gate": "greedy action reproduces",
+      "passed": true,
+      "detail": "7 live devices agree",
+      "fatal": true
+    },
+    {
+      "gate": "checkpoint came from the RL phase",
+      "passed": false,
+      "detail": "selected checkpoint is from phase \"warm_start\" (selection rule: UNKNOWN). A warm-start checkpoint is a behaviour cloner, not a policy.",
+      "fatal": true
+    },
+    {
+      "gate": "test split untouched",
+      "passed": true,
+      "detail": "test_split_used=False",
+      "fatal": true
+    },
+    {
+      "gate": "not marked deployable",
+      "passed": true,
+      "detail": "approved_for_deployment is false, as it must be",
+      "fatal": true
+    },
+    {
+      "gate": "gradient tests ran",
+      "passed": true,
+      "detail": "gradient_tests=PASS",
+      "fatal": false
+    },
+    {
+      "gate": "Q values finite and bounded",
+      "passed": true,
+      "detail": "Q in [-11.23, 9.82]",
+      "fatal": true
+    },
+    {
+      "gate": "no illegal dim",
+      "passed": true,
+      "detail": "0 attempts to dim a device that cannot dim",
+      "fatal": true
+    },
+    {
+      "gate": "beats chance",
+      "passed": true,
+      "detail": "balanced accuracy 0.7635 against chance 0.3333",
+      "fatal": true
+    },
+    {
+      "gate": "has not collapsed to one level",
+      "passed": true,
+      "detail": "greedy share off 0.761, on 0.160, reduced 0.079",
+      "fatal": true
+    },
+    {
+      "gate": "still chooses dim",
+      "passed": true,
+      "detail": "dim recall 0.6112 - dimming is the behaviour that distinguishes SHARP from a rule-based shedder",
+      "fatal": false
+    }
+  ],
+  "gates_failed": [
+    "checkpoint came from the RL phase"
+  ],
+  "held_out_behaviour": {
+    "balanced_accuracy": 0.7634960489872816,
+    "recall_by_level": {
+      "off": 0.89873109949711,
+      "on": 0.7805610798459781,
+      "reduced": 0.6111959676187567
+    },
+    "greedy_share": {
+      "off": 0.7608331731385365,
+      "on": 0.1598343585800333,
+      "reduced": 0.07933246828143022
+    },
+    "q_min": -11.229347209097966,
+    "q_max": 9.823950923623428
+  },
+  "parameter_count": 50133,
+  "simulator": null,
+  "seconds": 2.3,
+  "test_split_used": false,
+  "what_this_does_not_prove": [
+    "That the policy helps in a real home. Every number here comes from a simulator built on survey data and declared assumptions.",
+    "That the occupant model is realistic. It is synthetic throughout.",
+    "That the shield is safe against hardware faults. It is verified against the simulator, not against a stuck relay."
+  ],
+  "approved_for_deployment": false
+}

@@ -345,20 +345,24 @@ def fit(root, *, steps, warm_start, batch, gamma, scale, alpha, lr, seed, hidden
 
     best = {'balanced_accuracy': -1.0}
     best_parameters = None
+    best_target = None
 
     def report(step, phase):
-        nonlocal best, best_parameters
+        nonlocal best, best_parameters, best_target
         metrics = evaluate(net, target, validation, gamma)
         metrics.update({'step': step, 'phase': phase,
                         'train_loss': float(np.mean(recent[-100:]))})
         history.append(metrics)
-        # Keep the best checkpoint, not the last one. Under Adam this matters:
-        # the run peaks early and then the temporal-difference term pulls the
-        # policy away from the logged behaviour again, so shipping the final
-        # weights ships a model that training had already beaten.
-        if metrics['balanced_accuracy'] > best['balanced_accuracy']:
+        # Best checkpoint FROM THE CONSERVATIVE PHASE ONLY. Behaviour cloning
+        # optimises agreement with the logged action directly, so it always wins
+        # that metric; selecting across both phases exports a pure imitator whose
+        # Q values are not value estimates. The target network is kept paired
+        # with the online one, or every reported TD error is meaningless.
+        if (phase == 'conservative'
+                and metrics['balanced_accuracy'] > best['balanced_accuracy']):
             best = dict(metrics)
             best_parameters = {k: v.copy() for k, v in net.p.items()}
+            best_target = {k: v.copy() for k, v in target.p.items()}
         print(f"  {phase:12s} {step:6d} | loss {metrics['train_loss']:9.6f} "
               f"| TD step {metrics['td_error_non_terminal']:7.5f} "
               f"| balanced {metrics['balanced_accuracy']:.4f} "
@@ -393,8 +397,11 @@ def fit(root, *, steps, warm_start, batch, gamma, scale, alpha, lr, seed, hidden
         if step % 2500 == 0 or step == steps:
             report(step, 'conservative')
 
-    check(best_parameters is not None, 'No evaluation ran, so no checkpoint to keep')
+    check(best_parameters is not None,
+          'No conservative-phase checkpoint was recorded, so there is no policy '
+          'to keep. Run with --steps large enough to reach an evaluation.')
     net.p = best_parameters
+    target.p = best_target
     final = best
     print(f"selected step {best['step']} ({best['phase']}), "
           f"balanced {best['balanced_accuracy']:.4f}; "
@@ -428,7 +435,10 @@ def fit(root, *, steps, warm_start, batch, gamma, scale, alpha, lr, seed, hidden
         'train_logged_level_share': {LEVEL_NAMES[i]: float(share[i])
                                      for i in range(LEVELS)},
         'final': final, 'history': history,
-        'checkpoint_selection': 'BEST_VALIDATION_BALANCED_ACCURACY',
+        'checkpoint_selection': 'BEST_CONSERVATIVE_PHASE_BY_BALANCED_ACCURACY',
+        'warm_start_peak_for_reference': max(
+            (h for h in history if h['phase'] == 'warm_start'),
+            key=lambda h: h['balanced_accuracy'], default=None),
         'selected_step': final['step'],
         'last_step_balanced_accuracy': history[-1]['balanced_accuracy'],
         'normalization_fit': 'TRAIN_ONLY', 'test_used': False,

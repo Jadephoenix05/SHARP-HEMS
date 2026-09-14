@@ -84,23 +84,35 @@ USE_LEVEL_BALANCE = True
 
 SHOULD_RUN_ABLATIONS = True
 
-if not DATASET.exists():
-    # Kaggle mounts a dataset under its slug, and the slug is not always the
-    # name you gave it. Rather than failing on a hard-coded path, look for the
-    # folder that actually holds the transitions.
-    candidates = [d for d in sorted(Path('/kaggle/input').glob('*'))
-                  if (d / 'rl_transitions/splits/train.parquet').exists()]
-    if len(candidates) == 1:
-        DATASET = candidates[0]
-        print('found the dataset at', DATASET)
-    else:
-        attached = [d.name for d in sorted(Path('/kaggle/input').glob('*'))]
-        raise SystemExit(
-            'Could not find the SHARP dataset. Use Add Data in the right-hand '
-            'panel to attach sharp-master-dataset-v2, then run this cell again. '
-            'Currently attached: ' + (', '.join(attached) or 'nothing'))
+MARKER = 'rl_transitions/splits/train.parquet'
 
-for required in ['rl_transitions/splits/train.parquet',
+if not (DATASET / MARKER).exists():
+    # Kaggle mounts a dataset under its slug, the slug is not always the name
+    # you gave it, and the archive's own folder structure is preserved inside.
+    # So do not guess a path - search for the file that identifies the release,
+    # at any depth, and work back to its root.
+    hits = list(Path('/kaggle/input').glob('**/' + MARKER))
+    found = sorted(set(hit.parent.parent.parent for hit in hits))
+    if len(found) == 1:
+        DATASET = found[0]
+        print('found the dataset at', DATASET)
+    elif len(found) > 1:
+        DATASET = found[0]
+        print('several copies attached, using', DATASET)
+        for other in found[1:]:
+            print('  also present:', other)
+    else:
+        print('Attached under /kaggle/input:')
+        for path in sorted(Path('/kaggle/input').glob('*')):
+            print('  ' + path.name + '/')
+            for child in sorted(path.glob('*'))[:12]:
+                print('    ' + child.name + ('/' if child.is_dir() else ''))
+        raise SystemExit(
+            'Could not find ' + MARKER + ' anywhere under /kaggle/input. '
+            'Attach sharp-master-dataset-v2 with Add Data, then re-run. The '
+            'listing above shows what is currently mounted.')
+
+for required in [MARKER,
                  'rl_transitions/splits/validation.parquet',
                  'rl_transitions/override_preference_pairs.parquet',
                  'simulator_inputs/device_power_models.parquet']:
@@ -557,19 +569,36 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
 
     best = {'balanced_accuracy': -1.0}
     best_parameters = None
+    best_target = None
 
     def snapshot(step, phase):
-        nonlocal best, best_parameters
+        nonlocal best, best_parameters, best_target
         metrics = evaluate(net, target_net, validation_data)
         metrics.update({'step': step, 'phase': phase,
                         'train_loss': float(np.mean(recent[-100:]))})
         history.append(metrics)
-        # Keep the BEST checkpoint, not the last. Under Adam the run peaks early
-        # and the temporal-difference term then pulls it away again, so shipping
-        # the final weights ships a model that training had already beaten.
-        if metrics['balanced_accuracy'] > best['balanced_accuracy']:
+        # Keep the best checkpoint FROM THE CONSERVATIVE PHASE ONLY.
+        #
+        # This restriction is the whole point. Behaviour cloning always wins on
+        # agreement with the logged actions - that is literally its objective -
+        # so selecting on balanced accuracy across both phases picks the warm
+        # start every time and throws the reinforcement learning away. The
+        # exported model would be a pure imitator of the scripted controllers,
+        # with Q values that are not value estimates at all.
+        #
+        # The cost of the restriction is small and the benefit is large: on the
+        # first Kaggle run the warm start scored 0.7635 with a step TD error of
+        # 0.778, while the first conservative checkpoint scored 0.7475 with a TD
+        # error of 0.263. Slightly less imitation, three times the value
+        # accuracy, and an actual policy.
+        if (phase == 'conservative'
+                and metrics['balanced_accuracy'] > best['balanced_accuracy']):
             best = dict(metrics)
             best_parameters = {k: v.copy() for k, v in net.p.items()}
+            # The target network is paired with the online one. Keeping the last
+            # target while restoring an earlier online net makes every reported
+            # TD error meaningless, because they no longer belong together.
+            best_target = {k: v.copy() for k, v in target_net.p.items()}
         print(f"  {phase:12s} {step:6d} | loss {metrics['train_loss']:8.5f} "
               f"| TD step {metrics['td_error_non_terminal']:7.5f} "
               f"terminal {metrics['td_error_terminal']:8.5f} "
@@ -603,9 +632,16 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
 
     if best_parameters is not None:
         net.p = best_parameters
-        print(f"[{label}] selected step {best['step']} "
-              f"(balanced {best['balanced_accuracy']:.4f}); "
-              f"last step scored {history[-1]['balanced_accuracy']:.4f}")
+        target_net.p = best_target
+        warm = [h for h in history if h['phase'] == 'warm_start']
+        print(f"[{label}] selected conservative step {best['step']} "
+              f"(balanced {best['balanced_accuracy']:.4f}, "
+              f"TD {best['td_error_non_terminal']:.4f})")
+        if warm:
+            peak = max(warm, key=lambda h: h['balanced_accuracy'])
+            print(f"[{label}]   the warm start reached "
+                  f"{peak['balanced_accuracy']:.4f} but with TD "
+                  f"{peak['td_error_non_terminal']:.4f} and is not a policy")
     print(f'[{label}] finished in {(time.time() - started) / 60:.1f} min')
     return net, target_net, history
 
@@ -979,8 +1015,17 @@ print('golden vector written for Join 1 of the integration guide')
 """),
 
     code("""
+warm_peak = max((h for h in history if h['phase'] == 'warm_start'),
+                key=lambda h: h['balanced_accuracy'], default=None)
 report = {
     'status': 'CONSERVATIVE_BDQ_TRAINED_ON_KAGGLE',
+    'checkpoint_selection': 'BEST_CONSERVATIVE_PHASE_BY_BALANCED_ACCURACY',
+    'checkpoint_selection_note': (
+        'Warm-start snapshots are excluded on purpose. Behaviour cloning '
+        'optimises agreement with the logged action directly, so it always wins '
+        'that metric; selecting across both phases exports a pure imitator '
+        'whose Q values are not value estimates.'),
+    'warm_start_peak_for_reference': warm_peak,
     'trained_at': pd.Timestamp.now(tz='Asia/Kolkata').isoformat(),
     'training_rows': int(train['rows']),
     'validation_rows': int(validation['rows']),
