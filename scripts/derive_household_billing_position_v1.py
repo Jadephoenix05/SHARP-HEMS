@@ -30,6 +30,19 @@ from sharp_apcpdcl_tariff import Tariff
 MAXIMUM_MONTHLY_KWH = 5000.0
 BISECTION_STEPS = 60
 
+# A domestic connection cannot sustain an arbitrary load factor. Inverting the
+# reported bill through an energy-only tariff put 148 of 498 households above a
+# load factor of 1.0, meaning they would have to draw more than their entire
+# sanctioned capacity twenty-four hours a day. The reported bill evidently
+# carries charges this tariff config deliberately excludes - electricity duty,
+# FPPCA, true-up, arrears - so treating all of it as energy overstates kWh.
+#
+# The inverted figure is therefore capped by what the connection can physically
+# deliver at a plausible domestic load factor. For cross-reference, eMARC
+# metered Basic households draw 3.33 kWh per day.
+MAXIMUM_LOAD_FACTOR = 0.35
+DAYS_PER_MONTH = 30.0
+
 
 def check(condition, message):
     if not condition:
@@ -83,7 +96,20 @@ def build(root):
                       else 'PENDING_COHORT_MEDIAN')})
 
     frame = pd.DataFrame(rows)
-    reported = frame[frame.basis.eq('INVERTED_FROM_REPORTED_BILL')]
+    capped = 0
+    for index, row in frame.iterrows():
+        if row.monthly_kwh is None or row.sanctioned_load_kw is None:
+            continue
+        ceiling = (float(row.sanctioned_load_kw) * 24.0 * DAYS_PER_MONTH
+                   * MAXIMUM_LOAD_FACTOR)
+        if float(row.monthly_kwh) > ceiling:
+            frame.at[index, 'monthly_kwh'] = ceiling
+            frame.at[index, 'basis'] = 'BILL_INVERSION_CAPPED_BY_CONNECTION_CAPACITY'
+            capped += 1
+    frame['capacity_capped'] = frame.basis.eq('BILL_INVERSION_CAPPED_BY_CONNECTION_CAPACITY')
+    print(f'  capped by connection capacity: {capped} households')
+    reported = frame[frame.basis.isin(['INVERTED_FROM_REPORTED_BILL',
+                                       'BILL_INVERSION_CAPPED_BY_CONNECTION_CAPACITY'])]
     check(len(reported) > 100, 'Too few households with a usable reported bill')
 
     # Missing households take their OWN split's median, so no split learns from
@@ -113,6 +139,13 @@ def build(root):
         'status': 'HOUSEHOLD_BILLING_POSITION_DERIVED',
         'households': int(len(frame)),
         'inverted_from_reported_bill': int(len(reported)),
+        'capped_by_connection_capacity': int(frame.capacity_capped.sum()),
+        'maximum_load_factor': MAXIMUM_LOAD_FACTOR,
+        'why_capped': ('Inverting the reported bill through an energy-only tariff '
+                       'implied load factors above 1.0 for 148 of 498 households. '
+                       'The reported bill carries duty, FPPCA and arrears that this '
+                       'config excludes, so it overstates energy.'),
+        'external_cross_reference': 'eMARC metered Basic households draw 3.33 kWh/day.',
         'split_median_assumption': int(filled),
         'monthly_kwh': {
             'min': float(frame.monthly_kwh.min()),

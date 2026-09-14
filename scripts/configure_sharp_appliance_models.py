@@ -49,6 +49,26 @@ EMPIRICAL = {'air_conditioner':[4,5], 'refrigerator':[3],
 # documented transfer assumption, never a measured Indian rating.
 REFIT_LIBRARY = ('data/processed/refit_power_library_v3/refit_power_library.json')
 
+# Necessity vs luxury. The project spec is explicit: necessity appliances are
+# masked out of the action space entirely by the safety filter, hard-coded
+# rather than learned, and SHARP restricts LUXURY load instead of cutting a
+# household's power. In an Indian home fans and lighting are necessities, not
+# discretionary comfort: a demand-response system that switches off the lights
+# during a peak is not one anybody would install.
+#
+# Static tagging, per the spec's "necessity vs luxury is a static/semantic
+# problem, not something a slow-learning agent should rediscover". The spec also
+# notes the boundary is household-specific and could later be user-configurable
+# from the dashboard; this is the default, not a claim about every household.
+NECESSITY = {
+    'refrigerator',        # food safety
+    'modem_router',        # connectivity, and the controller's own link
+    'ceiling_fan',         # thermal safety in AP summers
+    'table_fan',
+    'led_bulb', 'led_tube', 'cfl_bulb', 'cfl_tube', 'incandescent_bulb',
+    'water_purifier',      # drinking water
+}
+
 
 def build(root):
     base=root/'data/processed/simulator_devices_v1/unknown_quantity_one'
@@ -94,7 +114,11 @@ def build(root):
             channel=options[int(hashlib.sha256(r['device_id'].encode()).hexdigest(),16)%len(options)]
             watt=float(lookup.loc[channel,'above_threshold_median_w'])
             provenance='IAWE_15MIN_ABOVE_5W_MEDIAN_USED_AS_SIMULATION_PROXY'
+        necessity=app in NECESSITY
         rows.append({**r,'scenario_model_version':'baseline_power_v1',
+            'is_necessity':necessity,
+            'necessity_basis':('STATIC_SPEC_TAGGING_MASKED_FROM_ACTION_SPACE' if necessity
+                               else 'DISCRETIONARY_AVAILABLE_TO_THE_AGENT'),
             'operating_power_proxy_w':float(watt),'power_parameter_basis':provenance,
             'calibration_channel_id':channel,'is_measured_device_rating':False,
             'power_sensitivity_low_multiplier':low,'power_sensitivity_high_multiplier':high,
@@ -120,6 +144,8 @@ def build(root):
     config={'scenario_id':'baseline_power_v1','parameter_policy':'EXPLICIT_ASSUMPTIONS_AND_OBSERVED_PROXIES',
       'engineering_power_assumptions_w':{k:v[0] for k,v in BASELINE.items()},
       'empirical_proxy_channels':EMPIRICAL,'seed_rule':'SHA256(device_id) modulo channel count',
+      'necessity_appliances':sorted(NECESSITY),
+      'necessity_policy':'Necessity loads are never shed. SHARP restricts luxury load rather than cutting household power.',
       'evidence_limits':['Observed 15-minute means are not instantaneous ON power or nameplate ratings.',
         'iAWE represents one Indian household, not an Indian population distribution.',
         'Shared iAWE calibration does not provide independent heldout Indian-household evaluation.',

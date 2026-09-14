@@ -34,6 +34,23 @@ def build(root):
         if r['availability']=='SOURCE_REPORTED':lookup[(r['target_id'],r['metric'],r['season'])]=float(r['source_value'])
     proxy={(t,int(w)):g.sort_values('step_of_day').adult_reported_home_fraction_proxy.to_numpy(float)
         for (t,w),g in locations.groupby(['template_id','weekday_number'])}
+    # Measured Indian activity timing from the TUS 2024 diaries, where an
+    # activity plainly requires the appliance. This replaces hardcoded clock
+    # heuristics for the appliances it covers: comparing against eMARC mainline
+    # meters showed the heuristics produced no morning peak at all, which is the
+    # most characteristic feature of Indian household load.
+    tus_path=root/'data/processed/tus_appliance_clock_v1/appliance_clock_profiles.csv'
+    tus={}
+    if tus_path.exists():
+        frame=pd.read_csv(tus_path)
+        for column in frame.columns:
+            if column in ('step_of_day','clock'):continue
+            values=frame[column].to_numpy(float)
+            if len(values)==96 and values.sum()>0:
+                tus[column]=values/values.max()
+        print('TUS clock profiles applied to:',sorted(tus),flush=True)
+    else:
+        print('No TUS clock profiles found; using heuristics only',flush=True)
     schedules=[];requests=[]
     clock=np.arange(96)/4
     def allocate(hours,score):
@@ -81,10 +98,26 @@ def build(root):
                 if len(home)!=96 or not np.isfinite(home).all():raise ValueError('Invalid location proxy')
                 h=float(jobs_by_day[day]) if weekly is not None else hours
                 score=home*.5+np.sin((clock-6)/24*2*np.pi)*.05
-                if app in LIGHTS:score=score+((clock>=18)|(clock<6))*2
-                elif app in {'television','desktop','laptop_tablet'}:score=score+((clock>=18)&(clock<23))*2
-                elif app=='air_conditioner':score=score+((clock>=21)|(clock<6))*1.5
-                elif app in TASKS:score=score+((clock>=6)&(clock<10))*2
+                profile_key = 'lighting' if (app in LIGHTS and 'lighting' in tus) else app
+                if profile_key in tus:
+                    # Measured activity timing outweighs the presence prior.
+                    score=score+tus[profile_key]*2
+                    clock_basis=('TUS_2024_SLEEP_AND_DARKNESS' if profile_key=='lighting'
+                                 else 'TUS_2024_MEASURED_ACTIVITY_TIMING')
+                elif app in LIGHTS:
+                    score=score+((clock>=18)|(clock<6))*2
+                    clock_basis='SYNTHETIC_HEURISTIC_DARKNESS_AND_PRESENCE'
+                elif app in {'television','desktop','laptop_tablet'}:
+                    score=score+((clock>=18)&(clock<23))*2
+                    clock_basis='SYNTHETIC_HEURISTIC_EVENING_USE'
+                elif app=='air_conditioner':
+                    score=score+((clock>=21)|(clock<6))*1.5
+                    clock_basis='SYNTHETIC_HEURISTIC_NIGHT_COOLING'
+                elif app in TASKS:
+                    score=score+((clock>=6)&(clock<10))*2
+                    clock_basis='SYNTHETIC_HEURISTIC_MORNING_TASK'
+                else:
+                    clock_basis='SYNTHETIC_HEURISTIC_PRESENCE_ONLY'
                 # Device-specific tiny deterministic jitter breaks ties.
                 rng=np.random.default_rng(hashint(did+season+str(day))%(2**32))
                 score=score+rng.uniform(0,.001,96)
@@ -97,7 +130,7 @@ def build(root):
                     'duration_basis':this_basis,'source_active_months_per_year':seasonal_months,
                     'active_calendar_months_assigned':False,
                     'task_count':int(jobs_by_day[day]) if weekly is not None else None,
-                    'clock_preference_basis':'SYNTHETIC_HEURISTIC_USING_ONE_ADULT_LOCATION_PROXY',
+                    'clock_preference_basis':clock_basis,
                     'preferred_slots_are_executed_load':False,'is_synthetic':True}
                 requests.append(request)
                 schedules.append({'device_id':did,'template_id':tid,'split':r['split'],

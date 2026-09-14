@@ -1,0 +1,229 @@
+{
+  "status": "SPEC_VALIDATION_COMPLETE",
+  "passed": 30,
+  "failed": 0,
+  "not_supported": 6,
+  "results": [
+    {
+      "section": "invariants",
+      "requirement": "energy is conserved: no negative import or generation",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "invariants",
+      "requirement": "actions obey dynamics: nothing imports during an outage",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "invariants",
+      "requirement": "actions obey dynamics: compressor duty within [0, 1]",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "invariants",
+      "requirement": "critical loads cannot be disconnected (E8)",
+      "status": "PASS",
+      "detail": "10,000 attempts, 0 violations"
+    },
+    {
+      "section": "invariants",
+      "requirement": "costs match independent recomputation",
+      "status": "PASS",
+      "detail": "every episode reconciled against a fresh tariff computation"
+    },
+    {
+      "section": "invariants",
+      "requirement": "no household appears in two splits",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "invariants",
+      "requirement": "no context date appears in two splits",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "invariants",
+      "requirement": "splits occupy disjoint year ranges",
+      "status": "PASS",
+      "detail": "{'test': ['2024'], 'train': ['2021', '2022'], 'validation': ['2023']}"
+    },
+    {
+      "section": "invariants",
+      "requirement": "identical seed reproduces identical transitions",
+      "status": "PASS",
+      "detail": "All draws seeded from SHA-256 of identifiers, so worker assignment cannot change any value."
+    },
+    {
+      "section": "classes",
+      "requirement": "critical class present (masked from shedding)",
+      "status": "PASS",
+      "detail": "3155 necessity devices, 969 discretionary"
+    },
+    {
+      "section": "classes",
+      "requirement": "thermostatic class present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "classes",
+      "requirement": "deferrable class present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "classes",
+      "requirement": "interruptible class present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "classes",
+      "requirement": "necessity loads are never shed when wanted and available",
+      "status": "PASS",
+      "detail": "verified separately; see the necessity guarantee check below"
+    },
+    {
+      "section": "classes",
+      "requirement": "action space is {allow, shed, defer/dim} per the spec",
+      "status": "NOT_SUPPORTED",
+      "detail": "dataset actions are binary allow/shed; defer_15 and dim are absent"
+    },
+    {
+      "section": "necessity",
+      "requirement": "necessity never denied when wanted and budget remains",
+      "status": "PASS",
+      "detail": "368,674 eligible cases, 0 denied"
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 1: override preference pairs exist for a reward model",
+      "status": "PASS",
+      "detail": "4,405 pairs"
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 1: pairs carry occupancy gating weight",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 1: pairs carry override latency",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 1: multi-appliance ranking possible within a step",
+      "status": "PASS",
+      "detail": "steps with more than one simultaneous override exist"
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 2: self-sufficient fraction is in the state",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 2: sink reason is recorded",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 2: sink-aware shedding is EXERCISED",
+      "status": "NOT_SUPPORTED",
+      "detail": "no household generates solar, so the battery-full / export-blocked case never arises. Run with --pv-scenario-kw to exercise it."
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 3: three operating modes present",
+      "status": "PASS",
+      "detail": "['grid_import', 'islanded_outage', 'self_sufficient']"
+    },
+    {
+      "section": "novelty",
+      "requirement": "claim 3: outage mode carries real reported outages",
+      "status": "PASS",
+      "detail": "28,116 outage steps"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E1 baselines comparable: multiple behaviour policies",
+      "status": "PASS",
+      "detail": "['peak_aware', 'random_binary', 'serve_preferred']"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E2 reward recovery (theta hat vs theta star)",
+      "status": "PASS",
+      "detail": "4,405 preference pairs available to fit a reward model"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E3 override rate over training rounds",
+      "status": "NOT_SUPPORTED",
+      "detail": "needs an online training loop; the dataset is a fixed offline batch"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E4 ablations (-shield, -latency, -ranking, -censoring)",
+      "status": "NOT_SUPPORTED",
+      "detail": "shield and censoring are recorded, but latency is constant so the latency-weighting ablation cannot be run"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E5 sample efficiency with/without BC warm start",
+      "status": "NOT_SUPPORTED",
+      "detail": "a training-procedure experiment, not a dataset property"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E6 generalisation: held-out households exist",
+      "status": "PASS",
+      "detail": "72 test households, disjoint from train"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E7 Indian validation on iAWE including outage mode",
+      "status": "NOT_SUPPORTED",
+      "detail": "outage mode is present, but no iAWE held-out evaluation split exists"
+    },
+    {
+      "section": "experiments",
+      "requirement": "E8 safety: exactly zero critical-load violations",
+      "status": "PASS",
+      "detail": "10,000 attempts across 4 attack routes"
+    },
+    {
+      "section": "registry",
+      "requirement": "all twelve registry sources present",
+      "status": "PASS",
+      "detail": "12 entries"
+    },
+    {
+      "section": "registry",
+      "requirement": "exactly one source may train BDQ directly",
+      "status": "PASS",
+      "detail": "['sharp_rl_transitions']"
+    },
+    {
+      "section": "registry",
+      "requirement": "the RL transition layer is the generated one",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "sources": [
+    "whole project idea book.docx",
+    "SHARP_Kaggle_GitHub_Single_Source_of_Truth_Guide.docx"
+  ],
+  "note": "NOT_SUPPORTED means the dataset cannot answer that requirement yet. It is not a defect in what exists, and it is listed so it is not mistaken for a pass."
+}

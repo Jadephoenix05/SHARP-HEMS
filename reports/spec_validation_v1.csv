@@ -1,0 +1,37 @@
+section,requirement,status,detail
+invariants,energy is conserved: no negative import or generation,PASS,
+invariants,actions obey dynamics: nothing imports during an outage,PASS,
+invariants,"actions obey dynamics: compressor duty within [0, 1]",PASS,
+invariants,critical loads cannot be disconnected (E8),PASS,"10,000 attempts, 0 violations"
+invariants,costs match independent recomputation,PASS,every episode reconciled against a fresh tariff computation
+invariants,no household appears in two splits,PASS,
+invariants,no context date appears in two splits,PASS,
+invariants,splits occupy disjoint year ranges,PASS,"{'test': ['2024'], 'train': ['2021', '2022'], 'validation': ['2023']}"
+invariants,identical seed reproduces identical transitions,PASS,"All draws seeded from SHA-256 of identifiers, so worker assignment cannot change any value."
+classes,critical class present (masked from shedding),PASS,"3155 necessity devices, 969 discretionary"
+classes,thermostatic class present,PASS,
+classes,deferrable class present,PASS,
+classes,interruptible class present,PASS,
+classes,necessity loads are never shed when wanted and available,PASS,verified separately; see the necessity guarantee check below
+classes,"action space is {allow, shed, defer/dim} per the spec",NOT_SUPPORTED,dataset actions are binary allow/shed; defer_15 and dim are absent
+necessity,necessity never denied when wanted and budget remains,PASS,"368,674 eligible cases, 0 denied"
+novelty,claim 1: override preference pairs exist for a reward model,PASS,"4,405 pairs"
+novelty,claim 1: pairs carry occupancy gating weight,PASS,
+novelty,claim 1: pairs carry override latency,PASS,
+novelty,claim 1: multi-appliance ranking possible within a step,PASS,steps with more than one simultaneous override exist
+novelty,claim 2: self-sufficient fraction is in the state,PASS,
+novelty,claim 2: sink reason is recorded,PASS,
+novelty,claim 2: sink-aware shedding is EXERCISED,NOT_SUPPORTED,"no household generates solar, so the battery-full / export-blocked case never arises. Run with --pv-scenario-kw to exercise it."
+novelty,claim 3: three operating modes present,PASS,"['grid_import', 'islanded_outage', 'self_sufficient']"
+novelty,claim 3: outage mode carries real reported outages,PASS,"28,116 outage steps"
+experiments,E1 baselines comparable: multiple behaviour policies,PASS,"['peak_aware', 'random_binary', 'serve_preferred']"
+experiments,E2 reward recovery (theta hat vs theta star),PASS,"4,405 preference pairs available to fit a reward model"
+experiments,E3 override rate over training rounds,NOT_SUPPORTED,needs an online training loop; the dataset is a fixed offline batch
+experiments,"E4 ablations (-shield, -latency, -ranking, -censoring)",NOT_SUPPORTED,"shield and censoring are recorded, but latency is constant so the latency-weighting ablation cannot be run"
+experiments,E5 sample efficiency with/without BC warm start,NOT_SUPPORTED,"a training-procedure experiment, not a dataset property"
+experiments,E6 generalisation: held-out households exist,PASS,"72 test households, disjoint from train"
+experiments,E7 Indian validation on iAWE including outage mode,NOT_SUPPORTED,"outage mode is present, but no iAWE held-out evaluation split exists"
+experiments,E8 safety: exactly zero critical-load violations,PASS,"10,000 attempts across 4 attack routes"
+registry,all twelve registry sources present,PASS,12 entries
+registry,exactly one source may train BDQ directly,PASS,['sharp_rl_transitions']
+registry,the RL transition layer is the generated one,PASS,

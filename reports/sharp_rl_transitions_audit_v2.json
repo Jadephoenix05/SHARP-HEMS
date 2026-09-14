@@ -1,29 +1,30 @@
 {
-  "status": "AUDIT_PASSED",
+  "status": "AUDIT_FAILED",
   "transitions": 400896,
   "episodes": 4176,
   "households": 464,
   "feature_count": 305,
-  "preference_pairs": 46884,
-  "checks_failed": [],
+  "preference_pairs": 4405,
+  "checks_failed": [
+    "no infeasible step outside an outage"
+  ],
   "warnings": [],
   "operating_mode_steps": {
-    "grid_import": 369747,
+    "grid_import": 351976,
     "islanded_outage": 28116,
-    "self_sufficient": 3033
+    "self_sufficient": 20804
   },
   "marginal_rate_steps": {
-    "1.9": 31178,
-    "3.0": 176577,
-    "4.5": 63456,
-    "6.0": 120297,
-    "8.75": 8812,
-    "9.75": 576
+    "1.9": 123945,
+    "3.0": 183738,
+    "4.5": 46435,
+    "6.0": 43275,
+    "8.75": 3503
   },
-  "device_on_rate": 0.16000119951147168,
+  "device_on_rate": 0.16794917463917725,
   "attention_fraction": 0.7480393917624522,
   "outage_steps": 28116,
-  "infeasible_steps_all_during_outage": 0,
-  "preference_pairs_honoured": 18148,
+  "infeasible_steps_all_during_outage": 8,
+  "preference_pairs_honoured": 498,
   "audit_is_independent_of_generator_report": true
 }

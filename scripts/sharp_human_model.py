@@ -36,6 +36,8 @@ from dataclasses import dataclass
 import hashlib
 import math
 
+import numpy as np
+
 # Behavioural parameters. Declared assumptions, not fitted to any source.
 ATTENTION_HOME_THRESHOLD = 0.5      # adult-home proxy above this means present
 BASE_OVERRIDE_PROBABILITY = 0.05    # denied and present, but otherwise content
@@ -43,6 +45,24 @@ DISCOMFORT_SENSITIVITY = 0.15       # added probability per degree outside band
 UNMET_SERVICE_SENSITIVITY = 0.10    # added probability per remaining hour
 MAXIMUM_OVERRIDE_PROBABILITY = 0.85  # people do not always act, even when annoyed
 RESPONSE_WINDOW_STEPS = 1           # a user gets one interval to react
+MAXIMUM_LATENCY_STEPS = 3           # nobody is assumed to react after 45 minutes
+
+
+def response_latency_steps(episode_id, step_id, device_id, probability):
+    """How many 15-minute steps before the user actually reaches for the switch.
+
+    Annoyance shortens the delay: a room well outside the comfort band gets a
+    faster reaction than a mildly inconvenient one. The spec weights preference
+    pairs by this latency, so it has to vary; a constant latency carries no
+    information and makes the weighting inert.
+
+    Deterministic given the identifiers, like every other draw here.
+    """
+    key = f'latency|{episode_id}|{step_id}|{device_id}'.encode()
+    draw = int(hashlib.sha256(key).hexdigest()[:8], 16) / 0x100000000
+    # Strong pressure collapses the delay toward zero; weak pressure spreads it.
+    patience = 1.0 - min(1.0, float(probability) / MAXIMUM_OVERRIDE_PROBABILITY)
+    return int(min(MAXIMUM_LATENCY_STEPS, draw * patience * (MAXIMUM_LATENCY_STEPS + 1)))
 
 
 @dataclass(frozen=True)
@@ -122,7 +142,9 @@ def decide_overrides(*, episode_id, step_id, device_ids, wanted, executed,
                                  else 'UNMET_SERVICE'),
                 degrees_outside_band=float(degrees_outside_band),
                 remaining_service_hours=float(remaining_service_hours[index]),
-                attention_available=present, latency_steps=0))
+                attention_available=present,
+                latency_steps=response_latency_steps(
+                    episode_id, step_id, device_id, probability)))
     return requests, events, present
 
 
@@ -155,6 +177,14 @@ def self_test():
     high = override_probability(denied=True, present=True, degrees_outside_band=4.0,
                                 remaining_service_hours=0, is_air_conditioner=True)
     assert 0 < low < high <= MAXIMUM_OVERRIDE_PROBABILITY
+
+    # Latency varies, is bounded, and shortens as pressure rises.
+    latencies = {response_latency_steps('e', i, 'd', 0.1) for i in range(400)}
+    assert len(latencies) > 1, 'Latency must vary or the spec weighting is inert'
+    assert all(0 <= v <= MAXIMUM_LATENCY_STEPS for v in latencies)
+    calm = np.mean([response_latency_steps('e', i, 'd', 0.10) for i in range(400)])
+    urgent = np.mean([response_latency_steps('e', i, 'd', 0.80) for i in range(400)])
+    assert urgent < calm, f'Urgency must shorten latency: {urgent} vs {calm}'
 
     # Determinism: the same context always gives the same decision.
     first = decide_overrides(

@@ -48,6 +48,11 @@ def initialise(root_text, pv_scenario_kw, export_allowed):
     SHARED['billing'] = pd.read_parquet(
         root / 'data/processed/appliance_inputs_v1/household_billing_position_v1.parquet'
     ).set_index('template_id')
+    background_path = (root / 'data/processed/appliance_inputs_v1'
+                       / 'household_background_load_v1.parquet')
+    SHARED['background'] = (pd.read_parquet(background_path)
+                            .set_index('template_id').background_kw.to_dict()
+                            if background_path.exists() else {})
     context = pd.read_parquet(
         root / 'data/processed/simulator_context_v1/regional_grid_guntur_weather_15min_v1.parquet')
     context['timestamp_ist'] = pd.to_datetime(context.timestamp_ist)
@@ -98,7 +103,8 @@ def run_household(task):
                 thermal=SHARED['thermal'], requests=SHARED['requests'],
                 preferences=SHARED['preferences'],
                 pv_scenario_kw=SHARED['pv_scenario_kw'],
-                export_allowed=SHARED['export_allowed'])
+                export_allowed=SHARED['export_allowed'],
+                background_kw=float(SHARED['background'].get(template_id, 0.0)))
             if result is None:
                 skipped += 1
                 continue

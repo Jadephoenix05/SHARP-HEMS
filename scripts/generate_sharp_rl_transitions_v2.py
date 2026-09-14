@@ -97,7 +97,7 @@ def pick_days(context, split, per_split, seed):
 
 def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split,
                 policy, tariff, weights, thermal, requests, preferences,
-                pv_scenario_kw, export_allowed):
+                pv_scenario_kw, export_allowed, background_kw=0.0):
     tid = home.template_id
     n = len(ds)
     weekday = int(day.timestamp_ist.iloc[0].weekday())
@@ -118,14 +118,34 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
     preferred = np.stack([np.asarray(pref.loc[d, 'preferred_service_fraction'], float)
                           for d in ds.device_id])
     power = ds.operating_power_proxy_w.to_numpy(float)
-    protected = ds.service_role.eq('protected_service').to_numpy(bool)
+    # Necessity loads are masked out of the shed action entirely. SHARP restricts
+    # luxury load; it never cuts a household's essential supply.
+    protected = ds.is_necessity.to_numpy(bool)
     cycle = ds.dynamics_family.eq('cycle').to_numpy(bool)
     is_ac = ds.appliance_type.eq('air_conditioner').to_numpy(bool)
     on_inverter = ds.appliance_type.map(on_inverter_circuit).to_numpy(bool)
     device_ids = ds.device_id.astype(str).tolist()
     has_ac = bool(is_ac.any())
-    limit = float(home.sanctioned_load_kw) * 1000
-    check(math.isfinite(limit) and limit > 0, 'Nonfinite connection limit')
+    sanctioned_w = float(home.sanctioned_load_kw) * 1000
+    check(math.isfinite(sanctioned_w) and sanctioned_w > 0, 'Nonfinite connection limit')
+    # Sanctioned load is a CONTRACTUAL figure, not a breaker that trips. The
+    # median Andhra Pradesh household here is sanctioned at 0.52 kW and 222 of
+    # 464 are under 0.5 kW, so a household's own lights and fans can exceed it.
+    # Treating it as a hard physical cap would make necessity supply infeasible,
+    # which contradicts the whole design: SHARP restricts luxury load, it never
+    # cuts a household's essential power.
+    #
+    # So the PHYSICAL capacity used for feasibility is at least enough to carry
+    # the household's own necessity load, and exceeding the sanctioned figure is
+    # priced through the grid-peak reward term instead of being forbidden.
+    # Declared assumption; the 1.1 factor is headroom, not a measured rating.
+    necessity_w = float(ds.loc[ds.is_necessity, 'operating_power_proxy_w'].sum())
+    # Unmodelled household load, calibrated to this household's own reported
+    # bill. It is not controllable and never appears as an agent action, but it
+    # is real consumption and must be billed and counted against capacity.
+    base_w = float(background_kw) * 1000.0
+    check(math.isfinite(base_w) and base_w >= 0, 'Nonfinite background load')
+    limit = max(sanctioned_w, necessity_w * 1.1 + base_w)
 
     household = build_household_power(power_row, pv_scenario_kw=pv_scenario_kw,
                                       export_allowed=export_allowed)
@@ -154,6 +174,9 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                            opening_kwh=opening_kwh,
                            opening_charges_already_booked=day_of_month > 1)
     episode = f'{split}:{tid}:{date}:{policy}'
+    # Overrides decided at step t only reach the controller at t + latency.
+    # pending[step] = {device_id: OverrideEvent}
+    pending = {}
     records, rows, pairs = [], [], []
     invalid_capacity = 0
     reward_sum = 0.0
@@ -252,12 +275,26 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             wanted = np.where(is_ac, rng_local.random(n) < 0.5,
                               (rng_local.random(n) < 0.5) & (budget > 1e-9))
         # During an outage only the inverter circuit is alive: fans, lights and
-        # the router. Everything else is unpowered, which is what the occupant
-        # wants anyway, because it is what makes the battery last.
+        # the router. Everything else is unpowered.
+        #
+        # Demand for those essentials does NOT follow the normal schedule. A
+        # power cut is exactly when someone switches the fan on, and riding the
+        # cut is the whole reason the household bought an inverter. So while an
+        # occupant is present, every essential load the household owns is wanted,
+        # whether or not the clock says it is a preferred slot. Outside the
+        # inverter circuit nothing is wanted, because nothing can run.
         if grid_absent:
-            wanted = wanted & on_inverter
-            user_wanted = user_wanted & on_inverter
+            essential_wanted = on_inverter & (budget > 1e-9)
+            if present:
+                essential_wanted = essential_wanted | (on_inverter & (budget > 1e-9))
+            else:
+                essential_wanted = essential_wanted & (preferred[:, t] > 0)
+            wanted = np.where(on_inverter, essential_wanted, False)
+            user_wanted = np.where(on_inverter, essential_wanted, False)
 
+        # Unmodelled load is still load: it stops when the grid does.
+        step_background_kw = 0.0 if grid_absent else float(background_kw)
+        step_base_w = step_background_kw * 1000.0
         step_indoor = indoor
         step_battery = battery_kwh
         last = {}
@@ -274,7 +311,8 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             after = np.where(is_ac, budget, np.maximum(0.0, budget - delivered))
             powers = np.where(is_ac, power * action * duty, power * delivered)
 
-            flows = dispatch(demand_kw=float(powers.sum()) / 1000.0, pv_kw=pv_kw,
+            flows = dispatch(demand_kw=float(powers.sum()) / 1000.0 + step_background_kw,
+                             pv_kw=pv_kw,
                              battery_kwh=step_battery, household=household,
                              grid_absent=grid_absent)
 
@@ -325,7 +363,8 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         # removed rather than merely penalised, as the project spec requires.
         probe_flows = dispatch(
             demand_kw=float((power * np.where(is_ac, wanted.astype(float),
-                                              np.minimum(1.0, budget) * wanted)).sum()) / 1000.0,
+                                              np.minimum(1.0, budget) * wanted)).sum()) / 1000.0
+                      + step_background_kw,
             pv_kw=pv_kw, battery_kwh=step_battery, household=household,
             grid_absent=grid_absent)
         marginal_rate = float(tariff.next_unit_rate(ledger.kwh))
@@ -333,9 +372,13 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         worthless = bool(sink['shed_is_worthless'] and not grid_absent
                          and probe_flows['self_sufficient_fraction'] > 0)
         if worthless:
-            for j in range(n):
-                if current[j] and not is_ac[j]:
-                    devices[j] = replace(devices[j], must_run=True)
+            # Express the sink mask through the REQUEST, not by mutating the
+            # device. Setting must_run here made the device state at step t+1
+            # disagree with what step t's dynamics produced, because the
+            # previous step cannot know whether shedding will be worthless next
+            # interval. Keeping the running load requested achieves the same
+            # outcome and leaves device state continuous.
+            wanted = np.where(current & ~is_ac, True, wanted)
 
         state = observe(t, budget, current, ledger.kwh, indoor,
                         opening_flows if t == 0 else previous_flows,
@@ -345,10 +388,10 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         policy_only = physics(wanted.astype(int).tolist())
         from sharp_action_shield import apply_shield
         projected = apply_shield(devices, wanted.astype(int).tolist(),
-                                 max_import_w=import_ceiling_w, base_load_w=0.0,
+                                 max_import_w=import_ceiling_w, base_load_w=step_base_w,
                                  available_solar_w=non_grid_w)['executed_actions']
 
-        overrides, events, _ = decide_overrides(
+        decided, events, _ = decide_overrides(
             episode_id=episode, step_id=t, device_ids=device_ids,
             wanted=user_wanted.astype(int).tolist(), executed=projected,
             home_fraction=occupancy_fraction,
@@ -357,6 +400,14 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             is_air_conditioner=is_ac.tolist(), protected=protected.tolist())
 
         for event in events:
+            arrival = t + int(event.latency_steps)
+            if arrival <= 95:
+                pending.setdefault(arrival, {})[event.device_id] = event
+
+        # Only the overrides whose reaction time has elapsed act now.
+        arrived = pending.pop(t, {})
+        overrides = {device_id: 1 for device_id in arrived}
+        for event in arrived.values():
             device_override_count[device_ids.index(event.device_id)] += 1
             override_total += 1
 
@@ -364,7 +415,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             ledger=ledger, weights=weights, episode_id=episode, step_id=t,
             devices=devices, requested=wanted.astype(int).tolist(),
             state=state, physics_step=physics, max_import_w=import_ceiling_w,
-            base_load_w=0.0, available_solar_w=non_grid_w,
+            base_load_w=step_base_w, available_solar_w=non_grid_w,
             grid_peak_severity=severity,
             policy_source=policy, data_release_version=RELEASE_VERSION,
             human_actions=overrides or None,
@@ -380,15 +431,17 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         battery_kwh = flows['battery_kwh']
         steps_since_shed = applied['_next_shed']
 
-        for event in events:
+        for event in arrived.values():
             index = device_ids.index(event.device_id)
             honoured = bool(record['shield']['human_override_honored'].get(
                 event.device_id, False))
             pairs.append({
                 'episode_id': episode, 'step_id': t, 'split': split,
                 'household_id': tid, 'device_id': event.device_id,
+                'decided_at_step': t - int(event.latency_steps),
                 'appliance_type': ds.appliance_type.iloc[index],
-                'proposed_action': int(projected[index]),
+                'proposed_action': 0,
+                'proposed_action_at_arrival': int(projected[index]),
                 'preferred_action': int(event.requested_on),
                 'override_honoured': honoured,
                 'override_probability': event.probability,
@@ -404,7 +457,10 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                 'grid_peak_severity': severity,
                 # Occupancy gating weights the pair: a user who was clearly home
                 # gives stronger evidence than one who was marginally present.
-                'preference_weight': float(occupancy_fraction) * float(event.probability),
+                # Occupancy gating times pressure, discounted by how long the
+                # user took to react: a fast correction is stronger evidence.
+                'preference_weight': float(occupancy_fraction) * float(event.probability)
+                                     / (1.0 + float(event.latency_steps)),
                 'is_synthetic': True})
 
         budget = np.where(is_ac, budget,
@@ -420,6 +476,12 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         if records and records[-1]['next_state'] != record['state']:
             raise ValueError('State/next-state continuity failed')
         if records and records[-1]['next_device_state'] != record['device_state']:
+            for a, b in zip(records[-1]['next_device_state'], record['device_state']):
+                if a != b:
+                    diff = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
+                    raise ValueError(
+                        f'Device-state continuity failed at step {t} '
+                        f'device {a["device_id"]}: {diff}')
             raise ValueError('Device-state continuity failed')
         records.append(record)
         invalid_capacity += int(not record['constraint_feasible'])
@@ -444,11 +506,15 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             'outdoor_temperature_c': float(outdoor[t]),
             'compressor_duty_fraction': float(applied['_compressor_duty']),
             'grid_import_kwh': record['grid_import_kwh'],
+            'aggregate_power_kw': record['aggregate_power_w'] / 1000.0,
+            'background_load_kw': step_background_kw,
+            'controllable_power_kw': (record['aggregate_power_w'] / 1000.0
+                                      - step_background_kw),
             'month_to_date_kwh': float(ledger.kwh),
             'marginal_tariff_inr_kwh': marginal_rate,
             'occupancy_adult_home_fraction': occupancy_fraction,
             'attention_available': present,
-            'override_count': len(events),
+            'override_count': len(arrived),
             'operating_mode': flows['operating_mode_name'],
             'grid_absent': grid_absent,
             'self_sufficient_fraction': flows['self_sufficient_fraction'],
@@ -494,6 +560,7 @@ def run(root, households, days_per_split, policies, seed, pv_scenario_kw,
         'preferences': base / 'service_plans_v1/preferred_service_slots.parquet',
         'households': root / 'data/processed/appliance_inputs_v1/ap_households_with_splits_v1.parquet',
         'billing': root / 'data/processed/appliance_inputs_v1/household_billing_position_v1.parquet',
+        'background': root / 'data/processed/appliance_inputs_v1/household_background_load_v1.parquet',
         'occupancy': root / 'data/processed/location_scenarios_v1/adult_location_weekly_proxy.parquet',
         'context': root / 'data/processed/simulator_context_v1/regional_grid_guntur_weather_15min_v1.parquet',
         'thermal_config': root / 'configs/thermal/sharp_thermal_rc_v1.json',
@@ -507,6 +574,8 @@ def run(root, households, days_per_split, policies, seed, pv_scenario_kw,
     preferences = pd.read_parquet(paths['preferences'])
     hh = pd.read_parquet(paths['households'])
     billing = pd.read_parquet(paths['billing']).set_index('template_id')
+    background = (pd.read_parquet(paths['background']).set_index('template_id')
+                  .background_kw.to_dict() if paths['background'].exists() else {})
     context = pd.read_parquet(paths['context']).sort_values('timestamp_ist')
     context['timestamp_ist'] = pd.to_datetime(context.timestamp_ist)
     tariff = Tariff.load(paths['tariff_config'])
@@ -566,7 +635,8 @@ def run(root, households, days_per_split, policies, seed, pv_scenario_kw,
                         occupancy=occupancy, day=day, date=date, split=split,
                         policy=policy, tariff=tariff, weights=weights,
                         thermal=thermal, requests=requests, preferences=preferences,
-                        pv_scenario_kw=pv_scenario_kw, export_allowed=export_allowed)
+                        pv_scenario_kw=pv_scenario_kw, export_allowed=export_allowed,
+                        background_kw=float(background.get(home.template_id, 0.0)))
                     if result is None:
                         skipped += 1
                         continue

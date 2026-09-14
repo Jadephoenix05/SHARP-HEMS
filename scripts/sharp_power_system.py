@@ -201,11 +201,27 @@ def dispatch(*, demand_kw, pv_kw, battery_kwh, household, grid_absent):
 
     headroom_kwh = capacity - stored
     charge_kwh = 0.0
+    grid_charge_kwh = 0.0
     if capacity > 0 and surplus_pv > 0:
         charge_kwh = min(INVERTER_MAX_CHARGE_KW * STEP_HOURS, headroom_kwh,
                          surplus_pv * STEP_HOURS * ROUND_TRIP_EFFICIENCY)
         stored += charge_kwh
         surplus_pv -= charge_kwh / STEP_HOURS / ROUND_TRIP_EFFICIENCY
+        headroom_kwh = capacity - stored
+    # An inverter battery charges from the MAINS, which is the whole point: it
+    # refills while the grid is up so it can carry the house through the next
+    # cut. Charging only from solar surplus left every battery flat, because
+    # these households have no solar. The charge draws real grid energy, so it
+    # is added to demand and billed.
+    # Only after solar has had its turn, and only up to the charger's remaining
+    # rate. A home with surplus PV must never import to charge a battery that
+    # its own generation could fill.
+    if (capacity > 0 and not grid_absent and headroom_kwh > 1e-9
+            and surplus_pv <= 1e-9):
+        grid_charge_kwh = min(INVERTER_MAX_CHARGE_KW * STEP_HOURS - charge_kwh,
+                              headroom_kwh)
+        grid_charge_kwh = max(0.0, grid_charge_kwh)
+        stored += grid_charge_kwh
         headroom_kwh = capacity - stored
 
     if grid_absent:
@@ -214,7 +230,8 @@ def dispatch(*, demand_kw, pv_kw, battery_kwh, household, grid_absent):
         unserved_kw = max(0.0, unmet)
         export_kw = 0.0
     else:
-        grid_kw = max(0.0, unmet)
+        # Battery charging is real grid draw on top of appliance demand.
+        grid_kw = max(0.0, unmet) + grid_charge_kwh / STEP_HOURS / ROUND_TRIP_EFFICIENCY
         unserved_kw = 0.0
         export_kw = surplus_pv if household.export_allowed else 0.0
 
@@ -232,7 +249,8 @@ def dispatch(*, demand_kw, pv_kw, battery_kwh, household, grid_absent):
     return {
         'grid_import_kw': grid_kw, 'pv_direct_kw': direct_pv,
         'battery_discharge_kw': discharge_kw,
-        'battery_charge_kwh': charge_kwh, 'battery_kwh': stored,
+        'battery_charge_kwh': charge_kwh, 'battery_grid_charge_kwh': grid_charge_kwh,
+        'battery_kwh': stored,
         'battery_headroom_kwh': headroom_kwh,
         'export_kw': export_kw, 'unserved_kw': unserved_kw,
         'self_sufficient_fraction': rho, 'operating_mode': mode,
@@ -288,10 +306,24 @@ def self_test():
     assert pv_generation_kw(household, 1000.0) == 1.0 * PV_PERFORMANCE_RATIO
     assert pv_generation_kw(household, 0.0) == 0.0
 
-    # Grid present, no PV: everything imports.
+    # Grid present, no PV: appliance demand imports, and an empty battery also
+    # refills from the mains.
     flows = dispatch(demand_kw=1.0, pv_kw=0.0, battery_kwh=0.0,
                      household=household, grid_absent=False)
-    assert flows['grid_import_kw'] == 1.0 and flows['operating_mode'] == MODE_GRID_IMPORT
+    assert flows['grid_import_kw'] > 1.0, flows
+    assert flows['battery_grid_charge_kwh'] > 0, 'Mains must recharge the inverter'
+    assert flows['operating_mode'] == MODE_GRID_IMPORT
+    # A full battery with nothing to serve draws no charging current. Demand is
+    # zero here on purpose: with load present the battery discharges first and
+    # is no longer full, so it would legitimately recharge.
+    full_flows = dispatch(demand_kw=0.0, pv_kw=0.0,
+                          household=household, grid_absent=False,
+                          battery_kwh=household.battery_capacity_kwh)
+    assert full_flows['battery_grid_charge_kwh'] == 0.0, full_flows
+    assert full_flows['grid_import_kw'] == 0.0
+    # Nothing charges from a grid that is not there.
+    assert dispatch(demand_kw=0.0, pv_kw=0.0, battery_kwh=0.0,
+                    household=household, grid_absent=True)['battery_grid_charge_kwh'] == 0.0
 
     # Islanded with an empty battery: demand goes unserved, never imported.
     flows = dispatch(demand_kw=1.0, pv_kw=0.0, battery_kwh=0.0,

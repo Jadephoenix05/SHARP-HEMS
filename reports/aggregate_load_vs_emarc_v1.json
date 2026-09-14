@@ -1,0 +1,55 @@
+{
+  "status": "AGGREGATE_LOAD_COMPARED_TO_EMARC",
+  "reference": {
+    "source": "eMARC mainline meters, Prayas Energy Group",
+    "stratum": "Basic households only (no air conditioner, no water heater)",
+    "why_this_stratum": "The Andhra Pradesh sample has 13 geysers in 498 households and 51 air conditioners, so it is a Basic population. eMARC pooled across all types peaks at 07:45 because its water-heater homes do; Basic homes peak at 21:15, which is the fair comparison.",
+    "pooled_peak_clock_for_contrast": "07:45",
+    "readings": 3489792,
+    "household_days": 36352,
+    "regions": "Pune, Aurangabad, Kanpur rural, Gonda",
+    "period": "2018-2020",
+    "geography_warning": "Maharashtra and Uttar Pradesh, NOT Andhra Pradesh."
+  },
+  "block_to_clock_resolved": {
+    "mapping": "block index is the 15-minute slot from local midnight",
+    "evidence": "mainline peak at block 85 (21:15) and trough at block 45 (11:15), the Indian residential morning/evening double peak",
+    "previously": "open check in data_registry/sources.yaml"
+  },
+  "daily_energy_kwh": {
+    "emarc_median": 3.3277166663333335,
+    "emarc_p25": 1.6614666663125002,
+    "emarc_p75": 5.4160101795625,
+    "sharp_median": 3.4332333030596383,
+    "sharp_p25": 2.0985,
+    "sharp_p75": 6.074683230105104,
+    "ratio_sharp_over_emarc": 1.0317084197082707
+  },
+  "peak_to_average_ratio": {
+    "emarc_median": 2.9392818679214647,
+    "sharp_median": 2.3441528792625075
+  },
+  "diurnal_shape": {
+    "correlation": 0.5295631217384683,
+    "emarc_peak_block": 85,
+    "emarc_peak_clock": "21:15",
+    "sharp_peak_block": 76,
+    "sharp_peak_clock": "19:00",
+    "emarc_trough_clock": "11:15",
+    "sharp_trough_clock": "23:00",
+    "emarc_evening_ratio": 1.2317911195591242,
+    "sharp_evening_ratio": 1.4689368728750667
+  },
+  "emarc_by_household_type_mean_kw": {
+    "Basic": 0.17286443717395375,
+    "Water Heaters but no AC": 0.20724534449924203,
+    "With Air Conditioners": 0.2636174941370411
+  },
+  "interpretation": [
+    "SHARP models only inventoried appliances and carries NO hidden background load, so its aggregate is expected to sit below a real mainline meter. The ratio quantifies that gap.",
+    "eMARC is Maharashtra and Uttar Pradesh in 2018-2020; SHARP is Andhra Pradesh in 2021-2024. Differences in level are not necessarily errors.",
+    "Shape correlation is the meaningful number here, because it is scale free and tests whether the simulator reproduces Indian daily rhythm."
+  ],
+  "is_held_out_test": false,
+  "is_ground_truth_for_andhra_pradesh": false
+}

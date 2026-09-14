@@ -1,0 +1,29 @@
+{
+  "status": "UNMODELLED_BACKGROUND_LOAD_CALIBRATED",
+  "reference_policy": "serve_preferred",
+  "households": 464,
+  "from_reported_bill": 131,
+  "from_split_median": 333,
+  "modelled_daily_kwh_median": 1.313612570277044,
+  "reported_daily_kwh_median": 3.880246962962963,
+  "modelled_share_median": 0.37880224329488166,
+  "background_kw": {
+    "min": 0.0,
+    "p25": 0.03957916325655642,
+    "median": 0.08346474692988728,
+    "p75": 0.1675870487090669,
+    "max": 0.5683886465177709
+  },
+  "capped_households": 0,
+  "cap_kw": 2.0,
+  "what_the_residual_absorbs": [
+    "Appliances the survey respondent did not report.",
+    "Usage hours that are under-reported.",
+    "Standby, charging and other draw not thought of as an appliance.",
+    "Error in the 3,439 of 4,124 device power values that are assumptions."
+  ],
+  "is_controllable_by_the_agent": false,
+  "is_measured": false,
+  "rejected_alternative": "Scaling appliance power to close the gap. That would corrupt device ratings to fix a coverage problem and is not a calibration.",
+  "source_sha256": "c70588dde9aa0a8f333740eef90143da08491904aaa2f7c9cb9b8a9ceac35fbe"
+}
