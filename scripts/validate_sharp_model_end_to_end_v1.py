@@ -101,11 +101,29 @@ def validate(root, checkpoint, report_path, golden_path, episodes, skip_simulato
         gate.record('Q reproduces', difference < 1e-8,
                     f'max absolute difference {difference:.2e}')
         present = np.asarray(golden['device_present'], bool)
-        greedy = np.argmax(np.where(present[:, None], q, -np.inf), axis=1)
-        agreed = bool((greedy[present]
-                       == np.asarray(golden['expected_greedy_action'])[present]).all())
-        gate.record('greedy action reproduces', agreed,
-                    f'{int(present.sum())} live devices agree')
+        # The greedy action is an argmax over LEGAL levels, so the mask must
+        # come from the vector. A golden vector without it cannot be checked,
+        # which is itself a defect worth reporting.
+        if 'legal_levels' in golden:
+            legal = np.asarray(golden['legal_levels'], bool)
+            allowed = present[:, None] & legal
+            gate.record('golden vector is self-contained', True,
+                        'carries the legality mask, so the Pi can reproduce the '
+                        'greedy action')
+        else:
+            allowed = np.repeat(present[:, None], N_LEVELS, axis=1)
+            gate.record('golden vector is self-contained', False,
+                        'no legal_levels field: the Pi cannot reproduce '
+                        'expected_greedy_action without knowing which devices dim')
+        greedy = np.argmax(np.where(allowed, q, -np.inf), axis=1)
+        expected_action = np.asarray(golden['expected_greedy_action'])
+        mismatched = np.where(present & (greedy != expected_action))[0]
+        gate.record('greedy action reproduces', len(mismatched) == 0,
+                    f'{int(present.sum())} live devices, '
+                    + ('all agree' if len(mismatched) == 0
+                       else f'slots {mismatched.tolist()} differ '
+                            f'(expected {expected_action[mismatched].tolist()}, '
+                            f'got {greedy[mismatched].tolist()})'))
     else:
         gate.record('golden vector present', False,
                     f'{golden_path} not found - the Pi has no boot assertion')

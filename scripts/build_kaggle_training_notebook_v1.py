@@ -1007,8 +1007,24 @@ golden = {
         (validation['present'][0][:, None] > 0) & validation['legal'][0],
         expected[0], -np.inf), axis=1).tolist(),
     'device_present': validation['present'][0].tolist(),
-    'note': ('Assert this on the Pi at boot. Equality here proves the Pi builds '
-             'a byte-identical state vector and normalises it identically.'),
+    # The legality mask has to travel with the vector. The greedy action is an
+    # argmax over LEGAL levels, so without knowing which devices can dim the Pi
+    # cannot reproduce expected_greedy_action even with byte-identical weights
+    # and a byte-identical state - it would pick level 2 on an appliance that
+    # has no level 2.
+    'legal_levels': validation['legal'][0].astype(int).tolist(),
+    'supports_reduced': validation['legal'][0][:, 2].astype(int).tolist(),
+    'how_to_check': [
+        'h = maximum(0, state @ w + b)',
+        'q = (h @ v + vb) + (h @ a + ab).reshape(28, 3)',
+        'q -= q.mean(axis=1, keepdims=True)',
+        'assert allclose(q, expected_q)',
+        'allowed = device_present[:, None] & legal_levels',
+        'assert argmax(where(allowed, q, -inf), axis=1) == expected_greedy_action',
+    ],
+    'note': ('Assert this on the Pi at boot, before accepting any command. '
+             'Equality proves the Pi builds a byte-identical state vector, '
+             'normalises it identically, and applies the same legality mask.'),
 }
 (WORKING / 'golden_vector.json').write_text(json.dumps(golden, indent=2))
 print('golden vector written for Join 1 of the integration guide')

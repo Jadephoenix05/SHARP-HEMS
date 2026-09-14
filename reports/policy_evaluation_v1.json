@@ -1,9 +1,9 @@
 {
   "status": "POLICY_EVALUATED_IN_SIMULATOR",
-  "checkpoint": "models\\sharp_bdq_v2_solar_ready\\checkpoint.npz",
+  "checkpoint": "models\\sharp_validated_v1\\checkpoint.npz",
   "split": "validation",
   "test_split_used": false,
-  "household_days": 90,
+  "household_days": 40,
   "baseline": "serve_preferred (no demand response)",
   "arms": [
     "serve_preferred (no demand response)",
@@ -14,64 +14,64 @@
   "results_versus_baseline": {
     "peak_aware (rule-based)": {
       "cost_inr": {
-        "baseline_mean": 23.062557482201175,
-        "policy_mean": 22.023661137722726,
-        "absolute_change": -1.0388963444784525,
-        "percent_change_mean_of_ratios": -5.4322759745608105,
-        "percent_change_median": -1.8984628702472535,
-        "percent_change_pooled": -4.504688368929727,
-        "household_days_improved": 52,
-        "household_days_total": 90
+        "baseline_mean": 19.18298184585338,
+        "policy_mean": 18.059614558428336,
+        "absolute_change": -1.123367287425045,
+        "percent_change_mean_of_ratios": -6.650412005967062,
+        "percent_change_median": -2.819123865448746,
+        "percent_change_pooled": -5.856061880535389,
+        "household_days_improved": 28,
+        "household_days_total": 40
       },
       "peak_kw": {
-        "baseline_mean": 0.48226567305135276,
-        "policy_mean": 0.46728652725799535,
-        "absolute_change": -0.014979145793357369,
-        "percent_change_mean_of_ratios": -1.713864920435525,
+        "baseline_mean": 0.40847025122448094,
+        "policy_mean": 0.4089452747741646,
+        "absolute_change": 0.0004750235496837233,
+        "percent_change_mean_of_ratios": -0.993388943149728,
         "percent_change_median": 0.0,
-        "percent_change_pooled": -3.1059946063717443,
-        "household_days_improved": 5,
-        "household_days_total": 90
+        "percent_change_pooled": 0.11629330367625584,
+        "household_days_improved": 3,
+        "household_days_total": 40
       },
       "peak_to_average": {
-        "baseline_mean": 2.757716127066412,
-        "policy_mean": 2.8867443285447525,
-        "absolute_change": 0.129028201478341,
-        "percent_change_mean_of_ratios": 4.54906521051791,
-        "percent_change_median": 0.9776400077123967,
-        "percent_change_pooled": 4.678806502669204,
-        "household_days_improved": 4,
-        "household_days_total": 90
+        "baseline_mean": 2.5927801388790703,
+        "policy_mean": 2.8031282798988983,
+        "absolute_change": 0.21034814101982818,
+        "percent_change_mean_of_ratios": 6.796191342775221,
+        "percent_change_median": 1.590377405651238,
+        "percent_change_pooled": 8.112841419356416,
+        "household_days_improved": 3,
+        "household_days_total": 40
       },
       "import_kwh": {
-        "baseline_mean": 4.423160412983985,
-        "policy_mean": 4.196148307873489,
-        "absolute_change": -0.22701210511049558,
-        "percent_change_mean_of_ratios": -5.432275974560809,
-        "percent_change_median": -1.8984628702472492,
-        "percent_change_pooled": -5.132350715658243,
-        "household_days_improved": 52,
-        "household_days_total": 90
+        "baseline_mean": 3.920375837600477,
+        "policy_mean": 3.680552266030586,
+        "absolute_change": -0.23982357156989034,
+        "percent_change_mean_of_ratios": -6.650412005967059,
+        "percent_change_median": -2.8191238654487414,
+        "percent_change_pooled": -6.117361740416153,
+        "household_days_improved": 28,
+        "household_days_total": 40
       },
       "overrides": {
-        "baseline_mean": 0.15555555555555556,
-        "policy_mean": 0.18888888888888888,
-        "absolute_change": 0.03333333333333333,
-        "percent_change_mean_of_ratios": -45.83333333333333,
-        "percent_change_median": -33.33333333333333,
-        "percent_change_pooled": 21.428571428571423,
-        "household_days_improved": 5,
-        "household_days_total": 90
+        "baseline_mean": 0.175,
+        "policy_mean": 0.35,
+        "absolute_change": 0.175,
+        "percent_change_mean_of_ratios": -6.666666666666667,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": 100.0,
+        "household_days_improved": 1,
+        "household_days_total": 40
       },
       "discomfort": {
-        "baseline_mean": 6.078607406726418,
-        "policy_mean": 6.078607406726418,
+        "baseline_mean": 9.06179628663259,
+        "policy_mean": 9.06179628663259,
         "absolute_change": 0.0,
         "percent_change_mean_of_ratios": 0.0,
         "percent_change_median": 0.0,
         "percent_change_pooled": 0.0,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "unserved_kwh": {
         "baseline_mean": 0.0,
@@ -81,74 +81,74 @@
         "percent_change_median": NaN,
         "percent_change_pooled": NaN,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "safety": {
-        "necessity_service_opportunities": 10747,
+        "necessity_service_opportunities": 4608,
         "necessity_shed_while_entitled": 0,
         "condition": "necessity appliance, occupant requesting it, service budget remaining, grid up"
       }
     },
     "SHARP learned policy": {
       "cost_inr": {
-        "baseline_mean": 23.062557482201175,
-        "policy_mean": 22.69499844208575,
-        "absolute_change": -0.36755904011542895,
-        "percent_change_mean_of_ratios": -3.2099269871822904,
-        "percent_change_median": -1.3791675690768834,
-        "percent_change_pooled": -1.5937479631176736,
-        "household_days_improved": 74,
-        "household_days_total": 90
+        "baseline_mean": 19.18298184585338,
+        "policy_mean": 19.00340800418845,
+        "absolute_change": -0.17957384166492946,
+        "percent_change_mean_of_ratios": -0.6835441410374272,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": -0.9361101579927014,
+        "household_days_improved": 17,
+        "household_days_total": 40
       },
       "peak_kw": {
-        "baseline_mean": 0.48226567305135276,
-        "policy_mean": 0.46306308695024556,
-        "absolute_change": -0.019202586101107113,
-        "percent_change_mean_of_ratios": -3.694479507365706,
+        "baseline_mean": 0.40847025122448094,
+        "policy_mean": 0.37860130894188676,
+        "absolute_change": -0.029868942282594152,
+        "percent_change_mean_of_ratios": -3.0087714160325945,
         "percent_change_median": 0.0,
-        "percent_change_pooled": -3.9817443318348027,
-        "household_days_improved": 22,
-        "household_days_total": 90
+        "percent_change_pooled": -7.3123910965499554,
+        "household_days_improved": 8,
+        "household_days_total": 40
       },
       "peak_to_average": {
-        "baseline_mean": 2.757716127066412,
-        "policy_mean": 2.713417229550031,
-        "absolute_change": -0.044298897516381094,
-        "percent_change_mean_of_ratios": -0.6428860611397301,
-        "percent_change_median": 0.30045894283761515,
-        "percent_change_pooled": -1.6063617673188413,
-        "household_days_improved": 18,
-        "household_days_total": 90
+        "baseline_mean": 2.5927801388790703,
+        "policy_mean": 2.557632591795613,
+        "absolute_change": -0.035147547083457215,
+        "percent_change_mean_of_ratios": -2.3460591856814785,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": -1.3555930391634636,
+        "household_days_improved": 8,
+        "household_days_total": 40
       },
       "import_kwh": {
-        "baseline_mean": 4.423160412983985,
-        "policy_mean": 4.328964313594435,
-        "absolute_change": -0.09419609938955008,
-        "percent_change_mean_of_ratios": -3.2094430950176083,
-        "percent_change_median": -1.3791675690768774,
-        "percent_change_pooled": -2.129610744232602,
-        "household_days_improved": 74,
-        "household_days_total": 90
+        "baseline_mean": 3.920375837600477,
+        "policy_mean": 3.8851674780554197,
+        "absolute_change": -0.035208359545056564,
+        "percent_change_mean_of_ratios": -0.6835441410374282,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": -0.8980863316055682,
+        "household_days_improved": 17,
+        "household_days_total": 40
       },
       "overrides": {
-        "baseline_mean": 0.15555555555555556,
-        "policy_mean": 0.2222222222222222,
-        "absolute_change": 0.06666666666666667,
-        "percent_change_mean_of_ratios": -10.416666666666668,
-        "percent_change_median": 0.0,
-        "percent_change_pooled": 42.85714285714285,
-        "household_days_improved": 3,
-        "household_days_total": 90
+        "baseline_mean": 0.175,
+        "policy_mean": 0.425,
+        "absolute_change": 0.25,
+        "percent_change_mean_of_ratios": 106.66666666666667,
+        "percent_change_median": 20.0,
+        "percent_change_pooled": 142.85714285714286,
+        "household_days_improved": 0,
+        "household_days_total": 40
       },
       "discomfort": {
-        "baseline_mean": 6.078607406726418,
-        "policy_mean": 6.078607406726418,
+        "baseline_mean": 9.06179628663259,
+        "policy_mean": 9.06179628663259,
         "absolute_change": 0.0,
         "percent_change_mean_of_ratios": 0.0,
         "percent_change_median": 0.0,
         "percent_change_pooled": 0.0,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "unserved_kwh": {
         "baseline_mean": 0.0,
@@ -158,74 +158,74 @@
         "percent_change_median": NaN,
         "percent_change_pooled": NaN,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "safety": {
-        "necessity_service_opportunities": 9435,
+        "necessity_service_opportunities": 4103,
         "necessity_shed_while_entitled": 0,
         "condition": "necessity appliance, occupant requesting it, service budget remaining, grid up"
       }
     },
     "oracle (maximum curtailment)": {
       "cost_inr": {
-        "baseline_mean": 23.062557482201175,
-        "policy_mean": 19.95912387265205,
-        "absolute_change": -3.103433609549132,
-        "percent_change_mean_of_ratios": -22.046478537143887,
-        "percent_change_median": -20.404310429118365,
-        "percent_change_pooled": -13.45658915731371,
-        "household_days_improved": 90,
-        "household_days_total": 90
+        "baseline_mean": 19.18298184585338,
+        "policy_mean": 16.729814029984336,
+        "absolute_change": -2.4531678158690453,
+        "percent_change_mean_of_ratios": -22.150818039781605,
+        "percent_change_median": -21.27346634265676,
+        "percent_change_pooled": -12.78825072963995,
+        "household_days_improved": 40,
+        "household_days_total": 40
       },
       "peak_kw": {
-        "baseline_mean": 0.48226567305135276,
-        "policy_mean": 0.33909145935790513,
-        "absolute_change": -0.14317421369344763,
-        "percent_change_mean_of_ratios": -27.155037377421955,
-        "percent_change_median": -24.726958587748328,
-        "percent_change_pooled": -29.687830109816275,
-        "household_days_improved": 86,
-        "household_days_total": 90
+        "baseline_mean": 0.40847025122448094,
+        "policy_mean": 0.31573397021810823,
+        "absolute_change": -0.09273628100637267,
+        "percent_change_mean_of_ratios": -21.04189965509787,
+        "percent_change_median": -20.380168404377308,
+        "percent_change_pooled": -22.703313332702926,
+        "household_days_improved": 36,
+        "household_days_total": 40
       },
       "peak_to_average": {
-        "baseline_mean": 2.757716127066412,
-        "policy_mean": 2.589752855977211,
-        "absolute_change": -0.16796327108920076,
-        "percent_change_mean_of_ratios": -5.357314803435457,
-        "percent_change_median": -6.410876313692808,
-        "percent_change_pooled": -6.090665730264115,
-        "household_days_improved": 50,
-        "household_days_total": 90
+        "baseline_mean": 2.5927801388790703,
+        "policy_mean": 2.6581768195177524,
+        "absolute_change": 0.06539668063868226,
+        "percent_change_mean_of_ratios": 1.510817311449787,
+        "percent_change_median": -2.339375967903561,
+        "percent_change_pooled": 2.522260937518399,
+        "household_days_improved": 20,
+        "household_days_total": 40
       },
       "import_kwh": {
-        "baseline_mean": 4.423160412983985,
-        "policy_mean": 3.719796398134886,
-        "absolute_change": -0.7033640148490987,
-        "percent_change_mean_of_ratios": -22.01203951950859,
-        "percent_change_median": -20.40431042911835,
-        "percent_change_pooled": -15.901842781564199,
-        "household_days_improved": 90,
-        "household_days_total": 90
+        "baseline_mean": 3.920375837600477,
+        "policy_mean": 3.3052906172482173,
+        "absolute_change": -0.6150852203522594,
+        "percent_change_mean_of_ratios": -22.14606617750415,
+        "percent_change_median": -21.273466342656768,
+        "percent_change_pooled": -15.689445242799259,
+        "household_days_improved": 40,
+        "household_days_total": 40
       },
       "overrides": {
-        "baseline_mean": 0.15555555555555556,
-        "policy_mean": 3.477777777777778,
-        "absolute_change": 3.3222222222222224,
-        "percent_change_mean_of_ratios": 343.75,
-        "percent_change_median": 250.0,
-        "percent_change_pooled": 2135.714285714286,
-        "household_days_improved": 1,
-        "household_days_total": 90
+        "baseline_mean": 0.175,
+        "policy_mean": 3.3,
+        "absolute_change": 3.125,
+        "percent_change_mean_of_ratios": 740.0,
+        "percent_change_median": 200.0,
+        "percent_change_pooled": 1785.7142857142858,
+        "household_days_improved": 0,
+        "household_days_total": 40
       },
       "discomfort": {
-        "baseline_mean": 6.078607406726418,
-        "policy_mean": 6.078607406726418,
+        "baseline_mean": 9.06179628663259,
+        "policy_mean": 9.06179628663259,
         "absolute_change": 0.0,
         "percent_change_mean_of_ratios": 0.0,
         "percent_change_median": 0.0,
         "percent_change_pooled": 0.0,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "unserved_kwh": {
         "baseline_mean": 0.0,
@@ -235,10 +235,10 @@
         "percent_change_median": NaN,
         "percent_change_pooled": NaN,
         "household_days_improved": 0,
-        "household_days_total": 90
+        "household_days_total": 40
       },
       "safety": {
-        "necessity_service_opportunities": 10747,
+        "necessity_service_opportunities": 4608,
         "necessity_shed_while_entitled": 0,
         "condition": "necessity appliance, occupant requesting it, service budget remaining, grid up"
       }
@@ -246,48 +246,48 @@
   },
   "absolute_means": {
     "serve_preferred (no demand response)": {
-      "cost_inr": 23.062557482201175,
-      "import_kwh": 4.423160412983985,
-      "peak_kw": 0.48226567305135276,
-      "peak_to_average": 2.757716127066412,
-      "overrides": 0.15555555555555556,
-      "discomfort": 6.078607406726418,
+      "cost_inr": 19.18298184585338,
+      "import_kwh": 3.920375837600477,
+      "peak_kw": 0.40847025122448094,
+      "peak_to_average": 2.5927801388790703,
+      "overrides": 0.175,
+      "discomfort": 9.06179628663259,
       "unserved_kwh": 0.0,
       "infeasible_steps": 0.0,
-      "outage_steps": 4.933333333333334
+      "outage_steps": 5.9
     },
     "peak_aware (rule-based)": {
-      "cost_inr": 22.023661137722726,
-      "import_kwh": 4.196148307873489,
-      "peak_kw": 0.46728652725799535,
-      "peak_to_average": 2.8867443285447525,
-      "overrides": 0.18888888888888888,
-      "discomfort": 6.078607406726418,
+      "cost_inr": 18.059614558428336,
+      "import_kwh": 3.680552266030586,
+      "peak_kw": 0.4089452747741646,
+      "peak_to_average": 2.8031282798988983,
+      "overrides": 0.35,
+      "discomfort": 9.06179628663259,
       "unserved_kwh": 0.0,
       "infeasible_steps": 0.0,
-      "outage_steps": 4.933333333333334
+      "outage_steps": 5.9
     },
     "SHARP learned policy": {
-      "cost_inr": 22.69499844208575,
-      "import_kwh": 4.328964313594435,
-      "peak_kw": 0.46306308695024556,
-      "peak_to_average": 2.713417229550031,
-      "overrides": 0.2222222222222222,
-      "discomfort": 6.078607406726418,
+      "cost_inr": 19.00340800418845,
+      "import_kwh": 3.8851674780554197,
+      "peak_kw": 0.37860130894188676,
+      "peak_to_average": 2.557632591795613,
+      "overrides": 0.425,
+      "discomfort": 9.06179628663259,
       "unserved_kwh": 0.0,
       "infeasible_steps": 0.0,
-      "outage_steps": 4.933333333333334
+      "outage_steps": 5.9
     },
     "oracle (maximum curtailment)": {
-      "cost_inr": 19.95912387265205,
-      "import_kwh": 3.719796398134886,
-      "peak_kw": 0.33909145935790513,
-      "peak_to_average": 2.589752855977211,
-      "overrides": 3.477777777777778,
-      "discomfort": 6.078607406726418,
+      "cost_inr": 16.729814029984336,
+      "import_kwh": 3.3052906172482173,
+      "peak_kw": 0.31573397021810823,
+      "peak_to_average": 2.6581768195177524,
+      "overrides": 3.3,
+      "discomfort": 9.06179628663259,
       "unserved_kwh": 0.0,
       "infeasible_steps": 0.0,
-      "outage_steps": 4.933333333333334
+      "outage_steps": 5.9
     }
   },
   "metric_notes": {
