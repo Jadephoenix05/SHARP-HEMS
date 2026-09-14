@@ -287,8 +287,17 @@ for data, name in [(train, 'train'), (validation, 'validation')]:
     wanted = (data['state'][:, slot + PREFERRED_SERVICE] > 0) &              (data['state'][:, slot + REMAINING_HOURS] > 0)
     entitled = necessity & wanted
     deployment = data['legal'].copy()
-    deployment[:, :, 2] &= ~entitled          # never dim an essential in use
-    deployment[:, :, 0] &= ~entitled          # never shed one either
+    # The two rules are NOT symmetric, and getting that wrong is easy.
+    #
+    # DIMMING is forbidden UNCONDITIONALLY on a critical load. There is no state
+    # of the world in which SHARP dims someone's fan.
+    #
+    # SHEDDING is forbidden only while the occupant wants it. A fridge nobody is
+    # asking for at 3 a.m., or a fan whose daily service budget is already met,
+    # is correctly OFF - protecting essential service does not mean running it
+    # around the clock.
+    deployment[:, :, 2] &= ~necessity         # never dim a critical load, ever
+    deployment[:, :, 0] &= ~entitled          # never shed one that is in use
     data['deployment_legal'] = deployment
     data['necessity'] = necessity
     data['entitled'] = entitled
@@ -521,7 +530,8 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     present, legal, actions = data['present'], data['legal'], data['actions']
     deployment = data['deployment_legal']
     entitled = data['entitled']
-    necessity_touched = 0
+    necessity = data['necessity']
+    necessity_touched = necessity_dimmed = 0
     reward, done = data['scaled_reward'], data['done']
 
     absolute = np.zeros(len(state))
@@ -546,7 +556,9 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
         live = present[index] > 0
         illegal_picks += int((~np.take_along_axis(
             deployment[index], greedy[:, :, None], axis=2)[:, :, 0] & live).sum())
-        necessity_touched += int((entitled[index] & live & (greedy != 1)).sum())
+        # Two separate violations, because the rules differ.
+        necessity_touched += int((entitled[index] & live & (greedy == 0)).sum())
+        necessity_dimmed += int((necessity[index] & live & (greedy == 2)).sum())
         for level in range(N_LEVELS):
             picked = live & (actions[index] == level)
             logged_count[level] += picked.sum()
@@ -561,7 +573,8 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     return {
         'balanced_accuracy': float(recall.mean()),
         'raw_agreement': float(agree.sum() / total),
-        'necessity_degraded': necessity_touched,
+        'critical_shed_while_in_use': necessity_touched,
+        'critical_dimmed_ever': necessity_dimmed,
         'td_error_non_terminal': td(~done),
         'td_error_terminal': td(done),
         'td_error_pooled_do_not_quote': td(slice(None)),

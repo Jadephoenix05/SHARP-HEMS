@@ -108,9 +108,27 @@ def level_power(d, level):
 
 
 def apply_shield(devices, requested, *, max_import_w, base_load_w=0.0,
-                 available_solar_w=0.0, human_actions=None):
-    """Project a requested binary vector onto local constraints and import cap.
-    human_actions maps device IDs to explicit requested 0/1 overrides.
+                 available_solar_w=0.0, human_actions=None,
+                 peak_locked_out=None):
+    """Project a requested action vector onto local constraints and the import cap.
+
+    WHO IS BEING CONSTRAINED MATTERS. The shield exists to stop the CONTROLLER
+    from degrading essential service. It is not there to stop a resident using
+    their own switch, and it could not be: a fan has a physical switch on the
+    wall.
+
+      - The POLICY may never shed a critical load that is in use.
+      - A RESIDENT may switch anything off, including their own fan. It is their
+        house. `human_actions` asking for level 0 always wins.
+      - A RESIDENT may NOT energise a load in `peak_locked_out`. During a peak
+        the luxury circuit is not carrying power, so switching the air
+        conditioner on simply does nothing - the request is recorded and
+        refused, not silently ignored.
+
+    `human_actions` maps device IDs to explicit 0/1/2 requests from the
+    occupant. `peak_locked_out` is the set of device IDs that cannot be
+    energised this interval whatever anyone asks.
+
     Coupled capacity is checked after local masks; independent masks alone
     cannot encode a household-wide power constraint.
     """
@@ -123,17 +141,44 @@ def apply_shield(devices, requested, *, max_import_w, base_load_w=0.0,
     human_actions = {} if human_actions is None else dict(human_actions)
     if set(human_actions) - set(ids):
         raise ValueError('Human override references an unknown device')
+    peak_locked_out = set() if peak_locked_out is None else set(peak_locked_out)
+    if peak_locked_out - set(ids):
+        raise ValueError('Peak lockout references an unknown device')
+    locked_critical = [d.device_id for d in devices
+                       if d.device_id in peak_locked_out and d.must_run]
+    if locked_critical:
+        raise ValueError(
+            f'Critical loads cannot be locked out at peak: {locked_critical}. '
+            'A peak restricts luxury; it never cuts essential service.')
     for value in list(requested) + list(human_actions.values()):
         if type(value) not in (int, bool) or int(value) not in (0, 1, 2):
             raise ValueError('Actions must be 0 (off), 1 (on) or 2 (reduced)')
     masks, reasons, effective, executed = [], [], [], []
+    refusals = {}
     for d, request in zip(devices, requested):
         mask, why = local_mask(d)
+        by_human = d.device_id in human_actions
         wanted = int(human_actions.get(d.device_id, request))
-        # Fall back to the highest-power level still permitted, which preserves
-        # required service; OFF only when nothing else is allowed.
-        actual = wanted if mask[wanted] else next(
-            (level for level in LEVELS_BY_POWER if mask[level]), 0)
+
+        if d.device_id in peak_locked_out and wanted != 0:
+            # No power on this circuit right now. Refuse and say so, rather than
+            # accept the request and quietly do nothing.
+            actual = 0
+            why = why + ['peak_lockout']
+            refusals[d.device_id] = 'peak_lockout'
+        elif by_human and wanted == 0:
+            # The resident switching their own appliance off. Always honoured -
+            # the shield protects essential service from the CONTROLLER, not
+            # from the person who lives there.
+            actual = 0
+            why = why + ['occupant_switched_off']
+        else:
+            # Fall back to the highest-power level still permitted, which
+            # preserves required service; OFF only when nothing else is allowed.
+            actual = wanted if mask[wanted] else next(
+                (level for level in LEVELS_BY_POWER if mask[level]), 0)
+            if actual != wanted and not by_human:
+                refusals[d.device_id] = 'local_mask'
         masks.append(mask); reasons.append(why)
         effective.append(wanted); executed.append(actual)
     def net_import():
@@ -169,6 +214,8 @@ def apply_shield(devices, requested, *, max_import_w, base_load_w=0.0,
         'action_modified': [a != b for a, b in zip(effective, executed)],
         'human_override_honored': {key: executed[ids.index(key)] == int(value)
                                    for key, value in human_actions.items()},
+        'peak_locked_out': sorted(peak_locked_out),
+        'refusals': refusals,
     }
 
 

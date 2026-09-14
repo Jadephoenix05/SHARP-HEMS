@@ -21,3 +21,4 @@ reports/notebook_verification.log
 
 # Run logs are reproducible output, not evidence. The JSON reports are.
 reports/*.log
+handover/**/*.npz
