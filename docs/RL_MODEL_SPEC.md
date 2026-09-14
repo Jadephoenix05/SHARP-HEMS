@@ -170,49 +170,52 @@ The fix is inverse-frequency weighting on the CQL term, and the headline metric
 is **balanced accuracy** — the mean of the three per-level recalls — which that
 collapsed model scores 0.333 on, exactly chance.
 
-### Measured ablation (validation, 3,000 updates)
+### Measured ablation (validation)
 
-| Config | Balanced accuracy | Raw agreement |
+From the Kaggle notebook at full budget — 2,000 behaviour-cloning updates plus
+5,000 conservative updates per arm, level-legality mask applied throughout.
+
+| Config | Balanced accuracy | off / on / reduced recall |
 |---|---|---|
-| Neither | 0.341 | 0.343 |
-| + BC warm start | 0.375 | 0.368 |
-| + CQL α = 0.1 | 0.385 | 0.375 |
-| + CQL α = 0.5 | 0.426 | 0.404 |
+| Neither | 0.385 | 0.42 / 0.42 / 0.31 |
+| + BC warm start | 0.473 | 0.42 / 0.43 / 0.57 |
+| + CQL only | 0.494 | 0.41 / 0.39 / 0.68 |
+| + both | 0.530 | 0.42 / 0.40 / 0.78 |
 
-Monotone, and undertrained at 3,000. At 15,000 updates with a 2,000-step warm
-start: **α = 0.5 → 0.534, α = 1.0 → 0.579.** So α = 1.0 is the default. Chance is
-0.333.
+Both corrections earn their place, and the gain is concentrated in **REDUCED
+recall** — 0.31 to 0.78. That is the level SHARP exists to choose, and the level
+an unweighted objective abandons first because it is only 2.6 % of logged
+actions.
 
-### Hyperparameters that work
+Running the main configuration longer — 2,000 warm start plus **15,000**
+conservative updates at α = 1.0 — reaches **0.6008**, with zero illegal action
+selections. Chance is 0.333.
 
-| | Value | Why |
-|---|---|---|
-| Hidden | 128 | 50k params; larger overfits 279k rows |
-| Batch | 256 | |
-| LR | 1e-3 with gradient-norm clip 10 | |
-| γ | 0.99 | 96-step episodes |
-| Target sync | every 250 updates | |
-| Reward scale | ÷ 10 | see the terminal-reward warning below |
+### ⚠ The ceiling on this metric is about 0.78, not 1.0
 
-### ⚠ Terminal rewards are ~77× step rewards
+`random_binary` is **exactly one third of every split** and it *samples* its
+action. Its choices are not a function of the state, so no model reading the
+state can predict them, at any capacity. Perfect imitation of the two
+deterministic policies plus chance on the random third bounds the metric at
+roughly `(2/3 × 1.0) + (1/3 × 0.33) ≈ 0.78`.
 
-| | mean | sd |
-|---|---|---|
-| Non-terminal (99 %) | −0.23 | 0.58 |
-| Terminal (step 95) | **−17.68** | **31.15** |
+The per-policy breakdown shows the mechanism directly:
 
-The unmet-service penalty (weight 10 × remaining hours) lands as one lump at
-step 95. Two consequences:
+| Behaviour policy | Model scores |
+|---|---|
+| `serve_preferred` (deterministic) | 0.597 |
+| `peak_aware` (deterministic) | 0.497 |
+| `random_binary` (samples) | 0.482 |
 
-- Your **validation TD error is dominated by 1 % of rows**, so the headline TD error flatters
-  the policy. Report TD separately for terminal and non-terminal.
-- Learning is slower, because the value function must represent a huge spike.
+**Do not chase this number.** Balanced accuracy measures agreement with three
+scripted controllers. Scoring near the ceiling would mean an excellent imitation
+of a rule-based policy you already have for free — the opposite of the claim the
+project makes. It is a sanity check that the network learned structure, nothing
+more. The figures that belong in the results section are cost against baseline,
+peak-to-average ratio and comfort hours, and those need the simulator in the
+loop.
 
-If you want a cleaner signal, spread the unmet-service penalty per step or drop
-its weight from 10 to ~2, and regenerate. That is a config change plus an
-8-minute rebuild.
-
----
+`scripts/analyse_imitation_ceiling_v1.py` measures this.
 
 ## 6. The reward, and the half that is missing
 
