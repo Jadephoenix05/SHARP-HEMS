@@ -1,0 +1,53 @@
+{
+  "status": "IMITATION_CEILING_MEASURED",
+  "checkpoint": "models\\sharp_bdq_v2_cql1.0_balanced_bc_long",
+  "split": "validation",
+  "question": "How high can balanced accuracy against the logged action go, given that one of three behaviour policies samples?",
+  "model_balanced_accuracy_overall": 0.5787390049685891,
+  "model_recall_by_level": {
+    "off": 0.5592863728607916,
+    "on": 0.6690644437862311,
+    "reduced": 0.5078661982587445
+  },
+  "model_by_behaviour_policy": {
+    "peak_aware": {
+      "balanced_accuracy": 0.49738233291274964,
+      "recall_by_level": {
+        "off": 0.6015954006467841,
+        "on": 0.8272224366396501,
+        "reduced": 0.06332916145181477
+      },
+      "share_of_validation": 0.3333333333333333
+    },
+    "random_binary": {
+      "balanced_accuracy": 0.48195400352431017,
+      "recall_by_level": {
+        "off": 0.47703579499890647,
+        "on": 0.26483679525222553,
+        "reduced": 0.7039894203217986
+      },
+      "share_of_validation": 0.3333333333333333
+    },
+    "serve_preferred": {
+      "balanced_accuracy": 0.5970272458952922,
+      "recall_by_level": {
+        "off": 0.5980773517209643,
+        "on": 0.8330043859649123,
+        "reduced": 0.36
+      },
+      "share_of_validation": 0.3333333333333333
+    }
+  },
+  "dedicated_cloner_per_policy": {
+    "peak_aware": 0.3530681644420029,
+    "random_binary": 0.5330989083497523,
+    "serve_preferred": 0.2714184115834877
+  },
+  "clone_steps": 6000,
+  "chance_level": 0.3333333333333333,
+  "interpretation": [
+    "random_binary samples its action, so its choices are not a function of the state and no model can predict them beyond chance. It is one third of every split.",
+    "A score near the ceiling is a good model. A score near 1.0 would mean the logged data contained no exploration, which would make the dataset worse, not the model better.",
+    "Agreement with a scripted policy is not control quality. Cost against baseline, peak-to-average ratio and comfort hours are, and those need the simulator in the loop."
+  ]
+}

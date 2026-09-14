@@ -97,7 +97,7 @@ def pick_days(context, split, per_split, seed):
 
 def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split,
                 policy, tariff, weights, thermal, requests, preferences,
-                pv_scenario_kw, export_allowed, background_kw=0.0):
+                pv_scenario_kw, export_allowed, background_kw=0.0, policy_fn=None):
     tid = home.template_id
     n = len(ds)
     weekday = int(day.timestamp_ist.iloc[0].weekday())
@@ -195,7 +195,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
     invalid_capacity = 0
     reward_sum = 0.0
 
-    def observe(t, b, c, kwh, temperature, flows, worthless,
+    def observe(t, b, c, kwh, temperature, flows,
                 shed_memory, override_counts, e=None):
         occupancy_fraction = float(occupancy_day[t]) if t < 96 else 0.0
         globals_ = (day.loc[t, OBS].to_numpy(float).tolist() if t < 96
@@ -285,7 +285,34 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         severity = float(day.loc[t, 'obs_grid_peak_severity'])
         rng_local = np.random.default_rng(
             int(hashlib.sha256(f'{episode}|{t}'.encode()).hexdigest()[:8], 16))
-        if policy == 'peak_aware' and severity > 0.5:
+
+        # The observation the agent acts on. Built here rather than after the
+        # decision so that a learned policy sees exactly the state the dataset
+        # recorded for this step - the same vector, not a reconstruction.
+        state = observe(t, budget, current, ledger.kwh, indoor,
+                        opening_flows if t == 0 else previous_flows,
+                        steps_since_shed, device_override_count)
+
+        if policy == 'learned':
+            check(policy_fn is not None, "policy 'learned' needs a policy_fn")
+            # The callable gets the state and the physical facts it must respect.
+            # It returns one level per device; the shield still runs afterwards
+            # and may refuse, exactly as it does for the scripted policies.
+            wanted_level = np.asarray(policy_fn(
+                state=np.asarray(state['features'], float),
+                device_present=np.asarray(state['device_present'], bool),
+                supports_reduced=supports_reduced,
+                is_air_conditioner=is_ac,
+                occupant_wants=wanted,
+                budget=budget), int)
+            check(wanted_level.shape == (n,), 'policy_fn returned the wrong shape')
+            check(bool(((wanted_level >= 0) & (wanted_level < 3)).all()),
+                  'policy_fn returned a level outside 0..2')
+            check(not bool((wanted_level[~supports_reduced] == 2).any()),
+                  'policy_fn asked a non-dimmable device to dim')
+            # An AC decision is a thermostat call, not a power level.
+            wanted_level = np.where(is_ac, int(indoor > setpoint), wanted_level)
+        elif policy == 'peak_aware' and severity > 0.5:
             # Under grid stress: dim anything that can be dimmed, shed only
             # discretionary loads that cannot. A necessity is never shed, but it
             # CAN be dimmed - a fan on a lower speed or a dimmed light keeps the
@@ -393,7 +420,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                 'next_devices': nxt, 'appliance_power_w': powers.tolist(),
                 'next_state': observe(t + 1, after, running.astype(bool), ledger.kwh,
                                       next_temperature, flows,
-                                      False, next_shed, device_override_count,
+                                      next_shed, device_override_count,
                                       np.array([z['elapsed_state_steps'] for z in timers])),
                 'discomfort_units': float(discomfort),
                 'unmet_service_units': unmet,
@@ -425,9 +452,13 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             wanted_level = np.where(current & ~is_ac,
                                     np.maximum(wanted_level, 1), wanted_level)
 
-        state = observe(t, budget, current, ledger.kwh, indoor,
-                        opening_flows if t == 0 else previous_flows,
-                        worthless, steps_since_shed, device_override_count)
+        # The observation was built above, before the policy chose. Nothing
+        # between there and here may alter it: if this ever fires, a learned
+        # policy is acting on a different state from the one that gets recorded.
+        check(observe(t, budget, current, ledger.kwh, indoor,
+                      opening_flows if t == 0 else previous_flows,
+                      steps_since_shed, device_override_count) == state,
+              'The observation changed between the decision and the record')
 
         # What the policy alone would do, before any human request.
         wanted_level = np.asarray(wanted_level, int)
@@ -596,6 +627,116 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                'unserved_hours': float(budget[~is_ac].sum() / 4),
                'capacity_violation_steps': invalid_capacity}
     return rows, summary, pairs
+
+
+def load_inputs(root):
+    """Every input run_episode needs, loaded once.
+
+    Factored out of run() so a replay or an evaluation can drive the same
+    simulator on the same inputs without regenerating the whole release.
+    """
+    base = root / 'data/processed/simulator_devices_v1/unknown_quantity_one'
+    paths = {
+        'models': base / 'baseline_power_v1/device_power_models.parquet',
+        'requests': base / 'service_plans_v1/weekly_service_requests.parquet',
+        'preferences': base / 'service_plans_v1/preferred_service_slots.parquet',
+        'households': root / 'data/processed/appliance_inputs_v1/ap_households_with_splits_v1.parquet',
+        'billing': root / 'data/processed/appliance_inputs_v1/household_billing_position_v1.parquet',
+        'background': root / 'data/processed/appliance_inputs_v1/household_background_load_v1.parquet',
+        'occupancy': root / 'data/processed/location_scenarios_v1/adult_location_weekly_proxy.parquet',
+        'context': root / 'data/processed/simulator_context_v1/regional_grid_guntur_weather_15min_v1.parquet',
+        'thermal_config': root / 'configs/thermal/sharp_thermal_rc_v1.json',
+        'tariff_config': root / 'configs/tariffs/apcpdcl_2025_26_verified_components.json',
+    }
+    for name, path in paths.items():
+        check(path.exists(), f'Missing input: {name} -> {path}')
+
+    context = pd.read_parquet(paths['context']).sort_values('timestamp_ist')
+    context['timestamp_ist'] = pd.to_datetime(context.timestamp_ist)
+
+    occupancy_frame = pd.read_parquet(paths['occupancy'])
+    occupancy = {}
+    for (tid, weekday), group in occupancy_frame.groupby(['template_id', 'weekday_number']):
+        series = group.sort_values('step_of_day').adult_reported_home_fraction_proxy
+        if len(series) == 96:
+            occupancy[(tid, int(weekday))] = series.to_numpy(float)
+    check(occupancy, 'No complete occupancy days')
+
+    hh = pd.read_parquet(paths['households'])
+    check(int(hh.groupby('template_id').split.nunique().max()) == 1,
+          'A household appears in more than one split')
+
+    return {
+        'paths': paths,
+        'models': pd.read_parquet(paths['models']),
+        'requests': pd.read_parquet(paths['requests']),
+        'preferences': pd.read_parquet(paths['preferences']),
+        'households': hh,
+        'billing': pd.read_parquet(paths['billing']).set_index('template_id'),
+        'background': (pd.read_parquet(paths['background']).set_index('template_id')
+                       .background_kw.to_dict() if paths['background'].exists() else {}),
+        'context': context,
+        'tariff': Tariff.load(paths['tariff_config']),
+        'thermal': load_config(paths['thermal_config']),
+        'occupancy': occupancy,
+        'weights': RewardWeights(cost_per_inr=1, grid_peak_per_kwh=1,
+                                 discomfort_per_unit=0.5, switching_per_event=0.01,
+                                 unmet_service_per_unit=10),
+    }
+
+
+def replay_episodes(root, episode_ids, policy_fn=None, policy_override=None,
+                    inputs=None, pv_scenario_kw=0.0, export_allowed=False):
+    """Re-run named episodes, optionally substituting a learned policy.
+
+    An episode id is 'split:household:date:policy'. With policy_override set to
+    'learned' the same household, day and weather are replayed under policy_fn
+    instead, which is what makes a like-for-like comparison possible: the only
+    thing that differs between the baseline and the agent is the decision.
+
+    Returns (transitions, episode_summaries, preference_pairs).
+    """
+    inputs = inputs or load_inputs(root)
+    models, hh = inputs['models'], inputs['households']
+    billing, context = inputs['billing'], inputs['context']
+    frames, summaries, all_pairs = [], [], []
+    for episode_id in episode_ids:
+        parts = str(episode_id).split(':')
+        check(len(parts) == 4, f'Malformed episode id: {episode_id}')
+        split, template_id, date, policy = parts
+        policy = policy_override or policy
+        home_rows = hh.loc[hh.template_id.eq(template_id)]
+        check(len(home_rows) == 1, f'Expected one household row for {template_id}')
+        home = home_rows.iloc[0]
+        ds = models.loc[models.template_id.eq(template_id)]
+        ds = ds.sort_values('device_id').reset_index(drop=True)
+        check(0 < len(ds) <= MAX_DEVICES, f'{template_id} has {len(ds)} devices')
+        check(template_id in billing.index, f'No billing position for {template_id}')
+        day = context.loc[context.timestamp_ist.dt.strftime('%Y-%m-%d').eq(date)
+                          & context.split.eq(split)].reset_index(drop=True)
+        check(len(day) == 96, f'{date} in {split} is not a complete day')
+        result = run_episode(
+            ds=ds, home=home,
+            power_row={'template_id': template_id,
+                       'grid_supply_hours_daily': home.grid_supply_hours_daily,
+                       'evening_supply_hours': home.evening_supply_hours,
+                       'inverter_battery_available': home.inverter_battery_available,
+                       'solar_home_system_capacity_w': home.solar_home_system_capacity_w},
+            billing_row=billing.loc[template_id], occupancy=inputs['occupancy'],
+            day=day, date=date, split=split, policy=policy,
+            tariff=inputs['tariff'], weights=inputs['weights'],
+            thermal=inputs['thermal'], requests=inputs['requests'],
+            preferences=inputs['preferences'], pv_scenario_kw=pv_scenario_kw,
+            export_allowed=export_allowed,
+            background_kw=inputs['background'].get(template_id, 0.0),
+            policy_fn=policy_fn)
+        check(result is not None, f'{episode_id} did not produce an episode')
+        rows, summary, pairs = result
+        frames.append(pd.DataFrame(rows))
+        summaries.append(summary)
+        all_pairs.extend(pairs)
+    check(frames, 'No episodes replayed')
+    return pd.concat(frames, ignore_index=True), pd.DataFrame(summaries), all_pairs
 
 
 def run(root, households, days_per_split, policies, seed, pv_scenario_kw,

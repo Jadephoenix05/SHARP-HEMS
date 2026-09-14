@@ -1,0 +1,38 @@
+{
+  "status": "SCENARIOS_COMPATIBLE",
+  "scenarios": {
+    "main": "data/processed/sharp_rl_transitions_v2/rl_transitions.parquet",
+    "pv": "data/processed/sharp_rl_scenario_pv_v1/rl_transitions.parquet"
+  },
+  "failures": [],
+  "coverage": {
+    "main": {
+      "rows": 400896,
+      "households": 464,
+      "steps_with_solar": 0.0,
+      "steps_with_battery_charge": 0.07108826229246488,
+      "mean_self_sufficient_fraction": 0.0522244620534651,
+      "operating_modes": {
+        "grid_import": 352332,
+        "islanded_outage": 28116,
+        "self_sufficient": 20448
+      }
+    },
+    "pv": {
+      "rows": 178176,
+      "households": 464,
+      "steps_with_solar": 0.5101697198275862,
+      "steps_with_battery_charge": 0.07112068965517242,
+      "mean_self_sufficient_fraction": 0.45366662758561604,
+      "operating_modes": {
+        "grid_import": 89788,
+        "self_sufficient": 75892,
+        "islanded_outage": 12496
+      }
+    }
+  },
+  "shared_episode_ids": 1856,
+  "shared_episode_id_note": "The same household-day-policy is simulated under both scenarios, so episode_id alone is not a key across the union. Carry the scenario name alongside it.",
+  "why_combine": "pv_generation_kw is identically zero in the main scenario. Training on it alone gives the policy no evidence about a home with solar, and a zero-variance feature carries no information at all.",
+  "honest_limit": "The PV overlay is a SCENARIO, not measured rooftop generation. IRES reports almost no rooftop solar in Andhra Pradesh, so a policy trained with it is prepared for solar homes, not validated on them."
+}

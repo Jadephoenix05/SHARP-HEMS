@@ -1,0 +1,217 @@
+{
+  "status": "POLICY_EVALUATED_IN_SIMULATOR",
+  "checkpoint": "models\\sharp_bdq_v2_cql1.0_balanced_bc_long\\checkpoint.npz",
+  "split": "validation",
+  "test_split_used": false,
+  "household_days": 90,
+  "baseline": "serve_preferred (no demand response)",
+  "arms": [
+    "serve_preferred (no demand response)",
+    "peak_aware (rule-based)",
+    "SHARP learned policy"
+  ],
+  "results_versus_baseline": {
+    "peak_aware (rule-based)": {
+      "cost_inr": {
+        "baseline_mean": 24.61377291058712,
+        "policy_mean": 23.60918311143267,
+        "absolute_change": -1.004589799154451,
+        "percent_change_mean_of_ratios": -4.924151931636865,
+        "percent_change_median": -1.6356233572959182,
+        "percent_change_pooled": -4.081413291671121,
+        "household_days_improved": 53,
+        "household_days_total": 90
+      },
+      "peak_kw": {
+        "baseline_mean": 0.507465827612278,
+        "policy_mean": 0.49409656670850005,
+        "absolute_change": -0.013369260903778013,
+        "percent_change_mean_of_ratios": -1.1532571004755132,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": -2.634514518284476,
+        "household_days_improved": 9,
+        "household_days_total": 90
+      },
+      "peak_to_average": {
+        "baseline_mean": 2.723924785158164,
+        "policy_mean": 2.8592366452052045,
+        "absolute_change": 0.13531186004703996,
+        "percent_change_mean_of_ratios": 4.220537920212139,
+        "percent_change_median": 0.8537111690946113,
+        "percent_change_pooled": 4.9675329063531235,
+        "household_days_improved": 2,
+        "household_days_total": 90
+      },
+      "import_kwh": {
+        "baseline_mean": 4.648566541785603,
+        "policy_mean": 4.433643899183766,
+        "absolute_change": -0.21492264260183772,
+        "percent_change_mean_of_ratios": -4.924151931636862,
+        "percent_change_median": -1.6356233572959253,
+        "percent_change_pooled": -4.623417577653546,
+        "household_days_improved": 53,
+        "household_days_total": 90
+      },
+      "overrides": {
+        "baseline_mean": 0.0,
+        "policy_mean": 0.0,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": NaN,
+        "percent_change_median": NaN,
+        "percent_change_pooled": NaN,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "discomfort": {
+        "baseline_mean": 7.253986309504697,
+        "policy_mean": 7.253986309504697,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": 0.0,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": 0.0,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "unserved_kwh": {
+        "baseline_mean": 0.0,
+        "policy_mean": 0.0,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": NaN,
+        "percent_change_median": NaN,
+        "percent_change_pooled": NaN,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "safety": {
+        "necessity_service_opportunities": 10723,
+        "necessity_shed_while_entitled": 0,
+        "condition": "necessity appliance, occupant requesting it, service budget remaining, grid up"
+      }
+    },
+    "SHARP learned policy": {
+      "cost_inr": {
+        "baseline_mean": 24.61377291058712,
+        "policy_mean": 24.272785108846893,
+        "absolute_change": -0.340987801740228,
+        "percent_change_mean_of_ratios": -2.2693496545418883,
+        "percent_change_median": -1.0208690926180288,
+        "percent_change_pooled": -1.3853536513029148,
+        "household_days_improved": 68,
+        "household_days_total": 90
+      },
+      "peak_kw": {
+        "baseline_mean": 0.507465827612278,
+        "policy_mean": 0.48653639569331175,
+        "absolute_change": -0.020929431918966176,
+        "percent_change_mean_of_ratios": -4.017953143702682,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": -4.124303702860771,
+        "household_days_improved": 19,
+        "household_days_total": 90
+      },
+      "peak_to_average": {
+        "baseline_mean": 2.723924785158164,
+        "policy_mean": 2.6559625783431278,
+        "absolute_change": -0.0679622068150364,
+        "percent_change_mean_of_ratios": -1.9701887587802855,
+        "percent_change_median": 0.2650208735741281,
+        "percent_change_pooled": -2.4950104050354707,
+        "household_days_improved": 18,
+        "household_days_total": 90
+      },
+      "import_kwh": {
+        "baseline_mean": 4.648566541785603,
+        "policy_mean": 4.57060023963659,
+        "absolute_change": -0.07796630214901205,
+        "percent_change_mean_of_ratios": -2.267806842114142,
+        "percent_change_median": -1.0208690926180215,
+        "percent_change_pooled": -1.6772117049025637,
+        "household_days_improved": 68,
+        "household_days_total": 90
+      },
+      "overrides": {
+        "baseline_mean": 0.0,
+        "policy_mean": 0.0,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": NaN,
+        "percent_change_median": NaN,
+        "percent_change_pooled": NaN,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "discomfort": {
+        "baseline_mean": 7.253986309504697,
+        "policy_mean": 7.253986309504697,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": 0.0,
+        "percent_change_median": 0.0,
+        "percent_change_pooled": 0.0,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "unserved_kwh": {
+        "baseline_mean": 0.0,
+        "policy_mean": 0.0,
+        "absolute_change": 0.0,
+        "percent_change_mean_of_ratios": NaN,
+        "percent_change_median": NaN,
+        "percent_change_pooled": NaN,
+        "household_days_improved": 0,
+        "household_days_total": 90
+      },
+      "safety": {
+        "necessity_service_opportunities": 9585,
+        "necessity_shed_while_entitled": 0,
+        "condition": "necessity appliance, occupant requesting it, service budget remaining, grid up"
+      }
+    }
+  },
+  "absolute_means": {
+    "serve_preferred (no demand response)": {
+      "cost_inr": 24.61377291058712,
+      "import_kwh": 4.648566541785603,
+      "peak_kw": 0.507465827612278,
+      "peak_to_average": 2.723924785158164,
+      "overrides": 0.0,
+      "discomfort": 7.253986309504697,
+      "unserved_kwh": 0.0,
+      "infeasible_steps": 0.0,
+      "outage_steps": 5.066666666666666
+    },
+    "peak_aware (rule-based)": {
+      "cost_inr": 23.60918311143267,
+      "import_kwh": 4.433643899183766,
+      "peak_kw": 0.49409656670850005,
+      "peak_to_average": 2.8592366452052045,
+      "overrides": 0.0,
+      "discomfort": 7.253986309504697,
+      "unserved_kwh": 0.0,
+      "infeasible_steps": 0.0,
+      "outage_steps": 5.066666666666666
+    },
+    "SHARP learned policy": {
+      "cost_inr": 24.272785108846893,
+      "import_kwh": 4.57060023963659,
+      "peak_kw": 0.48653639569331175,
+      "peak_to_average": 2.6559625783431278,
+      "overrides": 0.0,
+      "discomfort": 7.253986309504697,
+      "unserved_kwh": 0.0,
+      "infeasible_steps": 0.0,
+      "outage_steps": 5.066666666666666
+    }
+  },
+  "metric_notes": {
+    "cost_inr": "Billed on the real APCPDCL FY2025-26 telescopic slab.",
+    "peak_to_average": "Averaged per household-day, not pooled.",
+    "overrides": "Synthetic occupant model; counts are not real behaviour.",
+    "unserved_kwh": "Demand the supply could not meet, mostly during outages."
+  },
+  "limitations": [
+    "The occupant, including every override, is synthetic and generated from a stated rule. Override counts compare controllers under the same simulated occupant; they are not evidence about real people.",
+    "Appliance power values are proxies for 3,439 of 4,124 devices.",
+    "The learned policy chooses a service level for appliances the occupant asked for; it never switches on an unwanted appliance, which is also what the scripted policies do.",
+    "This is simulator evaluation, not field evidence."
+  ],
+  "approved_for_deployment": false
+}

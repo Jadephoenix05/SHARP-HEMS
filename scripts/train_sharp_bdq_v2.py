@@ -139,6 +139,38 @@ def gradient_test():
             raise AssertionError('Padded branches contributed to the loss')
 
 
+SCENARIOS = {
+    'main': 'data/processed/sharp_rl_transitions_v2/rl_transitions.parquet',
+    # Rooftop PV overlay. IRES reports almost no rooftop solar in Andhra
+    # Pradesh, so the main scenario has pv_generation_kw identically zero -
+    # a model trained on it alone has never seen solar vary and cannot be
+    # expected to behave sensibly in a home that has it.
+    'pv': 'data/processed/sharp_rl_scenario_pv_v1/rl_transitions.parquet',
+}
+
+
+def load_many(root, scenarios, split):
+    """Load one or more scenarios for a split and stack them.
+
+    Safe to combine because the household-to-split assignment is identical
+    across scenarios and each scenario's dates are a subset of that split's
+    dates, so neither a household nor a date crosses a split boundary. Verified
+    in verify_scenario_compatibility_v1.py, which must pass before this is used.
+    """
+    parts = []
+    for name in scenarios:
+        path = root / SCENARIOS[name]
+        if not path.exists():
+            raise FileNotFoundError(f'Missing scenario {name}: {path}')
+        loaded = load(path, split)
+        parts.append(loaded)
+        print(f'  {split:10s} {name:4s} {len(loaded[0]):7,d} rows')
+    if len(parts) == 1:
+        return parts[0]
+    return tuple(np.concatenate([part[i] for part in parts], axis=0)
+                 for i in range(len(parts[0])))
+
+
 def load(source, split):
     d = pd.read_parquet(source, filters=[('split', '==', split)])
     if d.empty:
@@ -220,14 +252,16 @@ def evaluate(net, target, x, nx, actions, present, reward, done, gamma, chunk=20
 
 
 def fit(root, steps, warm_start, batch, gamma, scale, alpha, lr, seed, hidden,
-        level_balance, tag):
+        level_balance, tag, scenarios=('main',)):
     gradient_test()
-    source = root / 'data/processed/sharp_rl_transitions_v2/rl_transitions.parquet'
+    source = root / SCENARIOS['main']
     if not source.exists():
         raise FileNotFoundError(f'Missing {source}')
 
-    x, nx, actions, present, reward, done = load(source, 'train')
-    vx, vnx, vactions, vpresent, vreward, vdone = load(source, 'validation')
+    print(f'scenarios: {list(scenarios)}')
+    x, nx, actions, present, reward, done = load_many(root, scenarios, 'train')
+    vx, vnx, vactions, vpresent, vreward, vdone = load_many(
+        root, scenarios, 'validation')
 
     # Normalisation is fitted on TRAIN ONLY and then applied to validation.
     features = x.shape[1]
@@ -335,6 +369,8 @@ def fit(root, steps, warm_start, batch, gamma, scale, alpha, lr, seed, hidden,
         'learning_rate': lr,
         'gamma': gamma,
         'reward_scale_divisor': scale,
+        'scenarios': list(scenarios),
+        'scenario_paths': {name: SCENARIOS[name] for name in scenarios},
         'final': {k: final[k] for k in
                   ['balanced_accuracy', 'td_error_all', 'td_error_non_terminal',
                    'td_error_terminal',
@@ -403,8 +439,11 @@ if __name__ == '__main__':
     p.add_argument('--level-balance', action='store_true',
                    help='inverse-frequency weighting on the CQL / cloning term')
     p.add_argument('--tag', default=None, help='output directory suffix')
+    p.add_argument('--scenarios', nargs='+', default=['main'],
+                   choices=sorted(SCENARIOS),
+                   help='main is grid-only; add pv for rooftop solar exposure')
     a = p.parse_args()
     tag = a.tag or (f'cql{a.alpha}' + ('_balanced' if a.level_balance else '')
                     + ('_bc' if a.warm_start else ''))
     fit(a.root.resolve(), a.steps, a.warm_start, a.batch, a.gamma, a.reward_scale,
-        a.alpha, a.lr, a.seed, a.hidden, a.level_balance, tag)
+        a.alpha, a.lr, a.seed, a.hidden, a.level_balance, tag, tuple(a.scenarios))
