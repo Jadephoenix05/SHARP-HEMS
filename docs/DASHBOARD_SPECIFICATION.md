@@ -29,22 +29,33 @@ A dashboard that only plots power answers none of them.
 
 Ownership is measured across the 431 target households — no inverter, no solar.
 
-| id | Appliance | Class | Legal levels | Sim watts | Owns it |
+The idea book's four classes: **Critical** never interrupted, **Thermostatic**
+adjusted inside comfort bands, **Deferrable** moved in time, **Interruptible**
+paused briefly.
+
+| id | Appliance | Class | Legal levels | Watts | Owns it |
 |---|---|---|---|---|---|
-| `refrigerator_01` | Refrigerator | necessity, thermostatic | **not commandable** | 43.2 | 30.4 % |
-| `ceiling_fan_01` | Ceiling fan | necessity, **dimmable** | 1, 2 | 60.0 | 97.0 % |
-| `led_bulb_01` | LED light | necessity, **dimmable** | 1, 2 | 9.0 | 68.9 % |
-| `television_01` | Television | interruptible | 0, 1 | 104.6 | 78.9 % |
-| `water_pump_01` | Water pump | interruptible | 0, 1 | 750.0 | 11.1 % |
-| `washing_machine_01` | Washing machine | deferrable, cycle | 0, 1 | 113.7 | 8.6 % |
-| `air_conditioner_01` | Air conditioner | thermostatic | 0, 1 + advisory setpoint | 1328.4 | 5.6 % |
+| `ceiling_fan_01` | Ceiling fan | **Critical** | **1 only** | 60.0 | 97.0 % |
+| `led_bulb_01` | LED light | **Critical** | **1 only** | 9.0 | 68.9 % |
+| `refrigerator_01` | Refrigerator | **Critical + thermostatic** | **1 only** | 43.2 | 30.4 % |
+| `air_conditioner_01` | Air conditioner | Thermostatic | 0, 1 + advisory setpoint | 1328.4 | 5.6 % |
+| `washing_machine_01` | Washing machine | Deferrable | 0, 1 | 113.7 | 8.6 % |
+| `television_01` | Television | Interruptible | 0, 1 | 104.6 | 78.9 % |
+| `mixer_grinder_01` | Mixer grinder | Interruptible | 0, 1 | 500.0 | 51.7 % |
 
 **Level 0 is not offered on a necessity appliance.** Not greyed out after the
 fact — never rendered as available. The fan, the light and the fridge cannot be
 shed, by anyone, including the resident.
 
-**Level 2 is only offered where `supports_reduced` is true**: the fan and the
-light. Offering "dim" on a television is a bug, and the Pi will reject it.
+**Level 2 is not offered at all in this build.** A critical load is never shed
+*and never dimmed* while the occupant is using it, and the only non-critical
+dimmable appliance in these homes is the air cooler — 37 devices out of 3,353.
+The dashboard therefore renders **two states, ON and SHED**, and a critical load
+renders as ON with no control at all.
+
+The protection is conditional, and the UI must reflect that: a fridge nobody is
+asking for at 3 a.m. is legitimately off. Protecting essential service does not
+mean running it around the clock.
 
 ### The air conditioner is a special case
 
@@ -60,27 +71,26 @@ implied by the UI.
 
 ---
 
-## 3. The three levels
+## 3. The levels, and what the resident sees
 
 ```
-0 = OFF       shed
+0 = OFF       shed      - luxury loads only
 1 = ON        full power
-2 = REDUCED   dimmed or low speed
+2 = REDUCED   reserved; not used on any critical load
 ```
 
-Level 2 is what distinguishes SHARP from a rule-based shedder, and the
-validated model chooses it with **0.6345 recall**. A two-state toggle in the UI
-throws away the project's headline behaviour.
-
-Render three distinct states. Not a checkbox. Suggested treatment:
-
-| Level | Colour | Label |
+| State | Treatment | Applies to |
 |---|---|---|
-| 1 ON | solid | `ON` |
-| 2 REDUCED | hatched or half-filled | `DIM 50 %` |
-| 0 OFF | outline only | `SHED` |
+| `PROTECTED` | solid, **no control shown** | fan, light, fridge in use |
+| `ON` | solid, control shown | luxury currently served |
+| `SHED` | outline only, reason on hover | luxury paused by SHARP |
 
-Dim percentages come from the dataset: ceiling fan **50 %**, LED bulb **40 %**.
+**A critical appliance must render with no off control at all** — not a greyed
+toggle. The resident should never see a button that would cut their fan, because
+no such action exists anywhere in the system.
+
+Level 2 stays in the contract and in `reduced_power_fraction` so dimming can be
+reintroduced without a schema change. It is simply never selected today.
 
 ---
 
@@ -100,6 +110,21 @@ Ten panels. Panels 4, 5 and 6 are the ones that carry the argument.
 | 8 | Power flow | grid → house, animated | `sensor/source/*` |
 | 9 | Outage mode | battery runway, objective switch | `state.mode_islanded` |
 | 10 | Results | **peak, PAR**, comfort hours, override rate | FastAPI metrics |
+
+### The headline is equity, not savings
+
+The line that carries the project:
+
+> **We do not choose which village goes dark. We take the television from
+> everyone so that nobody goes dark.**
+
+Measured on 40 held-out household-days, SHARP cuts household peak by **4.65 %** —
+the same relief a rolling blackout would get by cutting supply to **4.7 homes in
+100**, delivered without cutting anyone. The shed-luxury-only ceiling is 10.96 %,
+equivalent to blacking out 11 homes in 100.
+
+Panel 10 should say that in those terms. "Peak avoided, equivalent to N homes
+not blacked out" is the number a DISCOM and a citizen both understand.
 
 ### Panel 10 must lead with peak and PAR, not cost
 

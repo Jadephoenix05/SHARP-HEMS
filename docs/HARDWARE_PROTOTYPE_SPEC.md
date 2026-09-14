@@ -12,27 +12,41 @@ and isolation.
 
 ## 1. What the prototype must demonstrate
 
-The dataset defines four control classes. The prototype has to make all four
-physically visible, or the demo proves less than the dataset supports.
+The idea book's demand-response vocabulary defines four load classes. All four
+must be physically visible, or the demo proves less than the dataset supports.
 
-| Class | Dataset field | Behaviour to show |
+| Class | Rule | Devices in the 431 target homes |
 |---|---|---|
-| Necessity | `is_necessity = True` | **Never shed.** Masked out of the action space. |
-| Thermostatic | `dynamics_family = thermostatic` | Setpoint control; compressor duty is an output |
-| Deferrable | `dynamics_family = cycle` | Cannot be interrupted once started |
-| Interruptible | the rest | Shed or dim per step |
+| **Critical** | Never interrupted | **2,586** |
+| **Thermostatic** | Adjusted inside comfort bands | 30 |
+| **Deferrable** | Moved to another time | 63 |
+| **Interruptible** | Paused briefly | 674 |
 
-And the three action levels the shield now supports:
+Critical is a *permission* — may SHARP touch it? The other three are *dynamics* —
+how does it respond? A refrigerator is both Critical and thermostatic, and that
+is not a contradiction: SHARP leaves it alone, and its compressor protection
+still applies.
+
+### Action levels, and the decision that fans and lights are never dimmed
 
 ```
 0 = OFF       shed
 1 = ON        full power
-2 = REDUCED   dimmed or low speed
+2 = REDUCED   dim / low speed  - NOT used on any critical load
 ```
 
-Level 2 is the point of the whole design: under grid stress SHARP **dims a fan
-or light rather than switching it off**. A demo that only shows on/off has not
-shown SHARP.
+A fan, a light or a fridge the occupant is using is **never shed and never
+dimmed**. In these homes the ceiling fan is the only cooling 94 per cent of
+families have, and degrading it is not what "restricting luxury appliances"
+means.
+
+The measured consequence, stated rather than discovered: level 2 then applies
+only to discretionary dimmables — 37 air coolers out of 3,353 devices — so
+SHARP is a **binary shedder for 98.9 per cent of appliances**. It gives up about
+half the achievable peak reduction. That is the deliberate price of the
+guarantee, and the guarantee is the product.
+
+**So the Stage 1 rig needs no PWM at all.** Seven plain GPIO pins.
 
 ---
 
@@ -41,19 +55,28 @@ shown SHARP.
 Six controllable plus one critical indicator, matching the idea book's
 prototype table.
 
-| # | Appliance | Class | Dataset `appliance_type` | Levels | Sim power | Rig |
-|---|---|---|---|---|---|---|
-| — | Refrigerator | **Necessity** | `refrigerator` | *not in action space* | 47.7 W | LED, always lit |
-| 1 | Ceiling fan | **Necessity, dimmable** | `ceiling_fan` | 0 blocked, 1, 2 | 60 W | LED on **PWM** |
-| 2 | LED light | **Necessity, dimmable** | `led_bulb` | 0 blocked, 1, 2 | 9 W | LED on **PWM** |
-| 3 | Air conditioner | Thermostatic | `air_conditioner` | setpoint | 1114.6 W | LED + relay, **never cut mid-compressor** |
-| 4 | Washing machine | Deferrable | `washing_machine` | 0, 1 | 110.1 W | LED + relay, min-on 4 steps |
-| 5 | Television | Interruptible | `television` | 0, 1 | 118.5 W | LED + relay |
-| 6 | Water pump | Interruptible | `water_pump` | 0, 1 | 750 W | LED + relay (largest sheddable) |
+Ownership is measured across the 431 target households: no inverter, no solar.
 
-**Two of the seven need PWM, not a relay.** The fan and the LED light must dim.
-Tell whoever orders parts today — discovering this after the relay board arrives
-costs a week.
+| # | Appliance | Class | `appliance_type` | Levels | Watts | Owns it |
+|---|---|---|---|---|---|---|
+| 1 | Ceiling fan | **Critical** | `ceiling_fan` | **1 only** | 60.0 | **97.0 %** |
+| 2 | LED light | **Critical** | `led_bulb` | **1 only** | 9.0 | 68.9 % |
+| 3 | Refrigerator | **Critical + thermostatic** | `refrigerator` | **1 only** | 43.2 | 30.4 % |
+| 4 | Air conditioner | Thermostatic | `air_conditioner` | 0, 1 + advisory setpoint | 1328.4 | 5.6 % |
+| 5 | Washing machine | Deferrable | `washing_machine` | 0, 1, min-on 4 steps | 113.7 | 8.6 % |
+| 6 | Television | Interruptible | `television` | 0, 1 | 104.6 | **78.9 %** |
+| 7 | Mixer grinder | Interruptible | `mixer_grinder` | 0, 1 | 500.0 | **51.7 %** |
+
+Three Critical, one Thermostatic, one Deferrable, two Interruptible. All four
+classes covered.
+
+**The water pump was dropped in favour of the mixer grinder.** The pump is in
+11.1 per cent of homes; the mixer is in 51.7 per cent and is the second most
+common sheddable appliance in Andhra Pradesh. Both are Interruptible `task`
+loads, so the class coverage is identical and the mixer is far more
+representative.
+
+**No PWM is required.** Nothing dims, so all seven are plain digital outputs.
 
 ### Why these seven
 
@@ -85,8 +108,8 @@ stage, clearly labelled.
 | **Passive aluminium heatsink case** | 1 | The *official* case throttles to 428 MHz. Use FLIRC-style. |
 | microSD 32 GB A2, or USB SSD | 1 | SSD strongly preferred — see SD-card wear below |
 | 5 V 3 A USB-C supply | 1 | Official supply; brownouts corrupt cards |
-| 5 mm LEDs | 7 | 2 must be on PWM-capable pins |
-| Resistors 220 Ω | 7 | |
+| 5 mm LEDs | 7 | any GPIO; no PWM needed |
+| Resistors 220 Ω | 7 | one per LED |
 | Breadboard + jumpers | 1 set | |
 | 8-channel opto-isolated relay board, 5 V | 1 | Stage 2 only; opto-isolation is not optional |
 
@@ -105,32 +128,23 @@ stage, clearly labelled.
 BCM numbering, 3.3 V logic. Relay boards are typically **active-low** — verify
 yours before wiring, because an inverted board energises every load at boot.
 
-| Appliance | BCM pin | Mode | Note |
+| Appliance | BCM pin | Class | Commandable? |
 |---|---|---|---|
-| Refrigerator indicator | 17 | digital out | Always on. Never commandable. |
-| Ceiling fan | **12** | **PWM (hardware)** | GPIO12 is hardware-PWM capable |
-| LED light | **13** | **PWM (hardware)** | GPIO13 is hardware-PWM capable |
-| Air conditioner | 16 | digital out | |
-| Washing machine | 20 | digital out | |
-| Television | 21 | digital out | |
-| Water pump | 26 | digital out | |
-| Override button (optional) | 6 | input, pull-up | Physical override capture |
+| Ceiling fan | 17 | Critical | **No** — on whenever the occupant wants it |
+| LED light | 27 | Critical | **No** — same |
+| Refrigerator | 22 | Critical | **No** — always on, never commandable |
+| Air conditioner | 16 | Thermostatic | 0 / 1 |
+| Washing machine | 20 | Deferrable | 0 / 1, min-on 4 steps |
+| Television | 21 | Interruptible | 0 / 1 |
+| Mixer grinder | 26 | Interruptible | 0 / 1 |
+| Override button (optional) | 6 | input, pull-up | physical override capture |
 
-GPIO12 and GPIO13 are the hardware-PWM channels. Software PWM on other pins
-flickers visibly under CPU load, which looks like a fault during a demo.
+All plain digital outputs. **GPIO12 and GPIO13 are left free** — they are the
+hardware-PWM channels, and keeping them unused means dimming can be added later
+without rewiring.
 
-PWM duty for level 2 comes from the dataset's `reduced_power_fraction`:
-
-| Appliance | Fraction | PWM duty |
-|---|---|---|
-| ceiling_fan | 0.50 | 50 % |
-| table_fan | 0.50 | 50 % |
-| air_cooler | 0.55 | 55 % |
-| led_bulb / led_tube | 0.40 | 40 % |
-| incandescent_bulb | 0.50 | 50 % |
-
-CFL is deliberately absent — it dims poorly, and the dataset excludes it rather
-than pretending otherwise.
+`reduced_power_fraction` stays in the dataset (fan 0.50, LED 0.40, cooler 0.55)
+so the capability survives the decision not to use it.
 
 ---
 

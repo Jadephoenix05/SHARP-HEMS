@@ -70,6 +70,11 @@ WORKING = Path('/kaggle/working')
 N_BRANCHES = 28
 N_LEVELS = 3                      # 0 = OFF (shed), 1 = ON (full), 2 = REDUCED (dim)
 LEVEL_NAMES = ['off', 'on', 'reduced']
+# State layout from feature_schema.json: 25 globals, then 10 per device slot.
+GLOBAL_FEATURES = 25
+DEVICE_FEATURES = 10
+REMAINING_HOURS = 0
+PREFERRED_SERVICE = 6
 
 SEED = 42
 HIDDEN = 128
@@ -221,11 +226,26 @@ if devices.slot.max() >= N_BRANCHES:
 
 supports_reduced = {(t, s): bool(v) for t, s, v
                     in zip(devices.template_id, devices.slot, devices.supports_reduced)}
+is_necessity = {(t, s): bool(v) for t, s, v
+                in zip(devices.template_id, devices.slot, devices.is_necessity)}
 print(f'{int(devices.supports_reduced.sum()):,} of {len(devices):,} devices can dim')
 
 
 def build_legal_mask(data):
-    \"\"\"(rows, 28, 3) mask. Level 2 only where the appliance can actually dim.\"\"\"
+    \"\"\"(rows, 28, 3) TRAINING mask: level 2 wherever the appliance can dim.
+
+    This is the PHYSICAL constraint only, and it has to stay that way. The
+    conservative term takes the log-probability of the logged action, so if the
+    mask declares that action impossible you are asking for the log of zero. An
+    attempt to fold the policy rule in here produced a TD error of 317 and a
+    balanced accuracy of 0.40.
+
+    The rule that SHARP never dims a fan, a light or a fridge is a SHIELD rule,
+    enforced at action-selection time by the deployment mask below - exactly
+    like the existing rule that it never sheds them. The dataset contains
+    306,666 logged necessity sheds and that has never broken training, for the
+    same reason.
+    \"\"\"
     per_household = {}
     for household in np.unique(data['household']):
         mask = np.ones((N_BRANCHES, N_LEVELS), dtype=bool)
@@ -242,12 +262,45 @@ for data, name in [(train, 'train'), (validation, 'validation')]:
     live = data['present'] > 0
     chose_illegal = int((~np.take_along_axis(
         data['legal'], data['actions'][:, :, None], axis=2)[:, :, 0] & live).sum())
-    print(f'{name}: logged actions that violate the mask: {chose_illegal}')
+    print(f'{name}: logged actions that violate the physical mask: {chose_illegal}')
     if chose_illegal:
         raise ValueError(
             f'{chose_illegal} logged {name} actions are illegal under the mask. '
             'The mask or the slot ordering is wrong - do not train on this.')
-print('legality mask agrees with every logged action')
+
+    # THE DEPLOYMENT MASK. What the policy may choose, and what the Pi enforces.
+    #
+    # A necessity appliance is never shed and never dimmed WHEN THE OCCUPANT
+    # WANTS IT. The condition matters: a fridge at 3 a.m. that nobody is asking
+    # for, or a fan whose daily service budget is already met, is correctly OFF.
+    # Forcing level 1 unconditionally would run every fan and light around the
+    # clock, which wastes energy and is not what protecting essential service
+    # means.
+    #
+    # Occupant demand is read from the state itself - device feature 6 is
+    # preferred_service_fraction and feature 0 is remaining_service_hours - so
+    # this uses exactly the quantities the shield uses.
+    necessity = np.stack([
+        np.array([is_necessity.get((h, s), False) for s in range(N_BRANCHES)])
+        for h in data['household']])
+    slot = np.arange(N_BRANCHES) * DEVICE_FEATURES + GLOBAL_FEATURES
+    wanted = (data['state'][:, slot + PREFERRED_SERVICE] > 0) &              (data['state'][:, slot + REMAINING_HOURS] > 0)
+    entitled = necessity & wanted
+    deployment = data['legal'].copy()
+    deployment[:, :, 2] &= ~entitled          # never dim an essential in use
+    deployment[:, :, 0] &= ~entitled          # never shed one either
+    data['deployment_legal'] = deployment
+    data['necessity'] = necessity
+    data['entitled'] = entitled
+
+print('training mask agrees with every logged action')
+live = train['present'] > 0
+blocked = int((train['legal'][:, :, 2] & ~train['deployment_legal'][:, :, 2] & live).sum())
+entitled = int((train['entitled'] & live).sum())
+print(f'{entitled:,} device-steps where an essential is in use and therefore '
+      f'protected')
+print(f'deployment mask blocks {blocked:,} of those from being dimmed')
+print('a fan, light or fridge the occupant is using is never shed and never dimmed')
 """),
 
     markdown("""
@@ -466,6 +519,9 @@ def double_q_target(net, target_net, next_state, present, legal, reward, done,
 def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     state, next_state = data['normalised'], data['normalised_next']
     present, legal, actions = data['present'], data['legal'], data['actions']
+    deployment = data['deployment_legal']
+    entitled = data['entitled']
+    necessity_touched = 0
     reward, done = data['scaled_reward'], data['done']
 
     absolute = np.zeros(len(state))
@@ -484,11 +540,13 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
         absolute[index] = (np.abs(chosen - y[:, None]) * present[index]).sum(1)
         counted[index] = present[index].sum(1)
 
-        allowed = (present[index][:, :, None] > 0) & legal[index]
+        # Select under the DEPLOYMENT mask: this is what would actually happen.
+        allowed = (present[index][:, :, None] > 0) & deployment[index]
         greedy = np.argmax(np.where(allowed, q, -np.inf), axis=2)
         live = present[index] > 0
         illegal_picks += int((~np.take_along_axis(
-            legal[index], greedy[:, :, None], axis=2)[:, :, 0] & live).sum())
+            deployment[index], greedy[:, :, None], axis=2)[:, :, 0] & live).sum())
+        necessity_touched += int((entitled[index] & live & (greedy != 1)).sum())
         for level in range(N_LEVELS):
             picked = live & (actions[index] == level)
             logged_count[level] += picked.sum()
@@ -503,6 +561,7 @@ def evaluate(net, target_net, data, gamma=GAMMA, chunk=20000):
     return {
         'balanced_accuracy': float(recall.mean()),
         'raw_agreement': float(agree.sum() / total),
+        'necessity_degraded': necessity_touched,
         'td_error_non_terminal': td(~done),
         'td_error_terminal': td(done),
         'td_error_pooled_do_not_quote': td(slice(None)),
@@ -1004,7 +1063,7 @@ golden = {
     'state': validation['normalised'][0].tolist(),
     'expected_q': expected[0].tolist(),
     'expected_greedy_action': np.argmax(np.where(
-        (validation['present'][0][:, None] > 0) & validation['legal'][0],
+        (validation['present'][0][:, None] > 0) & validation['deployment_legal'][0],
         expected[0], -np.inf), axis=1).tolist(),
     'device_present': validation['present'][0].tolist(),
     # The legality mask has to travel with the vector. The greedy action is an
@@ -1012,8 +1071,16 @@ golden = {
     # cannot reproduce expected_greedy_action even with byte-identical weights
     # and a byte-identical state - it would pick level 2 on an appliance that
     # has no level 2.
-    'legal_levels': validation['legal'][0].astype(int).tolist(),
+    # The DEPLOYMENT mask, not the physical one: a necessity appliance is never
+    # shed and never dimmed, so its only legal level is 1.
+    'legal_levels': validation['deployment_legal'][0].astype(int).tolist(),
     'supports_reduced': validation['legal'][0][:, 2].astype(int).tolist(),
+    'is_necessity': validation['necessity'][0].astype(int).tolist(),
+    'occupant_wants_it': validation['entitled'][0].astype(int).tolist(),
+    'policy_rule': ('A fan, light or fridge the occupant is using is never shed '
+                    'and never dimmed - its only legal level is 1. One the '
+                    'occupant is not asking for may be off; protecting essential '
+                    'service does not mean running it around the clock.'),
     'how_to_check': [
         'h = maximum(0, state @ w + b)',
         'q = (h @ v + vb) + (h @ a + ab).reshape(28, 3)',

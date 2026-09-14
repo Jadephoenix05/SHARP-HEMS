@@ -69,8 +69,17 @@ def load_policy(checkpoint):
             1, keepdims=True)
 
         n = len(supports_reduced)
+        necessity = np.array([
+            bool(state[GLOBAL_FEATURES + j * DEVICE_FEATURES + PROTECTED_SERVICE_OFFSET])
+            for j in range(n)])
         legal = np.ones((n, N_LEVELS), bool)
-        legal[:, 2] = supports_reduced          # a device that cannot dim, cannot dim
+        # A device that cannot dim, cannot dim. And by project decision a
+        # NECESSITY is never dimmed either: a ceiling fan is the only cooling
+        # 94 per cent of these homes have, and degrading it is not what
+        # "restricting luxury appliances" means. Level 2 therefore survives only
+        # on discretionary dimmables - air coolers - which is 37 of 3,353
+        # devices. That is a deliberate trade, not an oversight.
+        legal[:, 2] = supports_reduced & ~necessity
         level = np.argmax(np.where(legal, q[:n], -np.inf), axis=1)
 
         # SHARP decides how fully to serve what the occupant asked for. It does
@@ -108,9 +117,25 @@ def maximum_curtailment_oracle(*, state, device_present, supports_reduced,
     necessity = np.array([
         bool(state[GLOBAL_FEATURES + j * DEVICE_FEATURES + PROTECTED_SERVICE_OFFSET])
         for j in range(len(supports_reduced))])
-    level = np.where(necessity,
-                     np.where(supports_reduced, 2, 1),   # dim it, or keep it on
-                     0)                                   # shed everything else
+    # Necessities are served in full - never dimmed - and everything else is
+    # shed. This is now the real ceiling, because necessity dimming is off.
+    level = np.where(necessity, 1, np.where(supports_reduced, 2, 0))
+    return np.where(occupant_wants, level, 0)
+
+
+def shed_discretionary_only_oracle(*, state, device_present, supports_reduced,
+                                   is_air_conditioner, occupant_wants, budget):
+    """The ceiling if necessity appliances are never dimmed, only served.
+
+    This is the alternative design: fans and lights always run at full
+    performance, and the controller may only shed discretionary loads. Comparing
+    its ceiling against the full oracle's says exactly what dimming buys, and
+    therefore whether giving it up is affordable.
+    """
+    necessity = np.array([
+        bool(state[GLOBAL_FEATURES + j * DEVICE_FEATURES + PROTECTED_SERVICE_OFFSET])
+        for j in range(len(supports_reduced))])
+    level = np.where(necessity, 1, 0)      # serve necessities fully, shed the rest
     return np.where(occupant_wants, level, 0)
 
 
@@ -262,6 +287,7 @@ def evaluate(root, checkpoint, episodes, seed, cohort='plain_grid'):
         'peak_aware (rule-based)': ('peak_aware', None),
         'SHARP learned policy': ('learned', learned),
         'oracle (maximum curtailment)': ('learned', maximum_curtailment_oracle),
+        'oracle (no necessity dimming)': ('learned', shed_discretionary_only_oracle),
     }
     per_day, transitions = {}, {}
     for label, (policy_name, policy_fn) in arms.items():
@@ -286,7 +312,8 @@ def evaluate(root, checkpoint, episodes, seed, cohort='plain_grid'):
     oracle_label = 'oracle (maximum curtailment)'
 
     results = {}
-    for label in [rule_label, learned_label, oracle_label]:
+    no_dim_label = 'oracle (no necessity dimming)'
+    for label in [rule_label, learned_label, oracle_label, no_dim_label]:
         results[label] = {
             metric: compare(per_day[baseline_label], per_day[label], metric,
                             lower_is_better=lower)
