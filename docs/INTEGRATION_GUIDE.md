@@ -325,8 +325,8 @@ that drifts is the one enforcing safety. It is pure Python with no dependencies.
 
 ### Your build order
 
-1. GPIO map from `HARDWARE_PROTOTYPE_SPEC.md` §4. **`fan_01` and `light_01` need
-   hardware PWM on GPIO12/13** — order parts accordingly
+1. GPIO map from `HARDWARE_PROTOTYPE_SPEC.md` §4. **Seven plain digital
+   outputs — no PWM.** Nothing dims, so GPIO12/13 stay free for later
 2. Actuator service: subscribe `cmd`, validate, drive GPIO, publish `ack`
 3. All 8 local interlocks (spec §6)
 4. Watchdog: no valid cmd for 3 intervals → **hold last safe state**
@@ -336,8 +336,9 @@ that drifts is the one enforcing safety. It is pure Python with no dependencies.
 
 - [ ] Every `cmd` produces an `ack`, including every rejection with a reason
 - [ ] `test_e8_critical_load_safety.py` on the Pi: **0 violations / 10,000**
-- [ ] `fan_01` at level 2 → PWM 50 %; `light_01` at level 2 → PWM 40 %
-- [ ] A level-0 command to `fridge_01` is **rejected**, reason `NECESSITY_MASK`
+- [ ] A level-0 **or level-2** command to `fan_01`, `light_01` or `fridge_01`
+      is **rejected** while the occupant wants it, reason `NECESSITY_MASK`
+- [ ] The same appliance, *not* wanted, may legitimately be off
 - [ ] A command past `expires_at` is rejected
 - [ ] A repeated `command_id` is ignored, not re-applied
 - [ ] MQTT killed → relays hold, do **not** all switch off or on
@@ -488,7 +489,7 @@ Run in order. Each gates the next.
 | I5 | cmd → ack latency | Harini + Vaishnavi | < 500 ms p99 |
 | I6 | Actuation verification | Harini + Charu | mismatch < 1 % |
 | I7 | **Necessity mask end to end** | all | fridge-shed refused at API, shield **and** Pi |
-| I8 | Dim path end to end | all | level 2 → PWM 50 % → measured ≈ 50 % |
+| I8 | Critical protection end to end | all | level 0 and level 2 both refused on a fan, light or fridge in use |
 | I9 | Outage | all | AC/TV dead; fan/light continue on battery |
 | I10 | Watchdog | Harini | MQTT killed → holds state, does not fail open |
 | I11 | Replay determinism | Supriya | same episode twice → identical actions |

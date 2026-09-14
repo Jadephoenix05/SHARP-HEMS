@@ -1,0 +1,50 @@
+{
+  "status": "DOCS_CONSISTENT",
+  "documents": [
+    "DASHBOARD_GUIDE.md",
+    "DASHBOARD_SPECIFICATION.md",
+    "HARDWARE_PROTOTYPE_SPEC.md",
+    "HOSTING_AND_CONNECTIVITY_PLAN.md",
+    "INTEGRATION_GUIDE.md",
+    "RELEASE_AND_UPLOAD_GUIDE.md",
+    "RL_MODEL_SPEC.md"
+  ],
+  "checks_run": 115,
+  "decisions": [
+    {
+      "id": "D1",
+      "ruling": "Fans and lights are must - never shed."
+    },
+    {
+      "id": "D2",
+      "ruling": "No dimming of fans and lights at all."
+    },
+    {
+      "id": "D3",
+      "ruling": "Use the four load classes from the idea book."
+    },
+    {
+      "id": "D4",
+      "ruling": "Never cut a household off; restrict luxury instead."
+    },
+    {
+      "id": "D5",
+      "ruling": "The AC is on/off plus an ADVISORY setpoint, never automated."
+    },
+    {
+      "id": "D6",
+      "ruling": "No time-of-day tariff exists; a surcharge must be labelled a proposal."
+    },
+    {
+      "id": "D7",
+      "ruling": "The model is never presented as deployable."
+    },
+    {
+      "id": "D8",
+      "ruling": "Target homes first: no solar, no inverter."
+    }
+  ],
+  "failures": [],
+  "warnings": [],
+  "note": "Decisions override earlier drafts of these same documents. A forbidden phrase is excused when the line is stating the rule rather than instructing someone to break it."
+}
