@@ -38,6 +38,13 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 N_BRANCHES = 28
+# State layout, from feature_schema.json: 25 global features, then 10 per device
+# slot. Within a device block, offset 0 is remaining_service_hours and offset 3
+# is protected_service, which is the necessity flag.
+GLOBAL_FEATURES = 25
+DEVICE_FEATURES = 10
+REMAINING_HOURS_OFFSET = 0
+PROTECTED_SERVICE_OFFSET = 3
 N_LEVELS = 3
 STEP_HOURS = 0.25
 
@@ -82,6 +89,31 @@ def serve_preferred_reference(*, state, device_present, supports_reduced,
     return occupant_wants.astype(int)
 
 
+def maximum_curtailment_oracle(*, state, device_present, supports_reduced,
+                               is_air_conditioner, occupant_wants, budget):
+    """The physical ceiling: curtail everything the rules permit, every step.
+
+    This is not a policy anybody would deploy - it ignores comfort, service and
+    the occupant entirely, and it would be overridden constantly. It exists to
+    answer one question that no comparison against a baseline can: of the saving
+    that is physically available to ANY controller obeying the necessity rule,
+    how much does SHARP actually capture?
+
+    Without it, '1 per cent better than no control' is unreadable. It could mean
+    the policy is weak, or it could mean 1.1 per cent was all there ever was.
+
+    Necessity appliances are dimmed where they can be dimmed and served
+    otherwise; everything discretionary is shed.
+    """
+    necessity = np.array([
+        bool(state[GLOBAL_FEATURES + j * DEVICE_FEATURES + PROTECTED_SERVICE_OFFSET])
+        for j in range(len(supports_reduced))])
+    level = np.where(necessity,
+                     np.where(supports_reduced, 2, 1),   # dim it, or keep it on
+                     0)                                   # shed everything else
+    return np.where(occupant_wants, level, 0)
+
+
 def summarise(frame, label):
     """Per household-day outcomes, then averaged. Ratios are averaged per day,
     never computed from pooled sums, which would let big households dominate."""
@@ -102,7 +134,9 @@ def summarise(frame, label):
             'peak_kw': float(power.max()),
             'mean_kw': float(mean_power),
             'peak_to_average': float(power.max() / mean_power) if mean_power > 0 else np.nan,
-            'overrides': int(g.override_count.iloc[-1]),
+            # override_count is a per-step count, not a running total, so the
+            # last step is almost always zero. Sum it.
+            'overrides': int(g.override_count.sum()),
             'discomfort': float(g.reward_discomfort.sum()),
             'unserved_kwh': float(g.unserved_demand_kw.sum() * STEP_HOURS),
             'infeasible_steps': int((~g.constraint_feasible.astype(bool)).sum()),
@@ -143,10 +177,6 @@ def compare(baseline, treatment, column, lower_is_better=True):
     }
 
 
-GLOBAL_FEATURES = 25
-DEVICE_FEATURES = 10
-
-
 def safety_audit(frame, models):
     """Was a necessity load shed while the occupant wanted it AND could have it?
 
@@ -177,7 +207,8 @@ def safety_audit(frame, models):
             requested = np.asarray(requested, int)
             state = np.asarray(state, float)
             span = min(len(action), len(flags), len(requested))
-            budget = np.array([state[GLOBAL_FEATURES + j * DEVICE_FEATURES] * 4
+            budget = np.array([state[GLOBAL_FEATURES + j * DEVICE_FEATURES
+                                     + REMAINING_HOURS_OFFSET] * 4
                                for j in range(span)])
             entitled = flags[:span] & (requested[:span] > 0) & (budget > 1e-9)
             checked += int(entitled.sum())
@@ -188,15 +219,37 @@ def safety_audit(frame, models):
                           'budget remaining, grid up')}
 
 
-def evaluate(root, checkpoint, episodes, seed):
+def plain_grid_households(root):
+    """Homes with no inverter battery and no solar - 431 of 464, the first target.
+
+    A controller for an ordinary Andhra Pradesh home should be built and judged
+    on ordinary Andhra Pradesh homes. Mixing in the 33 households with an
+    inverter blurs both the baseline and the result, because their outage
+    behaviour is completely different.
+    """
+    h = pd.read_parquet(
+        root / 'data/processed/appliance_inputs_v1/ap_households_with_splits_v1.parquet')
+    h = h[pd.to_numeric(h.sanctioned_load_kw, errors='coerce').gt(0)]
+    no_inverter = h.inverter_battery_available.astype(float).fillna(0) <= 0
+    no_solar = pd.to_numeric(h.solar_home_system_capacity_w,
+                             errors='coerce').fillna(0) <= 0
+    return set(h.loc[no_inverter & no_solar, 'template_id'])
+
+
+def evaluate(root, checkpoint, episodes, seed, cohort='plain_grid'):
     import generate_sharp_rl_transitions_v2 as gen
 
     shipped = pd.read_parquet(
         root / 'data/processed/sharp_rl_transitions_v2/rl_transitions.parquet',
-        columns=['episode_id', 'split', 'policy'])
-    pool = sorted(shipped.loc[shipped.split.eq('validation')
-                              & shipped.policy.eq('serve_preferred')].episode_id.unique())
-    check(len(pool) > 0, 'No validation episodes')
+        columns=['episode_id', 'split', 'policy', 'household_id'])
+    eligible = shipped.split.eq('validation') & shipped.policy.eq('serve_preferred')
+    if cohort == 'plain_grid':
+        households = plain_grid_households(root)
+        eligible &= shipped.household_id.isin(households)
+        print(f'cohort: plain grid (no inverter, no solar) - '
+              f'{len(households)} households')
+    pool = sorted(shipped.loc[eligible].episode_id.unique())
+    check(len(pool) > 0, 'No validation episodes in this cohort')
     rng = np.random.default_rng(seed)
     chosen = list(rng.choice(pool, size=min(episodes, len(pool)), replace=False))
     print(f'{len(chosen)} held-out household-days, from {len(pool)} available')
@@ -208,6 +261,7 @@ def evaluate(root, checkpoint, episodes, seed):
         'serve_preferred (no demand response)': ('serve_preferred', None),
         'peak_aware (rule-based)': ('peak_aware', None),
         'SHARP learned policy': ('learned', learned),
+        'oracle (maximum curtailment)': ('learned', maximum_curtailment_oracle),
     }
     per_day, transitions = {}, {}
     for label, (policy_name, policy_fn) in arms.items():
@@ -229,9 +283,10 @@ def evaluate(root, checkpoint, episodes, seed):
     baseline_label = 'serve_preferred (no demand response)'
     rule_label = 'peak_aware (rule-based)'
     learned_label = 'SHARP learned policy'
+    oracle_label = 'oracle (maximum curtailment)'
 
     results = {}
-    for label in [rule_label, learned_label]:
+    for label in [rule_label, learned_label, oracle_label]:
         results[label] = {
             metric: compare(per_day[baseline_label], per_day[label], metric,
                             lower_is_better=lower)

@@ -75,7 +75,7 @@ SEED = 42
 HIDDEN = 128
 BATCH = 256
 GAMMA = 0.99
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 3e-4              # Adam, not plain SGD
 REWARD_SCALE = 10.0               # terminal rewards are ~77x step rewards
 WARM_START_UPDATES = 2000         # behaviour cloning
 CONSERVATIVE_UPDATES = 15000
@@ -85,11 +85,30 @@ USE_LEVEL_BALANCE = True
 SHOULD_RUN_ABLATIONS = True
 
 if not DATASET.exists():
-    raise SystemExit(
-        'Dataset not attached. Use Add Data in the right-hand panel and attach '
-        'sharp-master-dataset-v2, then run this cell again.')
+    # Kaggle mounts a dataset under its slug, and the slug is not always the
+    # name you gave it. Rather than failing on a hard-coded path, look for the
+    # folder that actually holds the transitions.
+    candidates = [d for d in sorted(Path('/kaggle/input').glob('*'))
+                  if (d / 'rl_transitions/splits/train.parquet').exists()]
+    if len(candidates) == 1:
+        DATASET = candidates[0]
+        print('found the dataset at', DATASET)
+    else:
+        attached = [d.name for d in sorted(Path('/kaggle/input').glob('*'))]
+        raise SystemExit(
+            'Could not find the SHARP dataset. Use Add Data in the right-hand '
+            'panel to attach sharp-master-dataset-v2, then run this cell again. '
+            'Currently attached: ' + (', '.join(attached) or 'nothing'))
+
+for required in ['rl_transitions/splits/train.parquet',
+                 'rl_transitions/splits/validation.parquet',
+                 'rl_transitions/override_preference_pairs.parquet',
+                 'simulator_inputs/device_power_models.parquet']:
+    if not (DATASET / required).exists():
+        raise SystemExit('The attached dataset is missing ' + required)
 
 print('numpy', np.__version__, '| pandas', pd.__version__)
+print('dataset:', DATASET)
 for path in sorted(DATASET.glob('*')):
     print(' ', path.name)
 """),
@@ -260,6 +279,12 @@ class BranchingDuelingNetwork:
             'v': rng.normal(0, 0.01, (hidden, 1)), 'vb': np.zeros(1),
             'a': rng.normal(0, 0.01, (hidden, N_BRANCHES * N_LEVELS)),
             'ab': np.zeros(N_BRANCHES * N_LEVELS)}
+        # Adam moments. Plain gradient descent with one global step size serves
+        # 305 features of very different scale badly; switching to Adam was the
+        # single largest measured gain in this pipeline.
+        self.m = {k: np.zeros_like(v) for k, v in self.p.items()}
+        self.vv = {k: np.zeros_like(v) for k, v in self.p.items()}
+        self.t = 0
 
     def forward(self, x):
         h = np.maximum(0, x @ self.p['w'] + self.p['b'])
@@ -317,15 +342,22 @@ class BranchingDuelingNetwork:
         return loss, self.backward(x, h, dq)
 
     def update(self, x, actions, target, present, legal, alpha,
-               lr=LEARNING_RATE, use_td=True, level_weight=None):
+               lr=LEARNING_RATE, use_td=True, level_weight=None,
+               beta1=0.9, beta2=0.999, eps=1e-8):
         loss, gradient = self.loss_and_gradient(
             x, actions, target, present, legal, alpha, use_td, level_weight)
         norm = np.sqrt(sum(np.square(g).sum() for g in gradient.values()))
         if not np.isfinite(norm) or not np.isfinite(loss):
             raise ValueError('Nonfinite training update')
         clip = min(1.0, 10.0 / (norm + 1e-12))
+        self.t += 1
         for key, g in gradient.items():
-            self.p[key] -= lr * g * clip
+            g = g * clip
+            self.m[key] = beta1 * self.m[key] + (1 - beta1) * g
+            self.vv[key] = beta2 * self.vv[key] + (1 - beta2) * np.square(g)
+            m_hat = self.m[key] / (1 - beta1 ** self.t)
+            v_hat = self.vv[key] / (1 - beta2 ** self.t)
+            self.p[key] -= lr * m_hat / (np.sqrt(v_hat) + eps)
         return loss
 
 
@@ -523,11 +555,21 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
                                train_data['legal'])
     reward, done = train_data['scaled_reward'], train_data['done']
 
+    best = {'balanced_accuracy': -1.0}
+    best_parameters = None
+
     def snapshot(step, phase):
+        nonlocal best, best_parameters
         metrics = evaluate(net, target_net, validation_data)
         metrics.update({'step': step, 'phase': phase,
                         'train_loss': float(np.mean(recent[-100:]))})
         history.append(metrics)
+        # Keep the BEST checkpoint, not the last. Under Adam the run peaks early
+        # and the temporal-difference term then pulls it away again, so shipping
+        # the final weights ships a model that training had already beaten.
+        if metrics['balanced_accuracy'] > best['balanced_accuracy']:
+            best = dict(metrics)
+            best_parameters = {k: v.copy() for k, v in net.p.items()}
         print(f"  {phase:12s} {step:6d} | loss {metrics['train_loss']:8.5f} "
               f"| TD step {metrics['td_error_non_terminal']:7.5f} "
               f"terminal {metrics['td_error_terminal']:8.5f} "
@@ -559,6 +601,11 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
         if step % 2500 == 0 or step == steps:
             snapshot(step, 'conservative')
 
+    if best_parameters is not None:
+        net.p = best_parameters
+        print(f"[{label}] selected step {best['step']} "
+              f"(balanced {best['balanced_accuracy']:.4f}); "
+              f"last step scored {history[-1]['balanced_accuracy']:.4f}")
     print(f'[{label}] finished in {(time.time() - started) / 60:.1f} min')
     return net, target_net, history
 

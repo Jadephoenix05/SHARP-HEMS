@@ -1,0 +1,123 @@
+{
+  "status": "BDQ_V3_TRAINING_COMPLETED",
+  "optimiser": "adam",
+  "legality_mask": true,
+  "imitation_filtered_to": [
+    "serve_preferred",
+    "peak_aware"
+  ],
+  "scenarios": [
+    "main"
+  ],
+  "training_rows": 279072,
+  "validation_rows": 59616,
+  "clonable_share_of_train": 0.6666666865348816,
+  "feature_count": 305,
+  "zero_variance_features": 36,
+  "hidden_units": 128,
+  "parameter_count": 50133,
+  "warm_start_updates": 500,
+  "conservative_updates": 2000,
+  "cql_alpha": 1.0,
+  "batch_size": 256,
+  "learning_rate": 0.0003,
+  "gamma": 0.99,
+  "reward_scale_divisor": 10.0,
+  "seed": 42,
+  "level_balanced": true,
+  "train_logged_level_share": {
+    "off": 0.8312542708760421,
+    "on": 0.1492893262265956,
+    "reduced": 0.019456402897362307
+  },
+  "final": {
+    "balanced_accuracy": 0.6390889959390732,
+    "raw_agreement": 0.8668540945790081,
+    "td_error_non_terminal": 0.18938985808221204,
+    "td_error_terminal": 3.0962381219823945,
+    "illegal_greedy_picks": 0,
+    "recall_by_level": {
+      "off": 0.9015837784876709,
+      "on": 0.779926374137858,
+      "reduced": 0.23575683519169086
+    },
+    "logged_share": {
+      "off": 0.831809480328079,
+      "on": 0.1419706362937332,
+      "reduced": 0.026219883378187876
+    },
+    "greedy_share": {
+      "off": 0.7815343457644496,
+      "on": 0.19064582532359348,
+      "reduced": 0.02781982891195694
+    },
+    "step": 2000,
+    "phase": "conservative",
+    "train_loss": 0.07342645387790808
+  },
+  "history": [
+    {
+      "balanced_accuracy": 0.556006063302145,
+      "raw_agreement": 0.8611451525054467,
+      "td_error_non_terminal": 0.7044449861000709,
+      "td_error_terminal": 4.44496621163813,
+      "illegal_greedy_picks": 0,
+      "recall_by_level": {
+        "off": 0.9050455104610267,
+        "on": 0.7629726794454083,
+        "reduced": 0.0
+      },
+      "logged_share": {
+        "off": 0.831809480328079,
+        "on": 0.1419706362937332,
+        "reduced": 0.026219883378187876
+      },
+      "greedy_share": {
+        "off": 0.7994661508394207,
+        "on": 0.20052984429065743,
+        "reduced": 4.004869921824939e-06
+      },
+      "step": 500,
+      "phase": "warm_start",
+      "train_loss": 0.009459951586995053
+    },
+    {
+      "balanced_accuracy": 0.6390889959390732,
+      "raw_agreement": 0.8668540945790081,
+      "td_error_non_terminal": 0.18938985808221204,
+      "td_error_terminal": 3.0962381219823945,
+      "illegal_greedy_picks": 0,
+      "recall_by_level": {
+        "off": 0.9015837784876709,
+        "on": 0.779926374137858,
+        "reduced": 0.23575683519169086
+      },
+      "logged_share": {
+        "off": 0.831809480328079,
+        "on": 0.1419706362937332,
+        "reduced": 0.026219883378187876
+      },
+      "greedy_share": {
+        "off": 0.7815343457644496,
+        "on": 0.19064582532359348,
+        "reduced": 0.02781982891195694
+      },
+      "step": 2000,
+      "phase": "conservative",
+      "train_loss": 0.07342645387790808
+    }
+  ],
+  "normalization_fit": "TRAIN_ONLY",
+  "test_used": false,
+  "finite_difference_gradient_test": "PASS",
+  "padded_branch_gradient_test": "PASS",
+  "checkpoint_reload": "PASS",
+  "training_source_sha256": "0c3a81826f40ae2d7fb27d25ae64f9825c07446c4cb8eea096e00da370350a4f",
+  "limitations": [
+    "Balanced accuracy measures agreement with scripted behaviour policies, not control quality.",
+    "Filtering the imitation term to deterministic policies raises that agreement partly by no longer being asked to predict noise. It does not make the controller better at controlling.",
+    "A falling TD error is not evidence of policy quality.",
+    "The test split has deliberately not been touched."
+  ],
+  "approved_for_deployment": false
+}
