@@ -1,0 +1,215 @@
+{
+  "status": "CONSERVATIVE_BDQ_TRAINING_COMPLETED",
+  "training_rows": 279072,
+  "validation_rows": 59616,
+  "feature_count": 305,
+  "zero_variance_features": 36,
+  "maximum_device_branches": 28,
+  "action_levels_per_branch": 3,
+  "action_level_meaning": {
+    "0": "off",
+    "1": "on",
+    "2": "reduced"
+  },
+  "hidden_units": 128,
+  "parameter_count": 50133,
+  "warm_start_updates": 0,
+  "conservative_updates": 3000,
+  "cql_alpha": 0.0,
+  "batch_size": 256,
+  "learning_rate": 0.001,
+  "gamma": 0.99,
+  "reward_scale_divisor": 10.0,
+  "final": {
+    "td_error_all": 0.09328058304214118,
+    "td_error_non_terminal": 0.07216289642055776,
+    "td_error_terminal": 2.0994608120925657,
+    "terminal_row_share": 0.010416666666666666,
+    "agreement_with_logged_action": 0.34261261694220174,
+    "agreement_by_level": {
+      "0": 0.3375357186704831,
+      "1": 0.3792155037447637,
+      "2": 0.3054834275240568
+    },
+    "logged_level_share": {
+      "0": 0.831809480328079,
+      "1": 0.1419706362937332,
+      "2": 0.026219883378187876
+    },
+    "greedy_level_share": {
+      "0": 0.3298010380622837,
+      "1": 0.37199034025374855,
+      "2": 0.2982086216839677
+    }
+  },
+  "history": [
+    {
+      "td_error_all": 0.10159939747517564,
+      "td_error_non_terminal": 0.08308051423297555,
+      "td_error_terminal": 1.8608933054841847,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.3100730488273741,
+      "agreement_by_level": {
+        "0": 0.2942111078745977,
+        "1": 0.40051340639501265,
+        "2": 0.32358332060485717
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.2887611335383827,
+        "1": 0.3950483788286556,
+        "2": 0.3161904876329617
+      },
+      "step": 500,
+      "phase": "conservative",
+      "train_loss_last_50": 0.0246890833140078
+    },
+    {
+      "td_error_all": 0.09754431850896556,
+      "td_error_non_terminal": 0.07846173960678898,
+      "td_error_terminal": 1.91038931421574,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.31674516211713444,
+      "agreement_by_level": {
+        "0": 0.30343356628205653,
+        "1": 0.3935457481769842,
+        "2": 0.3232014663204521
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.2975458157119057,
+        "1": 0.3886025406894784,
+        "2": 0.3138516435986159
+      },
+      "step": 1000,
+      "phase": "conservative",
+      "train_loss_last_50": 0.01979907627221953
+    },
+    {
+      "td_error_all": 0.09537243588412544,
+      "td_error_non_terminal": 0.07570130705963501,
+      "td_error_terminal": 1.964129674210715,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.32410411059848776,
+      "agreement_by_level": {
+        "0": 0.3135154393727477,
+        "1": 0.3869589133838277,
+        "2": 0.31968840690392547
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.30727364475201846,
+        "1": 0.3824190215301807,
+        "2": 0.31030733371780084
+      },
+      "step": 1500,
+      "phase": "conservative",
+      "train_loss_last_50": 0.022311715435680033
+    },
+    {
+      "td_error_all": 0.09426615710159049,
+      "td_error_non_terminal": 0.07404288474421032,
+      "td_error_terminal": 2.015477031052707,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.33133089837242086,
+      "agreement_by_level": {
+        "0": 0.3229906668046866,
+        "1": 0.38329172484802326,
+        "2": 0.3145715594928975
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.3162085095476099,
+        "1": 0.37813981801871077,
+        "2": 0.30565167243367936
+      },
+      "step": 2000,
+      "phase": "conservative",
+      "train_loss_last_50": 0.024144896093728576
+    },
+    {
+      "td_error_all": 0.09366870419582364,
+      "td_error_non_terminal": 0.0729763570750468,
+      "td_error_terminal": 2.059441680669625,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.3367254581571191,
+      "agreement_by_level": {
+        "0": 0.33009468005459813,
+        "1": 0.38058364716004456,
+        "2": 0.3096074537956316
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.3228305619633474,
+        "1": 0.37487785146738434,
+        "2": 0.30229158656926824
+      },
+      "step": 2500,
+      "phase": "conservative",
+      "train_loss_last_50": 0.025519159278703914
+    },
+    {
+      "td_error_all": 0.09328058304214118,
+      "td_error_non_terminal": 0.07216289642055776,
+      "td_error_terminal": 2.0994608120925657,
+      "terminal_row_share": 0.010416666666666666,
+      "agreement_with_logged_action": 0.34261261694220174,
+      "agreement_by_level": {
+        "0": 0.3375357186704831,
+        "1": 0.3792155037447637,
+        "2": 0.3054834275240568
+      },
+      "logged_level_share": {
+        "0": 0.831809480328079,
+        "1": 0.1419706362937332,
+        "2": 0.026219883378187876
+      },
+      "greedy_level_share": {
+        "0": 0.3298010380622837,
+        "1": 0.37199034025374855,
+        "2": 0.2982086216839677
+      },
+      "step": 3000,
+      "phase": "conservative",
+      "train_loss_last_50": 0.018874395187244156
+    }
+  ],
+  "normalization_fit": "TRAIN_ONLY",
+  "test_used": false,
+  "finite_difference_gradient_test": "PASS",
+  "padded_branch_gradient_test": "PASS",
+  "checkpoint_reload": "PASS",
+  "architecture_reference": "https://arxiv.org/abs/1711.08946",
+  "cql_reference": "https://arxiv.org/abs/2006.04779",
+  "training_source_sha256": "0c3a81826f40ae2d7fb27d25ae64f9825c07446c4cb8eea096e00da370350a4f",
+  "limitations": [
+    "CQL is applied over all three levels because the flat release does not carry per-device supports_reduced, so the penalty also covers levels the shield would refuse anyway.",
+    "Next-action selection masks padded branches but does not re-apply the joint safety shield.",
+    "Agreement with the logged action measures imitation of three scripted behaviour policies, not control quality.",
+    "A falling TD error is not evidence of real-world policy quality.",
+    "The test split has deliberately not been touched.",
+    "Appliance power values are proxies and thermal parameters are declared assumptions.",
+    "The reward is the hand-weighted billing reward; the learned preference term is fitted separately and is not applied here."
+  ],
+  "approved_for_deployment": false
+}

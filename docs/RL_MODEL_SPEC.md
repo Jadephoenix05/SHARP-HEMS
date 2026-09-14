@@ -132,18 +132,56 @@ one, and there is no environment to correct the error. It compounds.
 **Current status: no correction is applied.** `train_sharp_bdq_v1.py` is honest
 Double-Q with train-only normalisation, and its own limitations list says so.
 
-### What to add, in order of value
+### What was added, and what it bought
 
-1. **Conservative Q-Learning (CQL).** One extra loss term that pushes down Q on
-   actions not in the data. Roughly ten lines, and the single highest-value
-   change you can make.
-2. **Behaviour cloning warm start.** Pre-train the advantage head to predict the
-   logged action, then fine-tune. This is also what unblocks **E5**.
-3. **Shield-consistent targets.** The current trainer masks padded branches but
-   does *not* re-apply the joint shield when selecting the next action, so a
-   target can be bootstrapped from an action the shield would refuse. Fixing
-   this needs nested device state, which the flat release does not carry.
-   Documented as a known limitation.
+All three are implemented in `scripts/train_sharp_bdq_v2.py` and in the Kaggle
+notebook `notebooks/sharp_rl_training_kaggle.ipynb`.
+
+1. **Conservative Q-Learning (CQL).** The penalty term turns out to be exactly
+   the cross-entropy of the logged action under a softmax over that branch's Q
+   values, so the conservative penalty and behaviour cloning are the *same term*
+   — cloning is that loss with the TD part switched off. One objective, no
+   second head.
+2. **Behaviour cloning warm start.** Phase 1 of the same trainer. This is E5.
+3. **Level-legality masking.** Level 2 is meaningless on a device that cannot
+   dim, and ~40 % cannot. Verified first: across 499,392 logged device-steps,
+   the behaviour policies chose level 2 on a non-dimmable device **zero** times,
+   so the mask is safe to impose. Note what is *not* masked — OFF on a necessity
+   appliance, because the necessity rule is conditional and a fridge is
+   legitimately off at 3 a.m.
+
+Still outstanding: **shield-consistent targets.** Next-action selection now
+applies the legality mask but still does not re-apply the joint shield, which
+needs nested device state the flat release does not carry.
+
+### ⚠ Two metrics that lie
+
+**Pooled TD error.** Non-terminal TD *falls* while terminal TD *rises* over the
+same run (0.083 → 0.072 against 1.86 → 2.10). Pooled, that reads as progress.
+The v1 headline of 0.0933 was the flattering half. Report them apart.
+
+**Raw agreement with the logged action.** 83.18 % of logged actions are OFF, so a
+model that answers OFF unconditionally scores 0.83. An early conservative run
+scored 0.8335 and looked excellent — until the greedy distribution showed
+**99.6 % OFF and level-2 recall of exactly 0.0000.** It had collapsed to the
+majority class.
+
+The fix is inverse-frequency weighting on the CQL term, and the headline metric
+is **balanced accuracy** — the mean of the three per-level recalls — which that
+collapsed model scores 0.333 on, exactly chance.
+
+### Measured ablation (validation, 3,000 updates)
+
+| Config | Balanced accuracy | Raw agreement |
+|---|---|---|
+| Neither | 0.341 | 0.343 |
+| + BC warm start | 0.375 | 0.368 |
+| + CQL α = 0.1 | 0.385 | 0.375 |
+| + CQL α = 0.5 | 0.426 | 0.404 |
+
+Monotone, and undertrained at 3,000. At 15,000 updates with a 2,000-step warm
+start: **α = 0.5 → 0.534, α = 1.0 → 0.579.** So α = 1.0 is the default. Chance is
+0.333.
 
 ### Hyperparameters that work
 
@@ -193,41 +231,53 @@ band penalty rather than the learned model your method section describes:
 reward = −(cost + peak) + reward_model.predict(s, a)   # r_ψ
 ```
 
-### Building the Bradley-Terry preference reward
+### The Bradley-Terry preference reward — and its defect
 
-This is your headline contribution. The data is there: **3,180 preference
-pairs** in `rl_transitions/override_preference_pairs.parquet`.
+Implemented in `scripts/fit_preference_reward_v1.py` and in section 9 of the
+notebook. Fit on the 3,180 pairs in
+`rl_transitions/override_preference_pairs.parquet`.
 
-```python
-pairs = pd.read_parquet('.../override_preference_pairs.parquet')
-# proposed_action=0 (what the controller did) is DISPREFERRED
-# preferred_action=1 (what the user wanted)  is PREFERRED
-# preference_weight = occupancy_gating × pressure ÷ (1 + latency_steps)
-```
+**Read this before quoting a number.** Every one of the 3,180 pairs compares
+preferred = 1 (ON) against proposed = 0 (OFF). The direction never varies,
+because a pair is only recorded when the occupant overrode a shed. So the
+constant rule *"the occupant always wants it on"* scores **100 %**, beating the
+fitted model's 98.6 %. **The classification accuracy is not a result and must not
+appear in the abstract.**
 
-Fit `r_ψ(s, a)` by maximising the weighted Bradley-Terry likelihood, then use
-`−(cost + peak) + r_ψ` as the reward. That is **E2**, the headline figure.
+What *is* a result is the **margin**, `r_ψ(s,i,ON) − r_ψ(s,i,OFF)` — a learned,
+state-dependent measure of how badly the occupant wants that appliance back,
+which is exactly what a reward has to supply. On held-out households and dates:
 
-Each pair carries `latency_steps` (0–3, and it varies), `occupancy_adult_home_fraction`,
-`pressure_source`, `operating_mode` and `override_honoured` — everything the
-weighting in your abstract needs.
+| Evidence | Value |
+|---|---|
+| margin vs `override_probability` | pearson **+0.302**, spearman **+0.320** |
+| mean margin by latency (0 → 3 steps) | 2.70 → 2.59 → 1.94 → **1.88** |
 
-**Every pair is synthetic**, generated from a stated behavioural rule in
-`sharp_human_model.py`. No dataset on earth records real demand-response
-overrides in an Indian home; that is what the Pi deployment produces. Label it
-as synthetic in the paper, every time.
+The monotone decay with latency is the generator's own weighting recovered from
+comparisons alone. Those are the E2 numbers.
 
----
+**To make the direction informative**, the pair generator must also emit
+comparisons where the occupant *let a shed stand*. Those transitions exist but
+produce no pair today. That is a dataset regeneration, not a script change.
+
+Also handled: 52 pairs carry `preference_weight` exactly 0 because response
+latency pushed the override past the moment everyone left the house. They are
+dropped rather than trained at zero weight.
+
+**Every pair is synthetic**, generated from the stated rule in
+`sharp_human_model.py`. Recovering it shows the rule is learnable from override
+comparisons — not that real occupants behave this way. Label it synthetic every
+time.
 
 ## 7. Experiments
 
 | | Experiment | Status |
 |---|---|---|
 | E1 | SHARP vs rule-based / MILP / flat DQN / PPO | ✅ 3 behaviour policies available as baselines |
-| **E2** | **Reward recovery θ̂ vs θ\*** | ✅ 3,180 preference pairs |
+| **E2** | **Reward recovery θ̂ vs θ\*** | ⚠ fitted; margin recovers pressure (r = +0.30), but pair direction is constant so accuracy is meaningless |
 | E3 | Override rate over training rounds | ❌ needs an online loop |
 | E4 | Ablations: −shield, −latency, −ranking, −censoring | ✅ latency varies {0,1,2,3} |
-| E5 | Sample efficiency with/without BC warm start | ❌ training-procedure work |
+| E5 | Sample efficiency with/without BC warm start | ✅ ablation measured: 0.341 → 0.375 balanced accuracy |
 | E6 | Generalisation to held-out households | ✅ 72 test households, disjoint |
 | E7 | Indian validation on iAWE, outage mode | ✅ `reports/e7_iawe_heldout_v1.json` |
 | **E8** | **10,000 attempts to shed a critical load** | ✅ **0 violations** |
@@ -286,12 +336,40 @@ The dataset carries all of this in `scope_and_limits` inside
 
 ## 10. Order of work
 
-1. Load the data, reproduce the baseline run (~1 min on a laptop).
-2. Split the TD metric into terminal and non-terminal. You will immediately see
-   the reported number was flattering.
-3. Add **CQL**. Biggest single win.
-4. Fit the **Bradley-Terry reward** from the preference pairs → E2.
-5. Add the **BC warm start** → E5.
-6. Evaluate on **validation** only. Ablations → E4.
-7. Export weights, hand to hardware.
-8. Touch **test** once, at the end.
+Steps 1–5 are **done**. What remains:
+
+1. ~~Reproduce the baseline run.~~
+2. ~~Split the TD metric into terminal and non-terminal.~~ It was flattering.
+3. ~~Add CQL.~~ α = 1.0, level-balanced.
+4. ~~Fit the Bradley-Terry reward.~~ E2 — read the defect above before quoting it.
+5. ~~Add the BC warm start.~~ E5.
+6. **Substitute r_ψ into the training reward** and retrain. Currently the reward
+   is still the hand-weighted billing reward; the preference model is fitted but
+   not applied.
+7. **Regenerate the preference pairs in both directions** if E2 is to stand as
+   the headline contribution.
+8. Evaluate on **validation** only. Ablations → E4.
+9. Export weights and the golden vector, hand to hardware.
+10. Touch **test** once, at the end.
+
+## 11. Training on Kaggle
+
+`notebooks/sharp_rl_training_kaggle.ipynb` runs the whole thing end to end from
+the published dataset — attach `sharp-master-dataset-v2`, Run All, accelerator
+**None**. It loads the pre-split parquet files directly, so there is no split
+filtering to get wrong.
+
+It is verified by `scripts/verify_kaggle_training_notebook_v1.py`, which extracts
+every code cell and executes it locally against the release files, so it cannot
+ship broken.
+
+Outputs to `/kaggle/working`:
+
+| File | Use |
+|---|---|
+| `sharp_policy_bdq_v2.npz` | weights **plus `mean` and `sd`** |
+| `golden_vector.json` | Join 1 boot assertion for the Pi |
+| `training_report.json` | metrics, ablations, limitations |
+
+The export is checked by reloading it and re-running the forward pass — an export
+that does not reproduce the in-memory model fails on the Pi, not here.

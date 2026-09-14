@@ -1,0 +1,255 @@
+{
+  "status": "PREFERENCE_REWARD_FITTED",
+  "experiment": "E2",
+  "model": "Bradley-Terry over per-branch, per-level reward scores",
+  "parameter_count": 25044,
+  "hidden_units": 64,
+  "weight_decay": 0.0001,
+  "updates": 4000,
+  "selected_at_step": 750,
+  "zero_weight_pairs_dropped": {
+    "train": 42,
+    "validation": 8
+  },
+  "zero_weight_reason": "occupancy gating is zero because response latency pushed the override past the occupants leaving",
+  "train": {
+    "pairs": 2713,
+    "accuracy": 0.9992628086988573,
+    "weighted_accuracy": 0.9998296719591965,
+    "mean_margin": 3.5554427183153736,
+    "log_likelihood_per_pair": -0.051341727981965714
+  },
+  "validation": {
+    "pairs": 140,
+    "accuracy": 0.9857142857142858,
+    "weighted_accuracy": 0.9916184781316425,
+    "mean_margin": 2.451617263266238,
+    "log_likelihood_per_pair": -0.13431200053918457
+  },
+  "accuracy_is_meaningless_here": true,
+  "comparison_directions_observed": {
+    "1_over_0": 140
+  },
+  "constant_rule_baseline_accuracy": 1.0,
+  "headline_metrics_use_the_margin_not_the_accuracy": {
+    "margin_pearson_with_override_probability": 0.30192924438548424,
+    "margin_spearman_with_override_probability": 0.32023860652726993,
+    "mean_margin_by_latency_steps": {
+      "0": 2.700231922162346,
+      "1": 2.592618256639239,
+      "2": 1.9377422808960154,
+      "3": 1.8828240524862387
+    },
+    "mean_margin_by_pressure_source": {
+      "THERMAL_DISCOMFORT": 2.5381463106314754,
+      "UNMET_SERVICE": 2.369895385199069
+    }
+  },
+  "validation_by_appliance_type": {
+    "air_conditioner": {
+      "pairs": 68,
+      "accuracy": 1.0,
+      "mean_margin": 2.5381463106
+    },
+    "television": {
+      "pairs": 24,
+      "accuracy": 1.0,
+      "mean_margin": 2.2965324684
+    },
+    "water_pump": {
+      "pairs": 18,
+      "accuracy": 0.8888888889,
+      "mean_margin": 1.8973803916
+    },
+    "air_cooler": {
+      "pairs": 10,
+      "accuracy": 1.0,
+      "mean_margin": 4.186721547
+    },
+    "geyser": {
+      "pairs": 9,
+      "accuracy": 1.0,
+      "mean_margin": 1.0711453938
+    },
+    "laptop_tablet": {
+      "pairs": 5,
+      "accuracy": 1.0,
+      "mean_margin": 3.1464300559
+    },
+    "mixer_grinder": {
+      "pairs": 4,
+      "accuracy": 1.0,
+      "mean_margin": 2.2343257456
+    },
+    "washing_machine": {
+      "pairs": 2,
+      "accuracy": 1.0,
+      "mean_margin": 2.5929320842
+    }
+  },
+  "history": [
+    {
+      "pairs": 140,
+      "accuracy": 0.95,
+      "weighted_accuracy": 0.9834575226282418,
+      "mean_margin": 1.5130416401525328,
+      "log_likelihood_per_pair": -0.2541932170081801,
+      "step": 250,
+      "train_loss": 0.10604416832951086
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9785714285714285,
+      "weighted_accuracy": 0.9907362126718156,
+      "mean_margin": 2.0859480292790193,
+      "log_likelihood_per_pair": -0.1722401167321147,
+      "step": 500,
+      "train_loss": 0.0512017988185812
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 2.451617263266238,
+      "log_likelihood_per_pair": -0.13431200053918457,
+      "step": 750,
+      "train_loss": 0.035408276117147156
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 2.7217065042204567,
+      "log_likelihood_per_pair": -0.11214054329926013,
+      "step": 1000,
+      "train_loss": 0.03023044888795154
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 2.9325780726509088,
+      "log_likelihood_per_pair": -0.09761457738497187,
+      "step": 1250,
+      "train_loss": 0.020252078182206763
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.1068205067860113,
+      "log_likelihood_per_pair": -0.08721563324102506,
+      "step": 1500,
+      "train_loss": 0.017875672611172108
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.2538554804734527,
+      "log_likelihood_per_pair": -0.07952488186905642,
+      "step": 1750,
+      "train_loss": 0.01858004133626046
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.3808120506458064,
+      "log_likelihood_per_pair": -0.07363378496893454,
+      "step": 2000,
+      "train_loss": 0.014580268415780334
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.4922150221232795,
+      "log_likelihood_per_pair": -0.0687791564713165,
+      "step": 2250,
+      "train_loss": 0.01308921529436838
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.5916434188135438,
+      "log_likelihood_per_pair": -0.06473339032130102,
+      "step": 2500,
+      "train_loss": 0.013528247974194614
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.68025503793621,
+      "log_likelihood_per_pair": -0.061400575695280055,
+      "step": 2750,
+      "train_loss": 0.012972455700113794
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.7627048195506934,
+      "log_likelihood_per_pair": -0.05841716003393189,
+      "step": 3000,
+      "train_loss": 0.012177501938184988
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.8362081653892446,
+      "log_likelihood_per_pair": -0.05588543511046965,
+      "step": 3250,
+      "train_loss": 0.011651351977685761
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.905549099959478,
+      "log_likelihood_per_pair": -0.05360220682665556,
+      "step": 3500,
+      "train_loss": 0.011377934527433853
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 3.9698460152848027,
+      "log_likelihood_per_pair": -0.05163702164095373,
+      "step": 3750,
+      "train_loss": 0.012205948388558548
+    },
+    {
+      "pairs": 140,
+      "accuracy": 0.9857142857142858,
+      "weighted_accuracy": 0.9916184781316425,
+      "mean_margin": 4.029902352536162,
+      "log_likelihood_per_pair": -0.04982234831780777,
+      "step": 4000,
+      "train_loss": 0.010886775718611713
+    }
+  ],
+  "normalization_fit": "TRAIN_PAIRS_ONLY",
+  "model_selection": "VALIDATION_WEIGHTED_ACCURACY",
+  "test_used": false,
+  "finite_difference_gradient_test": "PASS",
+  "reward_model_reload": "PASS",
+  "branch_index_rule": "device_id ascending within household, matching feature_schema.json",
+  "preference_weight_formula": "occupancy gating x pressure / (1 + latency_steps)",
+  "reference": "Bradley and Terry 1952; Christiano et al. 2017 arXiv:1706.03741",
+  "source_sha256": "ab2154c04449e8aae3654e6009c6e359a8c53553fc8cb64fa330401b70c25d92",
+  "limitations": [
+    "Every pair compares ON against OFF in that one direction, so the classification accuracy is not a result: a constant rule scores 1.0. Report the margin metrics instead.",
+    "Making the direction informative requires the pair generator to also emit comparisons where the occupant accepted the shed. That is a dataset regeneration, not a change to this script.",
+    "Every preference pair is synthetic, generated from the stated rule in sharp_human_model.py. Recovering it shows the rule is learnable from override comparisons, not that real occupants behave this way.",
+    "The validation split holds only a few hundred pairs, so the margin correlations carry wide uncertainty.",
+    "Comparisons only exist where an override happened, so the pairs are concentrated on discretionary appliances under service pressure.",
+    "The reward is identified only up to a constant per branch, which is sufficient for a policy but means absolute values are not meaningful.",
+    "This reward is fitted here and is not yet substituted into the training reward."
+  ],
+  "approved_for_deployment": false
+}
