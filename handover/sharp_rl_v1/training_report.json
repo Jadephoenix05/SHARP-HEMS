@@ -3,17 +3,19 @@
   "checkpoint_selection": "BEST_CONSERVATIVE_PHASE_BY_BALANCED_ACCURACY",
   "checkpoint_selection_note": "Warm-start snapshots are excluded on purpose. Behaviour cloning optimises agreement with the logged action directly, so it always wins that metric; selecting across both phases exports a pure imitator whose Q values are not value estimates.",
   "warm_start_peak_for_reference": {
-    "balanced_accuracy": 0.7578859350504442,
-    "raw_agreement": 0.8784381808278867,
-    "necessity_degraded": 0,
+    "balanced_accuracy": 0.6191442992705788,
+    "raw_agreement": 0.8991994265026272,
+    "unshielded_violations": 68200,
+    "critical_shed_while_in_use": 0,
+    "critical_dimmed_ever": 0,
     "td_error_non_terminal": 0.7780875748005299,
     "td_error_terminal": 5.66394576264516,
     "td_error_pooled_do_not_quote": 0.8289819309239116,
     "illegal_greedy_picks": 0,
     "recall_by_level": {
-      "off": 0.8966343202559467,
-      "on": 0.8337212090438512,
-      "reduced": 0.543302275851535
+      "off": 0.9232906193804029,
+      "on": 0.9218465704734905,
+      "reduced": 0.012295707957843287
     },
     "logged_share": {
       "off": 0.831809480328079,
@@ -21,15 +23,15 @@
       "reduced": 0.026219883378187876
     },
     "greedy_share": {
-      "off": 0.75539856465462,
-      "on": 0.17182093425605535,
-      "reduced": 0.07278050108932461
+      "off": 0.7820229398949122,
+      "on": 0.21630102204280405,
+      "reduced": 0.0016760380622837371
     },
     "step": 2000,
     "phase": "warm_start",
     "train_loss": 0.05216640252501655
   },
-  "trained_at": "2026-09-14T23:52:48.240025+05:30",
+  "trained_at": "2026-09-15T00:45:23.131387+05:30",
   "training_rows": 279072,
   "validation_rows": 59616,
   "feature_count": 305,
@@ -48,17 +50,19 @@
     "seed": 42
   },
   "final_validation": {
-    "balanced_accuracy": 0.7489188364198611,
-    "raw_agreement": 0.8542627835447905,
-    "necessity_degraded": 0,
-    "td_error_non_terminal": 0.2631236749207378,
-    "td_error_terminal": 4.222469115231076,
-    "td_error_pooled_do_not_quote": 0.30436685659063717,
+    "balanced_accuracy": 0.6172527010783951,
+    "raw_agreement": 0.8895156510316545,
+    "unshielded_violations": 105903,
+    "critical_shed_while_in_use": 0,
+    "critical_dimmed_ever": 0,
+    "td_error_non_terminal": 0.3284512185275893,
+    "td_error_terminal": 2.777468959365825,
+    "td_error_pooled_do_not_quote": 0.35396181999465426,
     "illegal_greedy_picks": 0,
     "recall_by_level": {
-      "off": 0.8689837963018688,
-      "on": 0.8233966628584324,
-      "reduced": 0.5543760500992821
+      "off": 0.9102669963095722,
+      "on": 0.9301118492503421,
+      "reduced": 0.011379257675271117
     },
     "logged_share": {
       "off": 0.831809480328079,
@@ -66,24 +70,26 @@
       "reduced": 0.026219883378187876
     },
     "greedy_share": {
-      "off": 0.7333177143406382,
-      "on": 0.16530300845828527,
-      "reduced": 0.1013792772010765
+      "off": 0.7692213731897988,
+      "on": 0.22926278354479046,
+      "reduced": 0.0015158432654107394
     }
   },
   "history": [
     {
-      "balanced_accuracy": 0.7546501423579346,
-      "raw_agreement": 0.8752402921953095,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6153275045130802,
+      "raw_agreement": 0.8944096020761245,
+      "unshielded_violations": 68393,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.6643799218259859,
       "td_error_terminal": 4.810994589635426,
       "td_error_pooled_do_not_quote": 0.7075738246156676,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8934325792791991,
-        "on": 0.8305758896458342,
-        "reduced": 0.5399419581487704
+        "off": 0.9186396693299695,
+        "on": 0.9154289905358327,
+        "reduced": 0.011913853673438215
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -91,26 +97,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7533020152505446,
-        "on": 0.17512495194156094,
-        "reduced": 0.0715730328078944
+        "off": 0.779511886453928,
+        "on": 0.21874399269511727,
+        "reduced": 0.001744120850954761
       },
       "step": 1000,
       "phase": "warm_start",
       "train_loss": 0.057533272605426955
     },
     {
-      "balanced_accuracy": 0.7578859350504442,
-      "raw_agreement": 0.8784381808278867,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6191442992705788,
+      "raw_agreement": 0.8991994265026272,
+      "unshielded_violations": 68200,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.7780875748005299,
       "td_error_terminal": 5.66394576264516,
       "td_error_pooled_do_not_quote": 0.8289819309239116,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8966343202559467,
-        "on": 0.8337212090438512,
-        "reduced": 0.543302275851535
+        "off": 0.9232906193804029,
+        "on": 0.9218465704734905,
+        "reduced": 0.012295707957843287
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -118,26 +126,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.75539856465462,
-        "on": 0.17182093425605535,
-        "reduced": 0.07278050108932461
+        "off": 0.7820229398949122,
+        "on": 0.21630102204280405,
+        "reduced": 0.0016760380622837371
       },
       "step": 2000,
       "phase": "warm_start",
       "train_loss": 0.05216640252501655
     },
     {
-      "balanced_accuracy": 0.7489188364198611,
-      "raw_agreement": 0.8542627835447905,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6151839295783902,
+      "raw_agreement": 0.9018506503908753,
+      "unshielded_violations": 96528,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.2631236749207378,
       "td_error_terminal": 4.222469115231076,
       "td_error_pooled_do_not_quote": 0.30436685659063717,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8689837963018688,
-        "on": 0.8233966628584324,
-        "reduced": 0.5543760500992821
+        "off": 0.9294124444209062,
+        "on": 0.9048364574958744,
+        "reduced": 0.011302886818390102
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -145,26 +155,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7333177143406382,
-        "on": 0.16530300845828527,
-        "reduced": 0.1013792772010765
+        "off": 0.790425156990901,
+        "on": 0.20810105087786748,
+        "reduced": 0.0014737921312315775
       },
       "step": 2500,
       "phase": "conservative",
       "train_loss": 0.1536423713831509
     },
     {
-      "balanced_accuracy": 0.74864732758382,
-      "raw_agreement": 0.8397811739074715,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6172527010783951,
+      "raw_agreement": 0.8895156510316545,
+      "unshielded_violations": 105903,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.3284512185275893,
       "td_error_terminal": 2.777468959365825,
       "td_error_pooled_do_not_quote": 0.35396181999465426,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.84933762478966,
-        "on": 0.8352021890294644,
-        "reduced": 0.5614021689323354
+        "off": 0.9102669963095722,
+        "on": 0.9301118492503421,
+        "reduced": 0.011379257675271117
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -172,26 +184,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7149093297449699,
-        "on": 0.17329873125720877,
-        "reduced": 0.11179193899782135
+        "off": 0.7692213731897988,
+        "on": 0.22926278354479046,
+        "reduced": 0.0015158432654107394
       },
       "step": 5000,
       "phase": "conservative",
       "train_loss": 0.16397820134623003
     },
     {
-      "balanced_accuracy": 0.7434941622916286,
-      "raw_agreement": 0.8242863321799307,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6117380278716285,
+      "raw_agreement": 0.8739607362552865,
+      "unshielded_violations": 112531,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.3779839949144214,
       "td_error_terminal": 2.1895794798911896,
       "td_error_pooled_do_not_quote": 0.39685478121626266,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8306471609223903,
-        "on": 0.8349200976036333,
-        "reduced": 0.5649152283488621
+        "off": 0.8911359921424943,
+        "on": 0.932622462940239,
+        "reduced": 0.01145562853215213
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -199,26 +213,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.6991822055619633,
-        "on": 0.18044942650262719,
-        "reduced": 0.12036836793540946
+        "off": 0.7525490997052415,
+        "on": 0.24605720556196334,
+        "reduced": 0.0013936947327950787
       },
       "step": 7500,
       "phase": "conservative",
       "train_loss": 0.18287530328965573
     },
     {
-      "balanced_accuracy": 0.7408805436219595,
-      "raw_agreement": 0.8119333109060618,
-      "necessity_degraded": 0,
-      "td_error_non_terminal": 0.40639019353727335,
+      "balanced_accuracy": 0.6076094141558733,
+      "raw_agreement": 0.858137495194156,
+      "unshielded_violations": 115626,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
+      "td_error_non_terminal": 0.4063901935372734,
       "td_error_terminal": 2.015710518190255,
       "td_error_pooled_do_not_quote": 0.42315394691907526,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.814840671258236,
-        "on": 0.8399836386973017,
-        "reduced": 0.5678173209103407
+        "off": 0.870683367075992,
+        "on": 0.9410711011438807,
+        "reduced": 0.01107377424774706
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -226,26 +242,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.685143134051006,
-        "on": 0.1907479495066,
-        "reduced": 0.12410891644239395
+        "off": 0.7340165641419967,
+        "on": 0.26468185313341025,
+        "reduced": 0.0013015827245931053
       },
       "step": 10000,
       "phase": "conservative",
-      "train_loss": 0.18979063927240353
+      "train_loss": 0.18979063927240347
     },
     {
-      "balanced_accuracy": 0.7393438262492067,
-      "raw_agreement": 0.8081366942201718,
-      "necessity_degraded": 0,
-      "td_error_non_terminal": 0.42138511615581314,
-      "td_error_terminal": 2.1007668497658925,
-      "td_error_pooled_do_not_quote": 0.43887867588091806,
+      "balanced_accuracy": 0.604120802243168,
+      "raw_agreement": 0.8512290945790081,
+      "unshielded_violations": 115314,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
+      "td_error_non_terminal": 0.42138511615581176,
+      "td_error_terminal": 2.100766849765863,
+      "td_error_pooled_do_not_quote": 0.4388786758809165,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8106061882671841,
-        "on": 0.8376986981480697,
-        "reduced": 0.569726592332366
+        "off": 0.8628740078815789,
+        "on": 0.9381091411726541,
+        "reduced": 0.011379257675271117
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -253,26 +271,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.6818891772395232,
-        "on": 0.19405997693194926,
-        "reduced": 0.12405084582852749
+        "off": 0.7280953639625785,
+        "on": 0.27059504357298475,
+        "reduced": 0.0013095924644367552
       },
       "step": 12500,
       "phase": "conservative",
-      "train_loss": 0.19639137252802236
+      "train_loss": 0.196391372528023
     },
     {
-      "balanced_accuracy": 0.7405657499609432,
-      "raw_agreement": 0.8076801390490836,
-      "necessity_degraded": 0,
-      "td_error_non_terminal": 0.4283782717743135,
-      "td_error_terminal": 2.043856596269314,
-      "td_error_pooled_do_not_quote": 0.4452061709878031,
+      "balanced_accuracy": 0.6038346177635842,
+      "raw_agreement": 0.8487400679225938,
+      "unshielded_violations": 116216,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
+      "td_error_non_terminal": 0.4283782717743349,
+      "td_error_terminal": 2.043856596269877,
+      "td_error_pooled_do_not_quote": 0.44520617098783016,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8096384440020318,
-        "on": 0.839659233557596,
-        "reduced": 0.5723995723232015
+        "off": 0.8593400561869432,
+        "on": 0.9413955062835865,
+        "reduced": 0.010768290820223002
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -280,28 +300,30 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.6807037357426631,
-        "on": 0.19452654427784186,
-        "reduced": 0.12476971997949507
+        "off": 0.7245250224272716,
+        "on": 0.2742134435473536,
+        "reduced": 0.0012615340253748558
       },
       "step": 15000,
       "phase": "conservative",
-      "train_loss": 0.2044036382907786
+      "train_loss": 0.20440363829076197
     }
   ],
   "ablations": {
     "neither": {
-      "balanced_accuracy": 0.544517646052468,
-      "raw_agreement": 0.7643294245802896,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.5451439368697429,
+      "raw_agreement": 0.8602380494681533,
+      "unshielded_violations": 179386,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.03883569905284228,
       "td_error_terminal": 1.8087340255766728,
-      "td_error_pooled_do_not_quote": 0.05727213995413219,
+      "td_error_pooled_do_not_quote": 0.057272139954132176,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.7941545357595949,
-        "on": 0.7061312571404392,
-        "reduced": 0.1332671452573698
+        "off": 0.9124359952720156,
+        "on": 0.7110819616637752,
+        "reduced": 0.011913853673438215
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -309,23 +331,25 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.710057429834679,
-        "on": 0.15745746828143023,
-        "reduced": 0.13248510188389082
+        "off": 0.8137094707163911,
+        "on": 0.18293444828911956,
+        "reduced": 0.003356080994489299
       }
     },
     "warm start only": {
-      "balanced_accuracy": 0.5877229536389023,
-      "raw_agreement": 0.8392305042932205,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.5716933440576565,
+      "raw_agreement": 0.8823269095219787,
+      "unshielded_violations": 85597,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.11807702889921588,
-      "td_error_terminal": 4.2302096664679345,
+      "td_error_terminal": 4.230209666467934,
       "td_error_pooled_do_not_quote": 0.16091174387389004,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8733145722546275,
-        "on": 0.7729305067772465,
-        "reduced": 0.11692378188483275
+        "off": 0.9273084432076149,
+        "on": 0.7803636158478963,
+        "reduced": 0.007407973117458378
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -333,23 +357,25 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7659173555042932,
-        "on": 0.1783789087530437,
-        "reduced": 0.05570373574266308
+        "off": 0.8145384787902089,
+        "on": 0.18442626233499937,
+        "reduced": 0.0010352588747917467
       }
     },
     "CQL only": {
-      "balanced_accuracy": 0.7332409958943455,
-      "raw_agreement": 0.826020440856081,
-      "necessity_degraded": 0,
+      "balanced_accuracy": 0.6071026608509197,
+      "raw_agreement": 0.8773148148148148,
+      "unshielded_violations": 103276,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
       "td_error_non_terminal": 0.18247347300214725,
       "td_error_terminal": 1.834406593820041,
       "td_error_pooled_do_not_quote": 0.19968110967733363,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8346986872861996,
-        "on": 0.8286717725214742,
-        "reduced": 0.5363525278753628
+        "off": 0.8987190628768966,
+        "on": 0.9119733705694015,
+        "reduced": 0.010615549106460974
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -357,23 +383,25 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7046188164808407,
-        "on": 0.18110422273484558,
-        "reduced": 0.11427696078431372
+        "off": 0.7632601243111624,
+        "on": 0.2353221517365116,
+        "reduced": 0.0014177239523260284
       }
     },
     "warm start + CQL": {
-      "balanced_accuracy": 0.7406727248270495,
-      "raw_agreement": 0.8521642317057542,
-      "necessity_degraded": 0,
-      "td_error_non_terminal": 0.19820380948592461,
+      "balanced_accuracy": 0.6098801267194578,
+      "raw_agreement": 0.8991193291041907,
+      "unshielded_violations": 94569,
+      "critical_shed_while_in_use": 0,
+      "critical_dimmed_ever": 0,
+      "td_error_non_terminal": 0.1982038094859246,
       "td_error_terminal": 4.248097275882074,
-      "td_error_pooled_do_not_quote": 0.24039019976088452,
+      "td_error_pooled_do_not_quote": 0.24039019976088447,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8679317956952232,
-        "on": 0.8181920760518484,
-        "reduced": 0.5358943027340767
+        "off": 0.9285867322742712,
+        "on": 0.8905908404914032,
+        "reduced": 0.010462807392698946
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -381,9 +409,9 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7339364667435602,
-        "on": 0.166750768935025,
-        "reduced": 0.09931276432141484
+        "off": 0.7929121812123542,
+        "on": 0.205756199538639,
+        "reduced": 0.0013316192490067922
       }
     }
   },

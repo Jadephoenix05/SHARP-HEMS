@@ -81,10 +81,10 @@ HIDDEN = 128
 BATCH = 256
 GAMMA = 0.99
 LEARNING_RATE = 3e-4              # Adam, not plain SGD
-REWARD_SCALE = 2.0               # terminal rewards are ~77x step rewards
+REWARD_SCALE = 10.0               # terminal rewards are ~77x step rewards
 WARM_START_UPDATES = 2000         # behaviour cloning
 CONSERVATIVE_UPDATES = 15000
-CQL_ALPHA = 0.1                    # 0.5 and 1.0 both tested; 1.0 scored better
+CQL_ALPHA = 1.0                    # 0.5 and 1.0 both tested; 1.0 scored better
 USE_LEVEL_BALANCE = True
 
 # Reward reweighting, applied at load time from the recorded components so the
@@ -96,17 +96,26 @@ USE_LEVEL_BALANCE = True
 # policy learned to shed whenever, which is useless to the grid and maximally
 # annoying to the resident. Measured: five of its eight busiest shedding hours
 # were between 3 and 7 a.m., when grid severity is exactly zero.
-PEAK_WEIGHT = 8.0                  # lifts peak from 3.9% to roughly a quarter of the signal
+PEAK_WEIGHT = 1.0                  # lifts peak from 3.9% to roughly a quarter of the signal
 COST_WEIGHT = 1.0
 
 # Penalty on Q for actions the deployment mask forbids. Without it the policy
 # never learns the rule, because the shield silently repairs every violation -
 # measured, the raw policy wanted to shed a protected ceiling fan 1,733 times
 # and a television 56 times. Safety then rests entirely on one module.
-ILLEGAL_ACTION_PENALTY = 0.30      # at 0.5 the policy learned 'ON is always safe'
+ILLEGAL_ACTION_PENALTY = 0.0      # at 0.5 the policy learned 'ON is always safe'
 ILLEGAL_ACTION_MARGIN = 0.25       # how far below the best legal action is enough
 
 SHOULD_RUN_ABLATIONS = True
+
+# Balanced BATCH sampling, not just a balanced loss.
+#
+# Reweighting the loss by inverse frequency still leaves every batch 83 per cent
+# OFF and 2.6 per cent REDUCED - about six dim examples in a batch of 256. The
+# network sees the rare class too rarely to fit it, however heavily each example
+# is weighted once it arrives. Sampling rows in proportion to how much rare-class
+# action they contain puts the examples in front of it in the first place.
+USE_BALANCED_SAMPLING = True
 
 MARKER = 'rl_transitions/splits/train.parquet'
 
@@ -684,6 +693,22 @@ def level_weights(train_data):
     return weights / weights.mean(), share
 
 
+def sampling_probabilities(train_data, weights):
+    # How often each ROW should be drawn, given how rare its actions are.
+    #
+    # A row is not one label - it holds up to 28 device decisions at once - so
+    # the weight is the mean inverse-frequency weight over its live devices.
+    # Rows containing a REDUCED action are then drawn far more often than rows
+    # that are entirely OFF, which is what puts the rare class in front of the
+    # network rather than merely scaling it up once it has arrived.
+    live = train_data['present'] > 0
+    per_row = (weights[train_data['actions']] * live).sum(1) / np.maximum(1, live.sum(1))
+    probability = per_row / per_row.sum()
+    if not np.isfinite(probability).all() or probability.min() < 0:
+        raise ValueError('Bad sampling distribution')
+    return probability
+
+
 def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
                  balance, seed=SEED, label='run'):
     net = BranchingDuelingNetwork(train_data['state'].shape[1], seed=seed)
@@ -691,6 +716,18 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
     target_net.p = {k: v.copy() for k, v in net.p.items()}
     rng = np.random.default_rng(seed)
     weights = level_weights(train_data)[0] if balance else None
+    probability = None
+    if balance and USE_BALANCED_SAMPLING:
+        probability = sampling_probabilities(train_data, weights)
+        expected = (weights[train_data['actions']]
+                    * (train_data['present'] > 0)).sum(1)
+        print(f'  balanced sampling on: rarest rows drawn '
+              f'{expected.max() / max(1e-9, expected.mean()):.1f}x the average')
+
+    def draw(size):
+        if probability is None:
+            return rng.integers(0, len(state), size)
+        return rng.choice(len(state), size=size, p=probability)
     history, recent = [], []
 
     state = train_data['normalised']
@@ -741,7 +778,7 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
     if warm_start:
         print(f'[{label}] behaviour-cloning warm start: {warm_start} updates')
         for step in range(1, warm_start + 1):
-            index = rng.integers(0, len(state), BATCH)
+            index = draw(BATCH)
             recent.append(net.update(
                 state[index], actions[index], reward[index], present[index],
                 legal[index], alpha=1.0, use_td=False, level_weight=weights,
@@ -754,7 +791,7 @@ def train_policy(train_data, validation_data, *, alpha, warm_start, steps,
 
     print(f'[{label}] conservative Double-Q: {steps} updates, CQL alpha {alpha}')
     for step in range(1, steps + 1):
-        index = rng.integers(0, len(state), BATCH)
+        index = draw(BATCH)
         y = double_q_target(net, target_net, next_state, present, legal,
                             reward, done, GAMMA, index)
         recent.append(net.update(

@@ -1,0 +1,61 @@
+{
+  "status": "TEST_SPLIT_EVALUATED_ONCE",
+  "checkpoint": "handover\\sharp_rl_v1\\sharp_policy.npz",
+  "evaluated_at": "2026-09-15T00:50:20.403289+05:30",
+  "rows": 62208,
+  "households": 72,
+  "households_shared_with_training": 0,
+  "action_agreement": {
+    "peak_aware": 0.9281842818428184,
+    "random_binary": 0.7751198665832812,
+    "serve_preferred": 0.9622029393370857,
+    "deterministic_only": 0.9451936105899521,
+    "all_policies": 0.8885023625877284
+  },
+  "balanced_accuracy": 0.6216673707796796,
+  "recall_by_level": {
+    "off": 0.9131854741708416,
+    "on": 0.9408162944074546,
+    "reduced": 0.011000343760742524
+  },
+  "illegal_dim_attempts": 0,
+  "critical_shed_while_entitled": 0,
+  "critical_dimmed_ever": 0,
+  "critical_protection_opportunities": 54733,
+  "simulator": {
+    "cost_inr": {
+      "no demand response": 11.31101825623009,
+      "rule-based": 10.83228088123009,
+      "SHARP": 11.240159802298518,
+      "oracle ceiling": 10.821553534006203
+    },
+    "peak_kw": {
+      "no demand response": 0.3223805150118033,
+      "rule-based": 0.30962711561483525,
+      "SHARP": 0.30899607029670795,
+      "oracle ceiling": 0.2986370023195171
+    },
+    "peak_to_average": {
+      "no demand response": 2.518280591110927,
+      "rule-based": 2.5882849252194795,
+      "SHARP": 2.4665472850272407,
+      "oracle ceiling": 2.535625212625709
+    },
+    "import_kwh": {
+      "no demand response": 3.2385879405925366,
+      "rule-based": 3.080094190592537,
+      "SHARP": 3.2180568952744095,
+      "oracle ceiling": 3.077532604458083
+    },
+    "peak_share_of_achievable": 56.370954409975376,
+    "peak_cut_percent": 4.151753624007122
+  },
+  "seconds": 280.7,
+  "honest_scope": [
+    "These numbers are from a simulator built on survey data, declared assumptions and a synthetic occupant. They are not field evidence.",
+    "Action agreement measures reproduction of three scripted behaviour policies, not control quality.",
+    "random_binary samples its action from a draw absent from the state, so no model can predict it; quote the deterministic figure with that stated.",
+    "The test split has now been read. It cannot be read again without becoming a second validation set."
+  ],
+  "approved_for_deployment": false
+}
