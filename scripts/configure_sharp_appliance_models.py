@@ -60,6 +60,22 @@ REFIT_LIBRARY = ('data/processed/refit_power_library_v3/refit_power_library.json
 # problem, not something a slow-learning agent should rediscover". The spec also
 # notes the boundary is household-specific and could later be user-configurable
 # from the dashboard; this is the default, not a claim about every household.
+# Appliances that can run at reduced power rather than only on or off. In an
+# Indian home a ceiling-fan regulator is standard, and LED and incandescent
+# lamps dim readily. Compact fluorescents dim poorly and are excluded rather
+# than pretending otherwise.
+#
+# The fraction is the share of full power drawn at the reduced setting. These
+# are declared engineering assumptions, not measured dimming curves.
+REDUCED_POWER_FRACTION = {
+    'ceiling_fan': 0.50,        # regulator at a low speed
+    'table_fan': 0.50,
+    'air_cooler': 0.55,         # lower fan speed, pump still running
+    'led_bulb': 0.40,
+    'led_tube': 0.40,
+    'incandescent_bulb': 0.50,
+}
+
 NECESSITY = {
     'refrigerator',        # food safety
     'modem_router',        # connectivity, and the controller's own link
@@ -115,8 +131,14 @@ def build(root):
             watt=float(lookup.loc[channel,'above_threshold_median_w'])
             provenance='IAWE_15MIN_ABOVE_5W_MEDIAN_USED_AS_SIMULATION_PROXY'
         necessity=app in NECESSITY
+        reduced_fraction=REDUCED_POWER_FRACTION.get(app)
         rows.append({**r,'scenario_model_version':'baseline_power_v1',
             'is_necessity':necessity,
+            'supports_reduced':reduced_fraction is not None,
+            'reduced_power_fraction':float(reduced_fraction) if reduced_fraction else 0.0,
+            'reduced_power_w':float(watt*reduced_fraction) if reduced_fraction else 0.0,
+            'reduced_power_basis':('DECLARED_ASSUMPTION_DIMMING_OR_SPEED_SETTING'
+                                   if reduced_fraction else 'NOT_DIMMABLE'),
             'necessity_basis':('STATIC_SPEC_TAGGING_MASKED_FROM_ACTION_SPACE' if necessity
                                else 'DISCRETIONARY_AVAILABLE_TO_THE_AGENT'),
             'operating_power_proxy_w':float(watt),'power_parameter_basis':provenance,
@@ -145,6 +167,8 @@ def build(root):
       'engineering_power_assumptions_w':{k:v[0] for k,v in BASELINE.items()},
       'empirical_proxy_channels':EMPIRICAL,'seed_rule':'SHA256(device_id) modulo channel count',
       'necessity_appliances':sorted(NECESSITY),
+      'reduced_power_fractions':REDUCED_POWER_FRACTION,
+      'reduced_power_basis':'Declared assumptions. CFL is excluded because it dims poorly.',
       'necessity_policy':'Necessity loads are never shed. SHARP restricts luxury load rather than cutting household power.',
       'evidence_limits':['Observed 15-minute means are not instantaneous ON power or nameplate ratings.',
         'iAWE represents one Indian household, not an Indian population distribution.',

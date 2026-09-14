@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 
 N = 28
+LEVELS = 3   # 0 off, 1 on, 2 reduced
 
 
 class Network:
@@ -30,11 +31,11 @@ class Network:
         self.p = {'w': rng.normal(0, np.sqrt(2 / features), (features, hidden)),
                   'b': np.zeros(hidden),
                   'v': rng.normal(0, .01, (hidden, 1)), 'vb': np.zeros(1),
-                  'a': rng.normal(0, .01, (hidden, N * 2)), 'ab': np.zeros(N * 2)}
+                  'a': rng.normal(0, .01, (hidden, N * LEVELS)), 'ab': np.zeros(N * LEVELS)}
 
     def forward(self, x):
         h = np.maximum(0, x @ self.p['w'] + self.p['b'])
-        a = (h @ self.p['a'] + self.p['ab']).reshape(-1, N, 2)
+        a = (h @ self.p['a'] + self.p['ab']).reshape(-1, N, LEVELS)
         v = (h @ self.p['v'] + self.p['vb']).reshape(-1, 1, 1)
         return v + a - a.mean(2, keepdims=True), h
 
@@ -82,7 +83,7 @@ def gradient_test():
     down = net.loss_grad(x, a, y, m)[0]
     net.p[key][index] = original
     assert np.isclose((up - down) / (2 * eps), g[key][index], atol=1e-6, rtol=1e-4)
-    assert np.all(g['a'][:, 4:] == 0) and np.all(g['ab'][4:] == 0), \
+    assert np.all(g['a'][:, 2 * LEVELS:] == 0) and np.all(g['ab'][2 * LEVELS:] == 0), \
         'Padded branches contributed to the loss'
 
 
@@ -96,6 +97,8 @@ def load(source, split):
     actions = np.zeros((len(d), N), int)
     for i, a in enumerate(d.action.to_numpy()):
         a = np.asarray(a, int)
+        if a.size and (a.min() < 0 or a.max() >= LEVELS):
+            raise ValueError(f'Action level outside 0..{LEVELS - 1}')
         actions[i, :len(a)] = a
     reward = d.reward.to_numpy(float)
     done = d.done.to_numpy(bool)
@@ -178,6 +181,8 @@ def fit(root, steps, batch, gamma, scale, seed):
             filters=[('split', '==', 'train')]).household_id.nunique()),
         'feature_count': int(x.shape[1]),
         'maximum_device_branches': N,
+        'action_levels_per_branch': LEVELS,
+        'action_level_meaning': {'0': 'off', '1': 'on', '2': 'reduced'},
         'updates': steps,
         'batch_size': batch,
         'gamma': gamma,

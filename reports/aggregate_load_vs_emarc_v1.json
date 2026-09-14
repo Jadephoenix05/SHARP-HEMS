@@ -20,17 +20,17 @@
     "emarc_median": 3.3277166663333335,
     "emarc_p25": 1.6614666663125002,
     "emarc_p75": 5.4160101795625,
-    "sharp_median": 3.4332333030596383,
-    "sharp_p25": 2.0985,
+    "sharp_median": 3.4933637253086416,
+    "sharp_p25": 2.127750555036738,
     "sharp_p75": 6.074683230105104,
-    "ratio_sharp_over_emarc": 1.0317084197082707
+    "ratio_sharp_over_emarc": 1.0497779936168146
   },
   "peak_to_average_ratio": {
     "emarc_median": 2.9392818679214647,
-    "sharp_median": 2.3441528792625075
+    "sharp_median": 2.363822652619002
   },
   "diurnal_shape": {
-    "correlation": 0.5295631217384683,
+    "correlation": 0.5278489410773018,
     "emarc_peak_block": 85,
     "emarc_peak_clock": "21:15",
     "sharp_peak_block": 76,
@@ -38,7 +38,7 @@
     "emarc_trough_clock": "11:15",
     "sharp_trough_clock": "23:00",
     "emarc_evening_ratio": 1.2317911195591242,
-    "sharp_evening_ratio": 1.4689368728750667
+    "sharp_evening_ratio": 1.4601907507938277
   },
   "emarc_by_household_type_mean_kw": {
     "Basic": 0.17286443717395375,

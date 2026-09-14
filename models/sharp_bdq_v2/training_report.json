@@ -5,42 +5,48 @@
   "training_households": 323,
   "feature_count": 305,
   "maximum_device_branches": 28,
+  "action_levels_per_branch": 3,
+  "action_level_meaning": {
+    "0": "off",
+    "1": "on",
+    "2": "reduced"
+  },
   "updates": 3000,
   "batch_size": 256,
   "gamma": 0.99,
   "reward_scale_divisor": 10.0,
-  "final_train_loss_last_50": 0.024529287534592888,
-  "final_validation_td_error": 0.0984780954422369,
+  "final_train_loss_last_50": 0.018874395171061726,
+  "final_validation_td_error": 0.09328058293257385,
   "history": [
     {
       "step": 500,
-      "train_loss_last_50": 0.03961227529147744,
-      "validation_td_error": 0.10426298814452731
+      "train_loss_last_50": 0.024689083283132563,
+      "validation_td_error": 0.10159939731558357
     },
     {
       "step": 1000,
-      "train_loss_last_50": 0.02879073511665882,
-      "validation_td_error": 0.10153091820063512
+      "train_loss_last_50": 0.01979907625098004,
+      "validation_td_error": 0.09754431839333084
     },
     {
       "step": 1500,
-      "train_loss_last_50": 0.0493608140390161,
-      "validation_td_error": 0.10024865873936906
+      "train_loss_last_50": 0.02231171540018276,
+      "validation_td_error": 0.09537243578053792
     },
     {
       "step": 2000,
-      "train_loss_last_50": 0.0377681195369296,
-      "validation_td_error": 0.09946574278042318
+      "train_loss_last_50": 0.024144896076845033,
+      "validation_td_error": 0.09426615699537524
     },
     {
       "step": 2500,
-      "train_loss_last_50": 0.040856392793229224,
-      "validation_td_error": 0.09890066877090059
+      "train_loss_last_50": 0.02551915925710763,
+      "validation_td_error": 0.09366870408935962
     },
     {
       "step": 3000,
-      "train_loss_last_50": 0.024529287534592888,
-      "validation_td_error": 0.0984780954422369
+      "train_loss_last_50": 0.018874395171061726,
+      "validation_td_error": 0.09328058293257385
     }
   ],
   "normalization_fit": "TRAIN_ONLY",
@@ -49,7 +55,7 @@
   "padded_branch_gradient_test": "PASS",
   "checkpoint_reload": "PASS",
   "architecture_reference": "https://arxiv.org/abs/1711.08946",
-  "training_source_sha256": "bc77db8727074da4cf8607d8b006cf7e22a788d7f584f9a42ec57629167590e5",
+  "training_source_sha256": "0c3a81826f40ae2d7fb27d25ae64f9825c07446c4cb8eea096e00da370350a4f",
   "limitations": [
     "Offline Double-Q without any behaviour-policy or distribution-shift correction.",
     "Next-action selection masks padded branches but does not re-apply the joint safety shield.",

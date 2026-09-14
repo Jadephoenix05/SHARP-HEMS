@@ -1,7 +1,12 @@
 {
   "status": "PASS",
-  "module": "binary_device_action_shield_v1",
-  "exhaustive_three_device_action_vectors": 8,
+  "module": "three_level_device_action_shield_v2",
+  "action_levels": {
+    "0": "off",
+    "1": "on",
+    "2": "reduced"
+  },
+  "exhaustive_three_device_action_vectors": 27,
   "tested": [
     "protected loads",
     "minimum off time",
@@ -13,7 +18,11 @@
     "standby demand",
     "state timers",
     "determinism",
-    "invalid actions"
+    "invalid actions",
+    "reduced level offered only where supported",
+    "capacity pressure dims before it sheds",
+    "a must-run load may dim but never switch off",
+    "reduced power bounded by off and on power"
   ],
   "scope": "simulation decision logic only",
   "hardware_safety_certified": false,

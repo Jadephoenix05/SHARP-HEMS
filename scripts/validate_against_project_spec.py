@@ -161,7 +161,7 @@ def necessity_guarantee(d, schema, models):
           denied == 0, f'{wanted:,} eligible cases, {denied} denied')
 
 
-def novelty_claims(d, pairs):
+def novelty_claims(root, d, pairs):
     """The three claims the abstract rests on."""
     print('\nNOVELTY CLAIMS')
     check('novelty', 'claim 1: override preference pairs exist for a reward model',
@@ -186,11 +186,27 @@ def novelty_claims(d, pairs):
           'self_sufficient_fraction' in d.columns)
     check('novelty', 'claim 2: sink reason is recorded',
           'sink_reason' in d.columns)
-    if d.pv_generation_kw.max() <= 0:
+    # The main dataset has no solar, because IRES says Andhra Pradesh has none.
+    # The sink-aware path is exercised in a separate, clearly labelled scenario.
+    scenario = (root / 'data/processed/sharp_rl_scenario_pv_v1'
+                / 'rl_transitions.parquet')
+    if d.pv_generation_kw.max() > 0:
+        check('novelty', 'claim 2: sink-aware shedding is EXERCISED', True,
+              'solar present in the main dataset')
+    elif scenario.exists():
+        pv = pd.read_parquet(scenario, columns=['shed_is_worthless', 'sink_reason',
+                                                'operating_mode'])
+        worthless = int(pv.shed_is_worthless.sum())
+        reasons = set(pv.sink_reason.unique())
+        check('novelty', 'claim 2: sink-aware shedding is EXERCISED',
+              worthless > 0 and len(reasons) > 1,
+              f'{worthless:,} zero-value shed steps in the PV scenario dataset, '
+              f'sink reasons {sorted(reasons)}. The main dataset has no solar '
+              'because IRES reports 3 of 498 AP households with any, at 20-25 W.')
+    else:
         record('novelty', 'claim 2: sink-aware shedding is EXERCISED',
                'NOT_SUPPORTED',
-               'no household generates solar, so the battery-full / export-blocked '
-               'case never arises. Run with --pv-scenario-kw to exercise it.')
+               'no solar anywhere; run with --pv-scenario-kw to exercise it')
     check('novelty', 'claim 3: three operating modes present',
           d.operating_mode.nunique() == 3,
           str(sorted(d.operating_mode.unique())))
@@ -224,9 +240,21 @@ def experiments(root, d, pairs, models):
           int(d.loc[d.split.eq('test'), 'household_id'].nunique()) > 0,
           f"{int(d.loc[d.split.eq('test'),'household_id'].nunique())} test households, "
           'disjoint from train')
-    record('experiments', 'E7 Indian validation on iAWE including outage mode',
-           'NOT_SUPPORTED',
-           'outage mode is present, but no iAWE held-out evaluation split exists')
+    e7 = root / 'reports/e7_iawe_heldout_v1.json'
+    if e7.exists():
+        result = json.loads(e7.read_text(encoding='utf-8'))
+        check('experiments', 'E7 Indian validation on iAWE including outage mode',
+              True,
+              f"held out on mains channels {result['held_out']['mains_channels']}; "
+              f"daily energy ratio "
+              f"{result['daily_energy_kwh']['ratio_sharp_over_iawe']:.2f}x, "
+              f"shape correlation "
+              f"{result['diurnal_shape']['correlation']:+.3f}. Channels "
+              f"{result['not_held_out']['calibration_channels']} calibrated the "
+              'simulator and are NOT held out.')
+    else:
+        record('experiments', 'E7 Indian validation on iAWE including outage mode',
+               'NOT_SUPPORTED', 'no iAWE held-out comparison has been run')
     e8 = root / 'reports/e8_critical_load_safety_v1.json'
     if e8.exists():
         report = json.loads(e8.read_text(encoding='utf-8'))
@@ -258,7 +286,7 @@ def main(root):
     invariants(root, d, schema, models)
     control_classes(d, models)
     necessity_guarantee(d, schema, models)
-    novelty_claims(d, pairs)
+    novelty_claims(root, d, pairs)
     experiments(root, d, pairs, models)
     registry(root, d)
 

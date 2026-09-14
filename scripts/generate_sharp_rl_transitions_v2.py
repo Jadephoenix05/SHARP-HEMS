@@ -123,6 +123,8 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
     protected = ds.is_necessity.to_numpy(bool)
     cycle = ds.dynamics_family.eq('cycle').to_numpy(bool)
     is_ac = ds.appliance_type.eq('air_conditioner').to_numpy(bool)
+    supports_reduced = ds.supports_reduced.to_numpy(bool)
+    reduced_fraction = ds.reduced_power_fraction.to_numpy(float)
     on_inverter = ds.appliance_type.map(on_inverter_circuit).to_numpy(bool)
     device_ids = ds.device_id.astype(str).tolist()
     has_ac = bool(is_ac.any())
@@ -145,7 +147,19 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
     # is real consumption and must be billed and counted against capacity.
     base_w = float(background_kw) * 1000.0
     check(math.isfinite(base_w) and base_w >= 0, 'Nonfinite background load')
-    limit = max(sanctioned_w, necessity_w * 1.1 + base_w)
+    # A noninterruptible cycle cannot be stopped once started, so the connection
+    # must also carry the largest one the household owns. Without this a rice
+    # cooker mid-cycle plus the household's own lights and fans could exceed the
+    # limit by a few watts, leaving the shield to choose between breaking a cycle
+    # and shedding an essential. A supply that could not run a household's
+    # essentials alongside one appliance cycle would not have that appliance.
+    # A household with no cycle appliance yields an empty max, which pandas
+    # returns as NaN. `nan or 0.0` is nan, because nan is truthy, which silently
+    # destroyed the whole capacity headroom for those households.
+    cycle_series = ds.loc[ds.dynamics_family.eq('cycle'), 'operating_power_proxy_w']
+    cycle_w = float(cycle_series.max()) if len(cycle_series) else 0.0
+    check(math.isfinite(cycle_w), 'Nonfinite cycle power')
+    limit = max(sanctioned_w, (necessity_w + cycle_w) * 1.1 + base_w)
 
     household = build_household_power(power_row, pv_scenario_kw=pv_scenario_kw,
                                       export_allowed=export_allowed)
@@ -246,6 +260,8 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             rated = float(power[j]) if is_ac[j] else float(power[j] * min(1.0, budget[j]))
             devices.append(Device(device_ids[j], bool(current[j]), available,
                                   rated, must_run=must_run,
+                                  supports_reduced=bool(supports_reduced[j]),
+                                  estimated_reduced_w=float(rated * reduced_fraction[j]),
                                   noninterruptible_cycle_active=active_cycle,
                                   elapsed_state_steps=int(elapsed[j]),
                                   min_on_steps=(0 if grid_absent
@@ -270,10 +286,22 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         rng_local = np.random.default_rng(
             int(hashlib.sha256(f'{episode}|{t}'.encode()).hexdigest()[:8], 16))
         if policy == 'peak_aware' and severity > 0.5:
-            wanted = wanted & protected
+            # Under grid stress: dim anything that can be dimmed, shed only
+            # discretionary loads that cannot. A necessity is never shed, but it
+            # CAN be dimmed - a fan on a lower speed or a dimmed light keeps the
+            # service while cutting demand, which is the whole reason the third
+            # action level exists.
+            wanted_level = np.where(
+                supports_reduced & wanted, 2,
+                np.where(protected, wanted.astype(int), 0))
         elif policy == 'random_binary':
-            wanted = np.where(is_ac, rng_local.random(n) < 0.5,
-                              (rng_local.random(n) < 0.5) & (budget > 1e-9))
+            draw = rng_local.random(n)
+            choice = np.where(draw < 0.34, 0, np.where(draw < 0.67, 1, 2))
+            choice = np.where(supports_reduced, choice, np.minimum(choice, 1))
+            wanted_level = np.where(is_ac, (draw < 0.5).astype(int),
+                                    choice * (budget > 1e-9))
+        else:
+            wanted_level = wanted.astype(int)
         # During an outage only the inverter circuit is alive: fans, lights and
         # the router. Everything else is unpowered.
         #
@@ -291,6 +319,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                 essential_wanted = essential_wanted & (preferred[:, t] > 0)
             wanted = np.where(on_inverter, essential_wanted, False)
             user_wanted = np.where(on_inverter, essential_wanted, False)
+            wanted_level = wanted.astype(int)
 
         # Unmodelled load is still load: it stops when the grid does.
         step_background_kw = 0.0 if grid_absent else float(background_kw)
@@ -300,29 +329,38 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
         last = {}
 
         def physics(action):
-            action = np.asarray(action, float)
-            ac_enabled = bool((action * is_ac).sum() > 0) if has_ac else False
+            level = np.asarray(action, int)
+            # Level 1 is full power, level 2 the reduced setting, level 0 off.
+            action = np.where(level == 1, 1.0,
+                              np.where(level == 2, reduced_fraction, 0.0))
+            running = (level > 0).astype(float)
+            ac_enabled = bool((running * is_ac).sum() > 0) if has_ac else False
             thermal_result = thermal_step(step_indoor, float(outdoor[t]), thermal,
                                           ac_enabled=ac_enabled, setpoint_c=setpoint)
             duty = thermal_result['compressor_duty_fraction']
             next_temperature = thermal_result['next_temperature_c']
 
-            delivered = np.where(is_ac, 0.0, np.minimum(1.0, budget) * action)
-            after = np.where(is_ac, budget, np.maximum(0.0, budget - delivered))
-            powers = np.where(is_ac, power * action * duty, power * delivered)
+            # A dimmed appliance still delivers its service, so the budget is
+            # consumed at the full rate; only the power drawn is reduced.
+            served = np.where(is_ac, 0.0, np.minimum(1.0, budget) * running)
+            after = np.where(is_ac, budget, np.maximum(0.0, budget - served))
+            powers = np.where(is_ac, power * action * duty,
+                              power * np.minimum(1.0, budget) * action)
 
             flows = dispatch(demand_kw=float(powers.sum()) / 1000.0 + step_background_kw,
                              pv_kw=pv_kw,
                              battery_kwh=step_battery, household=household,
                              grid_absent=grid_absent)
 
-            timers = advance_timers(devices, action.astype(int).tolist())
+            timers = advance_timers(devices, level.tolist())
             nxt = []
             for j, (d, z) in enumerate(zip(devices, timers)):
                 if is_ac[j]:
                     nxt.append(replace(d, current_on=z['current_on'],
                                        elapsed_state_steps=z['elapsed_state_steps'],
                                        available=True, estimated_on_w=float(power[j]),
+                                       estimated_reduced_w=float(power[j]
+                                                                 * reduced_fraction[j]),
                                        must_run=False,
                                        noninterruptible_cycle_active=False))
                 else:
@@ -331,6 +369,10 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
                         d, current_on=z['current_on'],
                         elapsed_state_steps=z['elapsed_state_steps'],
                         available=bool(after[j] > 1e-9),
+                        # Reduced power must track the rescaled ON power, or the
+                        # next step sees a reduced setting above full power.
+                        estimated_reduced_w=float(power[j] * min(1.0, after[j])
+                                                  * reduced_fraction[j]),
                         # Minimum-on-time only binds when there is power to run on.
                         min_on_steps=(0 if next_absent
                                       else (4 if (cycle[j] and not is_ac[j]) else 0)),
@@ -345,10 +387,11 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             discomfort = (max(0.0, next_temperature - band_high)
                           + max(0.0, band_low - next_temperature)) if has_ac else 0.0
             unmet = float(after[~is_ac].sum() / 4) if t == 95 else 0.0
-            next_shed = np.where(action.astype(bool), 0, np.minimum(96, steps_since_shed + 1))
+            next_shed = np.where(running.astype(bool), 0,
+                                 np.minimum(96, steps_since_shed + 1))
             result = {
                 'next_devices': nxt, 'appliance_power_w': powers.tolist(),
-                'next_state': observe(t + 1, after, action.astype(bool), ledger.kwh,
+                'next_state': observe(t + 1, after, running.astype(bool), ledger.kwh,
                                       next_temperature, flows,
                                       False, next_shed, device_override_count,
                                       np.array([z['elapsed_state_steps'] for z in timers])),
@@ -379,15 +422,18 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             # interval. Keeping the running load requested achieves the same
             # outcome and leaves device state continuous.
             wanted = np.where(current & ~is_ac, True, wanted)
+            wanted_level = np.where(current & ~is_ac,
+                                    np.maximum(wanted_level, 1), wanted_level)
 
         state = observe(t, budget, current, ledger.kwh, indoor,
                         opening_flows if t == 0 else previous_flows,
                         worthless, steps_since_shed, device_override_count)
 
         # What the policy alone would do, before any human request.
-        policy_only = physics(wanted.astype(int).tolist())
+        wanted_level = np.asarray(wanted_level, int)
+        policy_only = physics(wanted_level.tolist())
         from sharp_action_shield import apply_shield
-        projected = apply_shield(devices, wanted.astype(int).tolist(),
+        projected = apply_shield(devices, wanted_level.tolist(),
                                  max_import_w=import_ceiling_w, base_load_w=step_base_w,
                                  available_solar_w=non_grid_w)['executed_actions']
 
@@ -413,7 +459,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
 
         record = transition_step(
             ledger=ledger, weights=weights, episode_id=episode, step_id=t,
-            devices=devices, requested=wanted.astype(int).tolist(),
+            devices=devices, requested=wanted_level.tolist(),
             state=state, physics_step=physics, max_import_w=import_ceiling_w,
             base_load_w=step_base_w, available_solar_w=non_grid_w,
             grid_peak_severity=severity,
@@ -424,7 +470,8 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             terminated=t == 95)
 
         applied = last['result']
-        executed = np.asarray(record['shield']['executed_actions'], float)
+        executed_level = np.asarray(record['shield']['executed_actions'], int)
+        executed = (executed_level > 0).astype(float)
         flows = applied['_flows']
         previous_flows = flows
         indoor = applied['_next_temperature_c']
@@ -465,7 +512,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
 
         budget = np.where(is_ac, budget,
                           np.maximum(0.0, budget - np.minimum(1.0, budget) * executed))
-        current = executed.astype(bool)
+        current = executed_level > 0
         elapsed = np.array([x['elapsed_state_steps'] for x in record['next_device_state']], int)
         kwh_index = GLOBAL_FEATURES.index('month_to_date_kwh_div500')
         rate_index = GLOBAL_FEATURES.index('marginal_tariff_inr_kwh_div10')
@@ -494,7 +541,7 @@ def run_episode(*, ds, home, power_row, billing_row, occupancy, day, date, split
             'state': record['state']['features'],
             'next_state': record['next_state']['features'],
             'action': record['shield']['executed_actions'],
-            'requested_action': wanted.astype(int).tolist(),
+            'requested_action': wanted_level.tolist(),
             'policy_action_before_human': projected,
             'device_present': [j < n for j in range(MAX_DEVICES)],
             'reward': record['reward']['reward'],

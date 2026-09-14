@@ -1,4 +1,17 @@
-"""SHARP binary-device action shield, version 1.
+"""SHARP three-level action shield, version 2.
+
+Action levels, matching the project spec's {allow, dim, shed} for lighting and
+{allow, shed} elsewhere:
+
+    0 = OFF       shed the load
+    1 = ON        full power
+    2 = REDUCED   dimmed or eco power, only where the appliance supports it
+
+Level 2 sits between 0 and 1 in power but is a distinct branch value, so a
+policy can choose to dim rather than face an all-or-nothing shed. Capacity
+shedding steps a device DOWN one level at a time - full to reduced to off -
+rather than dropping straight to off, so the least disruptive option is taken
+first.
 Pure simulation logic; this is not a certified hardware safety controller.
 Power estimates and timer limits must be supplied by the appliance models.
 A branch represents one modelled device, not an entire appliance category.
@@ -22,6 +35,8 @@ class Device:
     min_on_steps: int = 0
     min_off_steps: int = 0
     shed_priority: int = 0  # Higher number is shed first.
+    supports_reduced: bool = False   # can this appliance run dimmed or in eco?
+    estimated_reduced_w: float = 0.0
 
 
 def validate_device(d):
@@ -31,12 +46,17 @@ def validate_device(d):
                   'noninterruptible_cycle_active'):
         if not isinstance(getattr(d, field), bool):
             raise ValueError(f'{field} must be a boolean')
-    for field in ('estimated_on_w', 'estimated_off_w'):
+    if not isinstance(d.supports_reduced, bool):
+        raise ValueError('supports_reduced must be a boolean')
+    for field in ('estimated_on_w', 'estimated_off_w', 'estimated_reduced_w'):
         value = getattr(d, field)
         if not math.isfinite(value) or value < 0:
             raise ValueError(f'{field} must be finite and nonnegative')
     if d.estimated_on_w < d.estimated_off_w:
         raise ValueError('ON power must not be below OFF/standby power')
+    if d.supports_reduced and not (d.estimated_off_w <= d.estimated_reduced_w
+                                   <= d.estimated_on_w):
+        raise ValueError('Reduced power must sit between OFF and ON power')
     for field in ('elapsed_state_steps', 'min_on_steps', 'min_off_steps', 'shed_priority'):
         value = getattr(d, field)
         if type(value) is not int or value < 0:
@@ -46,25 +66,45 @@ def validate_device(d):
 
 
 def local_mask(d):
-    """Return [OFF allowed, ON allowed] and reasons. Fault/OFF takes precedence.
-    Minimum-off lockout takes precedence over a demand to run; this conflict
-    is exposed instead of silently violating the lockout.
+    """Return [OFF allowed, ON allowed, REDUCED allowed] and reasons.
+
+    Fault and OFF take precedence. A minimum-off lockout takes precedence over a
+    demand to run; that conflict is exposed rather than silently violated.
+
+    A device that must run may still be REDUCED where it supports it: dimming a
+    light keeps the service while lowering demand, which is the point of having
+    a third level at all.
     """
     validate_device(d)
+    reduced = d.supports_reduced
     if not d.available or d.force_off:
         reasons = ['unavailable' if not d.available else 'forced_off']
         if d.must_run or d.noninterruptible_cycle_active:
             reasons.append('required_service_interrupted')
-        return [True, False], reasons
+        return [True, False, False], reasons
     if d.current_on:
         if d.must_run or d.noninterruptible_cycle_active or d.elapsed_state_steps < d.min_on_steps:
-            return [False, True], ['protected_on']
+            return [False, True, reduced], ['protected_on']
     else:
         if d.elapsed_state_steps < d.min_off_steps:
-            return [True, False], ['minimum_off_lockout'] + (['required_service_delayed'] if d.must_run else [])
+            return [True, False, False], ['minimum_off_lockout'] + (
+                ['required_service_delayed'] if d.must_run else [])
         if d.must_run:
-            return [False, True], ['required_on']
-    return [True, True], []
+            return [False, True, reduced], ['required_on']
+    return [True, True, reduced], []
+
+
+# Power ordering of the levels, highest first. Capacity shedding walks this.
+LEVELS_BY_POWER = [1, 2, 0]
+
+
+def level_power(d, level):
+    """Estimated draw at an action level."""
+    if level == 1:
+        return float(d.estimated_on_w)
+    if level == 2:
+        return float(d.estimated_reduced_w)
+    return float(d.estimated_off_w)
 
 
 def apply_shield(devices, requested, *, max_import_w, base_load_w=0.0,
@@ -84,26 +124,41 @@ def apply_shield(devices, requested, *, max_import_w, base_load_w=0.0,
     if set(human_actions) - set(ids):
         raise ValueError('Human override references an unknown device')
     for value in list(requested) + list(human_actions.values()):
-        if type(value) not in (int, bool) or value not in (0, 1):
-            raise ValueError('Actions must be binary integers or booleans')
+        if type(value) not in (int, bool) or int(value) not in (0, 1, 2):
+            raise ValueError('Actions must be 0 (off), 1 (on) or 2 (reduced)')
     masks, reasons, effective, executed = [], [], [], []
     for d, request in zip(devices, requested):
         mask, why = local_mask(d)
         wanted = int(human_actions.get(d.device_id, request))
-        actual = wanted if mask[wanted] else int(mask[1])
+        # Fall back to the highest-power level still permitted, which preserves
+        # required service; OFF only when nothing else is allowed.
+        actual = wanted if mask[wanted] else next(
+            (level for level in LEVELS_BY_POWER if mask[level]), 0)
         masks.append(mask); reasons.append(why)
         effective.append(wanted); executed.append(actual)
     def net_import():
-        demand = base_load_w + sum(d.estimated_on_w if a else d.estimated_off_w
+        demand = base_load_w + sum(level_power(d, a)
                                    for d, a in zip(devices, executed))
         return max(0.0, demand - available_solar_w)
     order = sorted(range(len(devices)), key=lambda i: (-devices[i].shed_priority, devices[i].device_id))
-    for i in order:
-        if net_import() <= max_import_w + 1e-9:
-            break
-        if executed[i] and masks[i][0] and devices[i].estimated_on_w > devices[i].estimated_off_w:
-            executed[i] = 0
+    # Step each device DOWN one level at a time rather than straight to off, so
+    # a dimmable load is dimmed before it is shed. Repeat until the import fits
+    # or no further reduction is permitted anywhere.
+    progress = True
+    while net_import() > max_import_w + 1e-9 and progress:
+        progress = False
+        for i in order:
+            if net_import() <= max_import_w + 1e-9:
+                break
+            current = executed[i]
+            lower = [level for level in LEVELS_BY_POWER
+                     if masks[i][level]
+                     and level_power(devices[i], level) < level_power(devices[i], current)]
+            if not lower:
+                continue
+            executed[i] = lower[0]
             reasons[i].append('import_capacity_shedding')
+            progress = True
     excess = max(0.0, net_import() - max_import_w)
     return {
         'device_ids': ids, 'requested_actions': list(map(int, requested)),
@@ -148,24 +203,54 @@ def self_test():
     assert apply_shield([standby], [0], max_import_w=5)['capacity_excess_w'] == 5
     assert advance_timers([lock], [1])[0]['elapsed_state_steps'] == 1
     assert advance_timers([lock], [0])[0]['elapsed_state_steps'] == 2
+    # A dimmable light: reduced power sits between off and full.
+    lamp = Device('lamp', True, True, 100, estimated_off_w=0,
+                  supports_reduced=True, estimated_reduced_w=40, shed_priority=5)
+    assert local_mask(lamp)[0] == [True, True, True]
+    assert apply_shield([lamp], [2], max_import_w=500)['executed_actions'] == [2]
+    stepped = apply_shield([lamp], [1], max_import_w=50)
+    assert stepped['executed_actions'] == [2], stepped['executed_actions']
+    assert apply_shield([lamp], [1], max_import_w=10)['executed_actions'] == [0]
+    # A must-run dimmable load may dim but never switch off.
+    required = Device('required', True, True, 100, must_run=True,
+                      supports_reduced=True, estimated_reduced_w=40)
+    assert local_mask(required)[0] == [False, True, True]
+    assert apply_shield([required], [1], max_import_w=50)['executed_actions'] == [2]
+    assert apply_shield([required], [0], max_import_w=500)['executed_actions'] == [1]
+    # A device that does not support dimming never receives level 2.
+    assert local_mask(flexible)[0] == [True, True, False]
+    assert apply_shield([flexible], [2], max_import_w=5000)['executed_actions'] == [1]
+    try:
+        validate_device(Device('bad', True, True, 100, supports_reduced=True,
+                               estimated_reduced_w=200))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Reduced power above ON power accepted')
+
     checked = 0
-    for actions in product((0, 1), repeat=3):
+    for actions in product((0, 1, 2), repeat=3):
         ds = [protected, flexible, lock]
         r = apply_shield(ds, list(actions), max_import_w=600)
         assert all(mask[a] for mask, a in zip(r['local_legal_action_masks'], r['executed_actions']))
         assert r == apply_shield(ds, list(actions), max_import_w=600)
         checked += 1
     try:
-        apply_shield([protected], [2], max_import_w=500)
+        apply_shield([protected], [3], max_import_w=500)
     except ValueError:
         pass
     else:
-        raise AssertionError('Invalid action accepted')
-    report = {'status':'PASS', 'module':'binary_device_action_shield_v1',
+        raise AssertionError('Invalid action level accepted')
+    report = {'status':'PASS', 'module':'three_level_device_action_shield_v2',
+              'action_levels':{'0':'off','1':'on','2':'reduced'},
               'exhaustive_three_device_action_vectors':checked,
               'tested':['protected loads','minimum off time','cycle protection','fault precedence',
                         'infeasible capacity','human override constrained by cap','solar offset',
-                        'standby demand','state timers','determinism','invalid actions'],
+                        'standby demand','state timers','determinism','invalid actions',
+                        'reduced level offered only where supported',
+                        'capacity pressure dims before it sheds',
+                        'a must-run load may dim but never switch off',
+                        'reduced power bounded by off and on power'],
               'scope':'simulation decision logic only', 'hardware_safety_certified':False,
               'full_simulator_ready':False, 'master_release_ready':False}
     root = Path(__file__).resolve().parents[1]

@@ -180,5 +180,5 @@
     "A decoded IRES power-cut pattern codebook would replace assumed outage placement with reported placement."
   ],
   "transitions": 400896,
-  "override_events_synthetic": 47915
+  "override_events_synthetic": 3180
 }

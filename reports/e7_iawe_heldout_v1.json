@@ -1,0 +1,51 @@
+{
+  "status": "E7_IAWE_HELDOUT_COMPARED",
+  "held_out": {
+    "mains_channels": [
+      1,
+      2
+    ],
+    "note": "Never used to fit anything, so this comparison is held out."
+  },
+  "not_held_out": {
+    "calibration_channels": [
+      3,
+      4,
+      5,
+      7,
+      10
+    ],
+    "note": "Used as appliance power proxies for the refrigerator, air conditioner, laptop and television, so those appliances were partly fitted to this same household."
+  },
+  "scope": "ONE New Delhi household, about 73 days in 2013. Not a population.",
+  "daily_energy_kwh": {
+    "iawe_median": 18.01625171555422,
+    "iawe_p25": 15.033774530242152,
+    "iawe_p75": 21.292011379718076,
+    "iawe_complete_days": 72,
+    "sharp_median": 3.493363725308642,
+    "ratio_sharp_over_iawe": 0.19390069479838962
+  },
+  "diurnal_shape": {
+    "correlation": 0.10789209560035852,
+    "iawe_peak_clock": "22:00",
+    "sharp_peak_clock": "19:00",
+    "iawe_trough_clock": "08:15",
+    "sharp_trough_clock": "23:00"
+  },
+  "outage_mode": {
+    "iawe_interval_share_below_threshold": 0.04864941309574318,
+    "iawe_hours_per_day_median": 0.375,
+    "iawe_hours_per_day_max": 10.75,
+    "sharp_interval_share": 0.07013290229885058,
+    "sharp_source": "IRES-reported grid_supply_hours_daily for AP households",
+    "threshold_w": 1.0,
+    "caveat": "A mains reading near zero can be a genuine interruption or a metering dropout; the two cannot be separated here."
+  },
+  "interpretation": [
+    "iAWE is New Delhi in 2013; SHARP is Andhra Pradesh in 2021-2024. Differences in level and in outage frequency are expected.",
+    "Appliance power for the fridge, air conditioner, laptop and television came from this same household, so agreement on those is not evidence.",
+    "The mains comparison is the part that carries weight, and one home cannot establish population behaviour either way."
+  ],
+  "is_population_validation": false
+}

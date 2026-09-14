@@ -30,6 +30,9 @@ def warn(condition, message):
 
 
 def audit(root, folder):
+    models = pd.read_parquet(
+        root / 'data/processed/simulator_devices_v1/unknown_quantity_one'
+        / 'baseline_power_v1/device_power_models.parquet')
     out = root / folder
     d = pd.read_parquet(out / 'rl_transitions.parquet')
     d = d.sort_values(['episode_id', 'step_id']).reset_index(drop=True)
@@ -169,11 +172,24 @@ def audit(root, folder):
     lo, hi = float(d.indoor_temperature_c.min()), float(d.next_indoor_temperature_c.max())
     check(5.0 < lo and hi < 55.0, f'indoor temperature plausible ({lo:.1f} to {hi:.1f} C)')
     flat = np.concatenate(d.action.to_numpy())
-    check(bool(np.isin(flat, [0, 1]).all()), 'every action is binary')
+    check(bool(np.isin(flat, [0, 1, 2]).all()),
+          'every action is a valid level (0 off, 1 on, 2 reduced)')
+    levels = {int(k): int(v) for k, v in zip(*np.unique(flat, return_counts=True))}
+    check(2 in levels and levels[2] > 0,
+          f'the reduced level is actually exercised: {levels}')
+    # Only appliances that support a reduced setting may receive level 2.
+    bad = 0
+    for hh, g in d.groupby('household_id'):
+        supported = (models[models.template_id.eq(hh)].sort_values('device_id')
+                     .supports_reduced.to_numpy(bool))
+        for act in g.action:
+            a = np.asarray(act, int)
+            bad += int(((a == 2) & ~supported).sum())
+    check(bad == 0, 'level 2 only ever goes to a dimmable appliance')
     present = np.stack(d.device_present.to_numpy()).astype(bool)
     check(bool((d.action.map(len).to_numpy() == present.sum(1)).all()),
           'action length matches present-device count')
-    on_rate = float(flat.mean())
+    on_rate = float((flat > 0).mean())
     check(0.02 < on_rate < 0.98, f'actions not degenerate (on rate {on_rate:.3f})')
 
     print('\nBehaviour diversity')
