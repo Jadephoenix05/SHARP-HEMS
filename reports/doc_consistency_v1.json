@@ -1,6 +1,7 @@
 {
   "status": "DOCS_CONSISTENT",
   "documents": [
+    "DASHBOARD_BUILD_PLAN.md",
     "DASHBOARD_GUIDE.md",
     "DASHBOARD_SPECIFICATION.md",
     "GRID_CONTROLLER_AND_TARIFF.md",
@@ -10,7 +11,7 @@
     "RELEASE_AND_UPLOAD_GUIDE.md",
     "RL_MODEL_SPEC.md"
   ],
-  "checks_run": 156,
+  "checks_run": 174,
   "decisions": [
     {
       "id": "D1",
