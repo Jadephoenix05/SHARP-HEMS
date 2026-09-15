@@ -173,20 +173,20 @@ stage, clearly labelled.
 BCM numbering, 3.3 V logic. Relay boards are typically **active-low** — verify
 yours before wiring, because an inverted board energises every load at boot.
 
-| Appliance | BCM pin | Class | Commandable? |
-|---|---|---|---|
-| Ceiling fan | 17 | Critical | **No** — on whenever the occupant wants it |
-| LED light | 27 | Critical | **No** — same |
-| Refrigerator | 22 | Critical | **No** — always on, never commandable |
-| Air conditioner | 16 | Thermostatic | 0 / 1 |
-| Washing machine | 20 | Deferrable | 0 / 1, min-on 4 steps |
-| Television | 21 | Interruptible | 0 / 1 |
-| Mixer grinder | 26 | Interruptible | 0 / 1 |
-| Table fan | 27 | Critical | **No** |
-| Light 2 | 19 | Critical | **No** |
-| **EV charger** | 6 | Deferrable | 0 / 1, by deadline |
-| OLED (I²C) | 2, 3 | SDA / SCL | status display |
-| Buzzer | 18 | digital out | peak onset only |
+| # | Appliance | BCM pin | Class | Commandable? |
+|---|---|---|---|---|
+| 1 | Ceiling fan | **17** | Critical | **No** — served whenever the occupant wants it |
+| 2 | Table fan | **27** | Critical | **No** |
+| 3 | Light 1 | **22** | Critical | **No** |
+| 4 | Light 2 | **19** | Critical | **No** |
+| 5 | Refrigerator | **23** | Critical + thermostatic | **No** |
+| 6 | Air conditioner | **16** | Thermostatic | 0 / 1 |
+| 7 | Washing machine | **20** | Deferrable | 0 / 1, min-on 4 steps |
+| 8 | EV charger | **6** | Deferrable | 0 / 1, by deadline |
+| 9 | Television | **21** | Interruptible | 0 / 1 |
+| 10 | Mixer grinder | **26** | Interruptible | 0 / 1 |
+| — | OLED display | **2, 3** | I²C | SDA / SCL |
+| — | Buzzer | **18** | — | peak onset only |
 
 Ten loads, ten outputs, plus two I²C pins and the buzzer. **No inputs at all** —
 there are no switches. GPIO 5, 12 and 13 are free; 12 and 13 are the hardware-PWM

@@ -1,0 +1,156 @@
+{
+  "status": "HARDWARE_SPEC_BUILDABLE",
+  "checks": [
+    {
+      "check": "GPIO table parsed",
+      "passed": true,
+      "detail": "13 pins listed"
+    },
+    {
+      "check": "no two loads share a pin",
+      "passed": true,
+      "detail": "every pin used once"
+    },
+    {
+      "check": "all pins are usable BCM",
+      "passed": true,
+      "detail": "all within BCM 2-27"
+    },
+    {
+      "check": "nothing collides with I2C",
+      "passed": true,
+      "detail": "BCM 2/3 carry only the display"
+    },
+    {
+      "check": "PWM channels left free",
+      "passed": true,
+      "detail": "BCM [12, 13] unused, so dimming could return without rewiring"
+    },
+    {
+      "check": "hardware spec lists appliances",
+      "passed": true,
+      "detail": "10 rows"
+    },
+    {
+      "check": "dashboard spec lists appliance ids",
+      "passed": true,
+      "detail": "10 ids"
+    },
+    {
+      "check": "both specs describe the same number of appliances",
+      "passed": true,
+      "detail": "hardware 10, dashboard 10"
+    },
+    {
+      "check": "every appliance_type exists in the dataset",
+      "passed": true,
+      "detail": "10 types used, all known"
+    },
+    {
+      "check": "the EV is flagged as not in the data",
+      "passed": true,
+      "detail": "the EV is labelled a forward-looking extension"
+    },
+    {
+      "check": "Critical represented",
+      "passed": true,
+      "detail": "named in the hardware spec"
+    },
+    {
+      "check": "Thermostatic represented",
+      "passed": true,
+      "detail": "named in the hardware spec"
+    },
+    {
+      "check": "Deferrable represented",
+      "passed": true,
+      "detail": "named in the hardware spec"
+    },
+    {
+      "check": "Interruptible represented",
+      "passed": true,
+      "detail": "named in the hardware spec"
+    },
+    {
+      "check": "the OLED code uses the documented buzzer pin",
+      "passed": true,
+      "detail": "document BCM 18, code D18"
+    },
+    {
+      "check": "no switches, as decided",
+      "passed": true,
+      "detail": "the rig has no inputs; overrides come from the phone"
+    },
+    {
+      "check": "fits the Pi",
+      "passed": true,
+      "detail": "13 of 26 usable BCM pins in use"
+    }
+  ],
+  "pins_in_use": {
+    "2": [
+      "OLED display"
+    ],
+    "3": [
+      "OLED display"
+    ],
+    "6": [
+      "EV charger"
+    ],
+    "16": [
+      "Air conditioner"
+    ],
+    "17": [
+      "Ceiling fan"
+    ],
+    "18": [
+      "Buzzer"
+    ],
+    "19": [
+      "Light 2"
+    ],
+    "20": [
+      "Washing machine"
+    ],
+    "21": [
+      "Television"
+    ],
+    "22": [
+      "Light 1"
+    ],
+    "23": [
+      "Refrigerator"
+    ],
+    "26": [
+      "Mixer grinder"
+    ],
+    "27": [
+      "Table fan"
+    ]
+  },
+  "appliances_hardware": [
+    "Air conditioner",
+    "Ceiling fan",
+    "EV charger",
+    "Light 1",
+    "Light 2",
+    "Mixer grinder",
+    "Refrigerator",
+    "Table fan",
+    "Television",
+    "Washing machine"
+  ],
+  "appliances_dashboard": [
+    "air_conditioner_01",
+    "ceiling_fan_01",
+    "ev_charger_01",
+    "led_bulb_01",
+    "led_tube_01",
+    "mixer_grinder_01",
+    "refrigerator_01",
+    "table_fan_01",
+    "television_01",
+    "washing_machine_01"
+  ],
+  "note": "This checks the specification is buildable and agrees with the dashboard spec, the dataset vocabulary and the shipped code. It does not check that anything was actually wired correctly."
+}
