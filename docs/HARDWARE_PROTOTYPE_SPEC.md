@@ -50,33 +50,69 @@ guarantee, and the guarantee is the product.
 
 ---
 
-## 2. Appliance list — 7 devices
+## 2. Appliance list — 10 devices
 
-Six controllable plus one critical indicator, matching the idea book's
-prototype table.
+The median household in the dataset owns **8 devices** (mean 8.3, max 28), so a
+rig of 10 is a typical home rather than a showcase. Ownership is measured across
+the 431 target households: no inverter, no solar.
 
-Ownership is measured across the 431 target households: no inverter, no solar.
-
-| # | Appliance | Class | `appliance_type` | Levels | Watts | Owns it |
+| # | Appliance | Class | `appliance_type` | Part | BCM | Owns it |
 |---|---|---|---|---|---|---|
-| 1 | Ceiling fan | **Critical** | `ceiling_fan` | **1 only** | 60.0 | **97.0 %** |
-| 2 | LED light | **Critical** | `led_bulb` | **1 only** | 9.0 | 68.9 % |
-| 3 | Refrigerator | **Critical + thermostatic** | `refrigerator` | **1 only** | 43.2 | 30.4 % |
-| 4 | Air conditioner | Thermostatic | `air_conditioner` | 0, 1 + advisory setpoint | 1328.4 | 5.6 % |
-| 5 | Washing machine | Deferrable | `washing_machine` | 0, 1, min-on 4 steps | 113.7 | 8.6 % |
-| 6 | Television | Interruptible | `television` | 0, 1 | 104.6 | **78.9 %** |
-| 7 | Mixer grinder | Interruptible | `mixer_grinder` | 0, 1 | 500.0 | **51.7 %** |
+| 1 | Ceiling fan | **Critical** | `ceiling_fan` | **DC motor + driver** | 17 | **97.0 %** |
+| 2 | Table fan | **Critical** | `table_fan` | **USB fan, 5 V** | 27 | 12.3 % |
+| 3 | Light 1 | **Critical** | `led_bulb` | LED lamp | 22 | 68.9 % |
+| 4 | Light 2 | **Critical** | `led_tube` | LED | 19 | 33.2 % |
+| 5 | Refrigerator | **Critical + thermostatic** | `refrigerator` | LED | 23 | 30.4 % |
+| 6 | Air conditioner | Thermostatic | `air_conditioner` | LED + relay | 16 | 5.6 % |
+| 7 | Washing machine | Deferrable | `washing_machine` | LED | 20 | 8.6 % |
+| 8 | **EV charger** | **Deferrable** | see below | **toy car** | 6 | — |
+| 9 | Television | Interruptible | `television` | LED | 21 | **78.9 %** |
+| 10 | Mixer grinder | Interruptible | `mixer_grinder` | LED | 26 | **51.7 %** |
 
-Three Critical, one Thermostatic, one Deferrable, two Interruptible. All four
-classes covered.
+Five Critical, one Thermostatic, two Deferrable, two Interruptible. All four
+classes covered, and the Critical group is large enough that "the protected row
+never moves" is visible rather than anecdotal.
 
 **The water pump was dropped in favour of the mixer grinder.** The pump is in
 11.1 per cent of homes; the mixer is in 51.7 per cent and is the second most
 common sheddable appliance in Andhra Pradesh. Both are Interruptible `task`
-loads, so the class coverage is identical and the mixer is far more
-representative.
+loads, so the class coverage is identical and the mixer is more representative.
 
-**No PWM is required.** Nothing dims, so all seven are plain digital outputs.
+**No PWM anywhere.** Nothing dims, so every load is a plain digital output.
+GPIO12 and GPIO13 are deliberately left free - they are the hardware-PWM
+channels, so dimming could be reintroduced later without rewiring.
+
+### The EV charger
+
+There were no electric vehicles in IRES 2020, so no EV appears anywhere in
+training. But a charger is a textbook Deferrable load - large, flexible, and
+nobody minds when it charges so long as it is done by morning - and the policy
+handles it through the same class as the washing machine.
+
+The model reads each device's FEATURES, never its name: necessity flag, class,
+power, remaining service hours. Give the charger Deferrable features and a
+deadline and it is controlled correctly without retraining.
+
+State it plainly: *EV charging is handled as a Deferrable load. No EV appeared in
+the 2020 survey data, so this is a forward-looking extension rather than a
+validated result.*
+
+### The appliance list is not fixed
+
+Because the model reads features rather than names, **the rig's appliances can be
+changed without retraining**, as long as each `appliance_type` string matches one
+of the 22 the dataset defines so the Pi looks up the right flags. Twelve loads is
+the hard ceiling: 26 usable GPIO, minus two for the OLED on I2C, at two pins each
+(one output, one switch).
+
+### Is water a luxury?
+
+The water pump is classed Interruptible and a reviewer should be invited to
+question that. Many Andhra Pradesh homes pump to an overhead tank; shed the pump
+at the wrong time and there is no water in the morning, which is not a luxury.
+The honest position is that the classification comes from the dataset's
+`control_permission` field, and that a tank-level constraint - shed only while
+the tank is above a threshold - is the correct fix and is not yet implemented.
 
 ### Why these seven
 

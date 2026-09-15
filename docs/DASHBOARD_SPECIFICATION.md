@@ -44,9 +44,11 @@ A dashboard that only plots power answers none of them.
 
 ---
 
-## 2. The seven appliances
+## 2. The ten appliances
 
 Ownership is measured across the 431 target households — no inverter, no solar.
+These ids are frozen: the Pi, the dashboard and the rig must all spell them the
+same way.
 
 The idea book's four classes: **Critical** never interrupted, **Thermostatic**
 adjusted inside comfort bands, **Deferrable** moved in time, **Interruptible**
@@ -55,12 +57,23 @@ paused briefly.
 | id | Appliance | Class | Legal levels | Watts | Owns it |
 |---|---|---|---|---|---|
 | `ceiling_fan_01` | Ceiling fan | **Critical** | **1 only** | 60.0 | 97.0 % |
-| `led_bulb_01` | LED light | **Critical** | **1 only** | 9.0 | 68.9 % |
+| `table_fan_01` | Table fan | **Critical** | **1 only** | 40.0 | 12.3 % |
+| `led_bulb_01` | Light 1 | **Critical** | **1 only** | 9.0 | 68.9 % |
+| `led_tube_01` | Light 2 | **Critical** | **1 only** | 18.0 | 33.2 % |
 | `refrigerator_01` | Refrigerator | **Critical + thermostatic** | **1 only** | 43.2 | 30.4 % |
 | `air_conditioner_01` | Air conditioner | Thermostatic | 0, 1 + advisory setpoint | 1328.4 | 5.6 % |
 | `washing_machine_01` | Washing machine | Deferrable | 0, 1 | 113.7 | 8.6 % |
+| `ev_charger_01` | **EV charger** | Deferrable | 0, 1 + deadline | — | — |
 | `television_01` | Television | Interruptible | 0, 1 | 104.6 | 78.9 % |
 | `mixer_grinder_01` | Mixer grinder | Interruptible | 0, 1 | 500.0 | 51.7 % |
+
+**Five Critical.** That matters for Panel 4: with five protected loads, "the top
+row never moves during a peak" is visible rather than anecdotal.
+
+**The EV charger is a forward-looking extension.** No electric vehicle appeared
+in IRES 2020, so it is handled through the Deferrable class alongside the washing
+machine and must be labelled as such wherever it is shown — not presented as a
+validated result.
 
 **Level 0 is not offered on a necessity appliance.** Not greyed out after the
 fact — never rendered as available. The fan, the light and the fridge cannot be
