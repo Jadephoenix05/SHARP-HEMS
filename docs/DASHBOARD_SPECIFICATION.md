@@ -95,10 +95,20 @@ mean running it around the clock.
 appliance runs = physical switch ON  AND  power available
 ```
 
-A resident may switch anything off, including their own fan. Neither the switch
-nor the dashboard can force power ON. So the override button is a **request**,
-and the UI must never imply it is a command - during a peak, tapping "keep the
-TV on" returns a refusal with a reason, not a state change.
+A resident may switch anything off, including their own fan. Neither path can
+force power ON. So the override button is a **request**, and the UI must never
+imply it is a command - during a peak, tapping "keep the TV on" returns a
+refusal with a reason, not a state change.
+
+**The dashboard is the primary override path in this build.** Only the ceiling
+fan has a physical switch; the other nine appliances are turned off from the
+phone. The shield treats both identically, because it branches on who asked
+rather than how, so a phone OFF is honoured exactly like a flipped switch.
+
+One consequence the UI must handle: a phone override needs the broker and the Pi
+reachable, and a switch does not. When the connection is down, **disable the
+override controls and say why** rather than accepting a tap that will never
+arrive.
 
 | Actor | Action | Allowed |
 |---|---|---|

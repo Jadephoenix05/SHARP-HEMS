@@ -173,24 +173,48 @@ yours before wiring, because an inverted board energises every load at boot.
 | Washing machine | 20 | Deferrable | 0 / 1, min-on 4 steps |
 | Television | 21 | Interruptible | 0 / 1 |
 | Mixer grinder | 26 | Interruptible | 0 / 1 |
-| Override switch, per appliance | one input each | pull-up | the resident's own switch |
+| **Override switch, ceiling fan only** | **5** | input, pull-up | the one physical switch |
 | OLED (I2C) | 2, 3 | SDA / SCL | status display |
 | Buzzer | 18 | digital out | peak onset only |
 
 ### Two overrides, in series
 
 ```
-appliance runs = physical switch ON  AND  power available
+appliance runs = resident permits  AND  power available
 ```
 
 A wall switch and the supply are physically in series, so both must be closed.
 The resident may switch anything off, including a fan - it is their house, and
 the shield protects essential service from the CONTROLLER, not from the person
-living there. Neither the switch nor the dashboard can FORCE power on, which is
-why a peak lockout cannot be defeated from either side.
+living there. Neither path can FORCE power on, which is why a peak lockout
+cannot be defeated from either side.
 
-Wire the switch in series with the relay output and the AND is free in hardware;
-the Pi reads the switch only so it can report and log the override.
+### One physical switch, the rest from the phone
+
+Ten switches is ten inputs, ten wires and debounce code for a rule the phone
+already exercises: the shield honours a human OFF from either source, because it
+branches on *who asked*, not on *how they asked*.
+
+So fit **one** switch, on the ceiling fan, and drive the other nine from the
+dashboard.
+
+| | Cost | Buys |
+|---|---|---|
+| Ten switches | 10 inputs, 10 wires, debounce | completeness nobody asked for |
+| **One, on the fan** | 1 input, 1 wire, ~10 lines | the demo moment and the offline path |
+| None | nothing | phone-only, and nothing works if the network drops |
+
+The reason to keep one is not tidiness. A phone override needs the dashboard, the
+broker and the Pi all reachable. **A switch works with the network dead**, and the
+thing it demonstrates - that the resident, not the controller, has the final say -
+is the claim the project most wants to make. Losing the ability to show it
+because the campus Wi-Fi dropped would be an avoidable way to lose the argument.
+
+The ceiling fan is the right one: 97 per cent of homes own one, and it is the
+load the whole protection rule is built around.
+
+Wire that switch in series with its relay output and the AND is free in hardware;
+the Pi reads the pin only so it can report and log the override.
 
 ### The OLED sequence
 
