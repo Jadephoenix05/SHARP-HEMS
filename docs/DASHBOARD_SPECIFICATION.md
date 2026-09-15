@@ -100,10 +100,9 @@ force power ON. So the override button is a **request**, and the UI must never
 imply it is a command - during a peak, tapping "keep the TV on" returns a
 refusal with a reason, not a state change.
 
-**The dashboard is the primary override path in this build.** Only the ceiling
-fan has a physical switch; the other nine appliances are turned off from the
-phone. The shield treats both identically, because it branches on who asked
-rather than how, so a phone OFF is honoured exactly like a flipped switch.
+**The dashboard is the ONLY override path in this build.** There are no physical
+switches on the rig. The shield is unaffected: it branches on who asked rather
+than how, so a phone OFF is honoured exactly as a flipped switch would be.
 
 One consequence the UI must handle: a phone override needs the broker and the Pi
 reachable, and a switch does not. When the connection is down, **disable the

@@ -136,26 +136,35 @@ stage, clearly labelled.
 
 ## 3. Bill of materials
 
-### Stage 1 — LED rig, no mains (build this first)
+### What this build actually uses — all of it already in hand
 
-| Item | Qty | Notes |
+| Item | Qty | Used as |
 |---|---|---|
-| Raspberry Pi 4, 2–4 GB | 1 | Pi Zero 2 W is tight for inference; Pi 4 gives headroom |
-| **Passive aluminium heatsink case** | 1 | The *official* case throttles to 428 MHz. Use FLIRC-style. |
-| microSD 32 GB A2, or USB SSD | 1 | SSD strongly preferred — see SD-card wear below |
-| 5 V 3 A USB-C supply | 1 | Official supply; brownouts corrupt cards |
-| 5 mm LEDs | 7 | any GPIO; no PWM needed |
+| Raspberry Pi 4, 2–4 GB | 1 | controller; Pi Zero 2 W is tight for inference |
+| **Passive aluminium heatsink case** | 1 | the *official* case throttles to 428 MHz |
+| microSD 32 GB A2, or USB SSD | 1 | SSD preferred — see SD-card wear below |
+| 5 V 3 A USB-C supply | 1 | official supply; brownouts corrupt cards |
+| **DC motor + driver module** | 1 | **ceiling fan** — 5–12 V, a real fan that keeps spinning |
+| **USB fan, 5 V** | 1 | **table fan** |
+| **LED lamp** | 1 | **light 1** |
+| 5 mm LEDs | 6 | light 2, fridge, AC, washer, TV, mixer |
 | Resistors 220 Ω | 7 | one per LED |
+| **Toy car** | 1 | **EV charger** |
+| **SSD1306 OLED 128×64** | 1 | status display, I²C |
+| **Buzzer** | 1 | peak onset only |
+| **Relay modules** | 2 | the two motor loads |
 | Breadboard + jumpers | 1 set | |
-| 8-channel opto-isolated relay board, 5 V | 1 | Stage 2 only; opto-isolation is not optional |
 
-### Stage 3+ — sensing and mains (supervised only)
+### Not used in this build
 
-| Item | Qty | Notes |
-|---|---|---|
-| PZEM-004T v3.0 + CT clamp | 1 | Modbus RTU over UART |
-| USB–TTL adapter (CP2102/CH340) | 1 | Keep PZEM off the Pi's own UART |
-| Enclosure, DIN rail, MCB, ferrules | 1 set | Required before any mains work |
+| Item | Why not |
+|---|---|
+| **Physical switches** | Overrides come from the phone. See §4. |
+| **PZEM-004T + CT clamp** | No power measurement. `measured_w` is `null`; GPIO readback is the real signal. |
+| USB–TTL adapter | Only needed for the PZEM |
+| Mains fan, enclosure, MCB | Stage 4, supervised lab only |
+
+**Nothing further needs buying.**
 
 ---
 
@@ -173,48 +182,48 @@ yours before wiring, because an inverted board energises every load at boot.
 | Washing machine | 20 | Deferrable | 0 / 1, min-on 4 steps |
 | Television | 21 | Interruptible | 0 / 1 |
 | Mixer grinder | 26 | Interruptible | 0 / 1 |
-| **Override switch, ceiling fan only** | **5** | input, pull-up | the one physical switch |
-| OLED (I2C) | 2, 3 | SDA / SCL | status display |
+| Table fan | 27 | Critical | **No** |
+| Light 2 | 19 | Critical | **No** |
+| **EV charger** | 6 | Deferrable | 0 / 1, by deadline |
+| OLED (I²C) | 2, 3 | SDA / SCL | status display |
 | Buzzer | 18 | digital out | peak onset only |
 
-### Two overrides, in series
+Ten loads, ten outputs, plus two I²C pins and the buzzer. **No inputs at all** —
+there are no switches. GPIO 5, 12 and 13 are free; 12 and 13 are the hardware-PWM
+channels, so dimming could be reintroduced without rewiring.
+
+### Overrides come from the phone. There are no switches.
 
 ```
 appliance runs = resident permits  AND  power available
 ```
 
-A wall switch and the supply are physically in series, so both must be closed.
-The resident may switch anything off, including a fan - it is their house, and
-the shield protects essential service from the CONTROLLER, not from the person
-living there. Neither path can FORCE power on, which is why a peak lockout
-cannot be defeated from either side.
+Both conditions still hold; only the first one's *interface* changed. The
+resident permits or refuses from the dashboard rather than a wall switch.
 
-### One physical switch, the rest from the phone
+**No code changes anywhere.** The shield branches on WHO asked, not on HOW:
 
-Ten switches is ten inputs, ten wires and debounce code for a rule the phone
-already exercises: the shield honours a human OFF from either source, because it
-branches on *who asked*, not on *how they asked*.
+```python
+elif by_human and wanted == 0:
+    # the resident switching their own appliance off - always honoured
+```
 
-So fit **one** switch, on the ceiling fan, and drive the other nine from the
-dashboard.
+A phone OFF reaches that branch exactly as a switch would. The three rules are
+unchanged: SHARP may never shed or dim a critical load in use; the resident may
+switch anything off; nobody may energise a load that is locked out during a peak.
 
-| | Cost | Buys |
-|---|---|---|
-| Ten switches | 10 inputs, 10 wires, debounce | completeness nobody asked for |
-| **One, on the fan** | 1 input, 1 wire, ~10 lines | the demo moment and the offline path |
-| None | nothing | phone-only, and nothing works if the network drops |
+**Why no switch at all.** Ten switches is ten inputs, ten wires and debounce code
+for a rule the phone already exercises. The one argument for keeping a single
+switch was that it works when the network is down - but the hosting plan already
+covers that case better: Mosquitto runs on the Pi, and if the cloud broker is
+unreachable the broker, controller and dashboard all run locally over a phone
+hotspot, so phone overrides keep working. A switch would have been a tactile
+demonstration, not a capability.
 
-The reason to keep one is not tidiness. A phone override needs the dashboard, the
-broker and the Pi all reachable. **A switch works with the network dead**, and the
-thing it demonstrates - that the resident, not the controller, has the final say -
-is the claim the project most wants to make. Losing the ability to show it
-because the campus Wi-Fi dropped would be an avoidable way to lose the argument.
-
-The ceiling fan is the right one: 97 per cent of homes own one, and it is the
-load the whole protection rule is built around.
-
-Wire that switch in series with its relay output and the AND is free in hardware;
-the Pi reads the pin only so it can report and log the override.
+**The one thing the dashboard must therefore do** is disable the override
+controls, with a reason, whenever the connection is down. A phone override can
+fail silently in a way a switch cannot, and a button that looks like it worked is
+worse than one that is visibly unavailable.
 
 ### The OLED sequence
 
