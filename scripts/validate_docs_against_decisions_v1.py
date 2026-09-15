@@ -90,6 +90,23 @@ DECISIONS = [
         'ruling': 'Target homes first: no solar, no inverter.',
         'required_in': {'DASHBOARD_SPECIFICATION.md': r'431|no inverter'},
     },
+
+    {
+        'id': 'D9',
+        'ruling': 'No PZEM in this build: measured_w is null, never a simulated value.',
+        # Only genuine conflation, not a line that names both fields in order
+        # to keep them apart. "power_15min_mean_w and measured_w stay separate"
+        # is the rule being stated, not broken.
+        'forbidden': [r'measured_w\s*[:=]\s*(?!null|number \| null)\w*simulat',
+                      r'simulated.{0,20}(?:as|into|in).{0,10}measured_w',
+                      r'publish.{0,30}simulated.{0,20}measured'],
+        # "It is tempting to..." is a warning against the thing, not an
+        # instruction to do it.
+        'exempt_phrases': ['null', 'never', 'not', 'would make', 'do not',
+                           'separate', 'stay', 'tempting'],
+        'required_in': {'HARDWARE_PROTOTYPE_SPEC.md': r'gpio_state|readback',
+                        'DASHBOARD_SPECIFICATION.md': r'gpio_state'},
+    },
 ]
 
 # Vocabulary the idea book defines. Documents must not invent synonyms for it.

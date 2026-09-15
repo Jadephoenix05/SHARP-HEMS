@@ -232,8 +232,13 @@ synthetic data the model trained on.
 
 ## 1.6 Two fields that must never be merged
 
-`power_15min_mean_w` (simulated or modelled) and `measured_w` (what the meter or
-LED rig actually read) stay **separate, always**.
+`power_15min_mean_w` (the SIMULATED appliance wattage) and `measured_w` (what a
+meter actually read) stay **separate, always**.
+
+There is no PZEM in this build, so **`measured_w` is `null`** - not a simulated
+value wearing a measured label. The real measurement available without a meter
+is `gpio_state`: an output pin read back reports what it is actually driving.
+Publish that, and `actuation_verified` alongside it.
 
 It is tempting to publish the simulated wattage as "measured" so the numbers
 look right. Do that and a stuck relay, a failed GPIO write and a wiring fault

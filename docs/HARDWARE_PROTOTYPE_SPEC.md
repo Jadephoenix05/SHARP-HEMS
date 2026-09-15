@@ -201,22 +201,39 @@ home/<house_id>/override/<appliance_id>                    dashboard -> agent
 home/<house_id>/health
 ```
 
-### Keep simulated and measured on separate topics
+### No PZEM in this build - so `measured_w` is null, not faked
 
-It is tempting to publish the simulated appliance wattage in place of the LED's
-real reading, so the numbers "look right". **Do not.** Harini's handbook is
-explicit that publishing a command is not proof a relay moved. If you overwrite
-the LED's real 0.02 W with a fake 1,115 W, a stuck relay, a failed GPIO write or
-a wiring fault all become invisible, because the fake number says the AC is
-running regardless.
+There is no power meter on this rig. The LEDs stand in for appliances and the
+wattages shown are simulated, which is the point of a simulation rig.
 
-Two topics gives you a free and genuinely valuable check:
+What matters is WHERE that simulated number goes. Publishing it in a field named
+`measured_w` would make a stuck relay, a failed GPIO write and a broken wire all
+invisible at once, because the fake number says the appliance is running
+whatever the hardware is doing. So:
 
+| Field | Value | Why it is honest |
+|---|---|---|
+| `power_15min_mean_w` | simulated appliance wattage | that is what it is |
+| `measured_w` | **`null`** | no meter is fitted |
+| `gpio_state` | **real pin readback** | a genuine measurement |
+| `actuation_verified` | `gpio_state == commanded` | a real check |
+
+### GPIO readback is a free actuation check
+
+An output pin can be read back, and what comes back is what the pin is really
+driving:
+
+```python
+GPIO.output(pin, GPIO.HIGH)
+actual = GPIO.input(pin)          # not what we asked for - what is there
 ```
-measured_w > threshold   must agree with   commanded_state
-```
 
-That is an actuation-verification result you can report.
+That catches a failed write, a mis-numbered pin, and a pin held by another
+process. It will not catch a physically stuck relay - nothing without a sensor
+will - and the reports should say so rather than imply full verification.
+
+Publish `actuation_verified` per appliance. A mismatch is the single most
+valuable fault signal the rig can produce, and it costs nothing.
 
 ### Command and acknowledgement schema
 

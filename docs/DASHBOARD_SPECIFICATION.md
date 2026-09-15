@@ -208,8 +208,10 @@ export interface ApplianceState {
   is_necessity: boolean;           // true -> level 0 is NEVER offered
   supports_reduced: boolean;       // true -> the dim control exists
   level: ActionLevel;
-  power_15min_mean_w: number;      // simulated or metered
-  measured_w: number | null;       // the rig's real reading, never overwritten
+  power_15min_mean_w: number;      // SIMULATED appliance wattage
+  measured_w: number | null;       // null in this build - no meter fitted
+  gpio_state: 0 | 1;               // real pin readback - a true measurement
+  actuation_verified: boolean;     // gpio_state agrees with the command
   remaining_service_hours: number;
 }
 
@@ -251,12 +253,20 @@ min_off_steps | command_expired | level_not_supported | watchdog_hold
 
 ### Two fields that are load-bearing
 
-**`measured_w` is nullable and separate from `power_15min_mean_w`.** Never render
-a simulated figure in a field labelled "measured". If the LED's real 0.02 W is
-overwritten with a fake 1,328 W, then a stuck relay, a failed GPIO write and a
-wiring fault all become invisible — the fake number says the AC is running
-regardless. Two fields give a free actuation check: `measured_w > threshold`
-must agree with the commanded state.
+**There is no PZEM in this build, so `measured_w` is `null` — never a simulated
+number.** Show the simulated wattage everywhere; that is what the rig exists for.
+Just never put it in a field named *measured*, or a stuck relay, a failed GPIO
+write and a wiring fault all become invisible behind a number that says the
+appliance is running regardless.
+
+`gpio_state` is the real signal available without a meter. An output pin read
+back reports what it is actually driving, which catches a failed write, a
+mis-numbered pin, and a pin held by another process. It will not catch a
+physically stuck relay — nothing without a sensor will — so say that rather than
+imply full verification.
+
+Render **`actuation_verified`** per appliance. A mismatch between commanded and
+actual is the most valuable fault the rig can surface, and it costs nothing.
 
 **`background_load_kw` is 61 % of household load and is not controllable.** It is
 unmodelled draw calibrated against these households' own reported bills. Show it
