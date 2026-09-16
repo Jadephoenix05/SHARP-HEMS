@@ -83,7 +83,7 @@ GAMMA = 0.99
 LEARNING_RATE = 3e-4              # Adam, not plain SGD
 REWARD_SCALE = 10.0               # terminal rewards are ~77x step rewards
 WARM_START_UPDATES = 2000         # behaviour cloning
-CONSERVATIVE_UPDATES = 15000
+CONSERVATIVE_UPDATES = 5000
 CQL_ALPHA = 1.0                    # 0.5 and 1.0 both tested; 1.0 scored better
 USE_LEVEL_BALANCE = True
 
@@ -115,7 +115,15 @@ SHOULD_RUN_ABLATIONS = True
 # network sees the rare class too rarely to fit it, however heavily each example
 # is weighted once it arrives. Sampling rows in proportion to how much rare-class
 # action they contain puts the examples in front of it in the first place.
-USE_BALANCED_SAMPLING = True
+# Measured and REJECTED. Oversampling rows that contain a rare action moved dim
+# recall almost not at all (0.011 -> 0.015) while costing six points of OFF
+# recall, taking three-level balanced accuracy from 0.6173 to 0.5922. REDUCED is
+# almost absent by DESIGN - no critical load may be dimmed, so only 37 air
+# coolers of 3,353 devices can dim at all - and no amount of resampling teaches
+# a class the design removed. It only distorts the distribution the value
+# function is fitted on.
+USE_BALANCED_SAMPLING = False
+LEVEL_WEIGHT_NORM = 'min'          # 'mean' or 'min'; see level_weights()
 
 MARKER = 'rl_transitions/splits/train.parquet'
 
@@ -690,7 +698,12 @@ def level_weights(train_data):
                        for level in range(N_LEVELS)])
     share = counts / counts.sum()
     weights = 1.0 / np.maximum(share, 1e-9)
-    return weights / weights.mean(), share
+    if LEVEL_WEIGHT_NORM == 'mean':
+        return weights / weights.mean(), share
+    # 'min': scale so the commonest level sits near 0.4 rather than the mean
+    # sitting at 1.0. Same ratios, about 6.6x the magnitude, which makes the
+    # conservative term correspondingly stronger.
+    return weights * (0.401 / weights.min()), share
 
 
 def sampling_probabilities(train_data, weights):

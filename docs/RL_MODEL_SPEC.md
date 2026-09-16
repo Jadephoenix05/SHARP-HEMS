@@ -191,55 +191,47 @@ Running the main configuration longer — 2,000 warm start plus **15,000**
 conservative updates at α = 1.0 — reaches **0.6008**, with zero illegal action
 selections. Chance is 0.333.
 
-### ⚠ The ceiling on this metric is about 0.83, and the model is near it
+### ⚠ The ceiling is NOT what I first calculated — corrected
 
-`random_binary` is **exactly one third of every split** and it *samples* its
-action. From the generator itself:
+An earlier version of this section claimed a hard ceiling of 0.4911 on
+`random_binary` rows and about 0.83 pooled, on the grounds that the policy draws
+its action from fresh noise:
 
 ```python
-draw = rng_local.random(n)                      # fresh noise, per device, per step
+draw = rng_local.random(n)                      # a draw, per device, per step
 choice = np.where(draw < 0.34, 0, np.where(draw < 0.67, 1, 2))
 ```
 
-The draw is not in the state, and the shield and human override change only
-**0.01 %** of logged actions, so nothing downstream restores the information.
+**That calculation was wrong, and the error was found by Pranitha.** Her
+independently trained model scored **0.694** on `random_binary` — above a number
+I had called a hard cap — and rather than accept it she traced the cause. She
+ruled out the shield and the human override (they alter under 0.01 % of any
+policy's logged actions) and ruled out a state/action row-alignment bug, then
+found the real reason: for many devices the logged action is 80–99 % persistent
+across all 96 steps of a day.
 
-The exact ceiling was computed by enumerating every rule mapping the
-state-visible device class — `supports_reduced` × `is_air_conditioner` — to a
-level, which is the most any state-reading model can exploit once the draw
-itself is noise:
+Verified here on validation `random_binary` rows, 1,734 device-episodes:
 
-| | Balanced accuracy |
+| | |
 |---|---|
-| Exact ceiling on `random_binary` rows | **0.4911** |
-| What the model actually scores there | **0.482** |
+| Median modal-action persistence across a day | **0.833** |
+| Devices ≥ 80 % persistent | **77.9 %** |
+| Devices ≥ 99 % persistent | 3.2 % |
 
-**The model has captured 98 % of what that third of the data contains.** All
-remaining headroom is in the two deterministic policies. Perfect imitation of
-those plus the measured ceiling on the random third bounds the pooled metric at
-`(2/3 × 1.0) + (1/3 × 0.491) ≈ 0.83`, and perfect imitation is itself out of
-reach because the behaviour policies read simulator state the 305 features do
-not fully expose.
+Under fresh i.i.d. draws that figure would sit near 1/3. It does not, because
+minimum-run and cycle constraints apply even under the "random" behaviour
+policy. **That persistence is real structure a state-reading model can learn**,
+through `current_on` and `elapsed_state_steps`, so the enumerated ceiling is a
+**simplified lower bound, not a hard cap**.
 
-Per-policy scores confirm the ordering:
+The practical consequence: there is more headroom than this document previously
+claimed, and it sits specifically in `random_binary`. Chasing it means learning
+the persistence, not running more updates — Pranitha reached a better figure
+there with 5,000 conservative updates against our 15,000.
 
-| Behaviour policy | Model scores |
-|---|---|
-| `serve_preferred` (deterministic) | 0.597 |
-| `peak_aware` (deterministic) | 0.497 |
-| `random_binary` (samples) | 0.482 vs a 0.491 ceiling |
-
-**Do not target a number on this metric.** It measures agreement with three
-scripted controllers; scoring near the ceiling would mean an excellent imitation
-of a rule-based policy that already exists for free, which is the opposite of
-the claim this project makes. It is a sanity check that the network learned
-structure, nothing more.
-
-`scripts/analyse_imitation_ceiling_v1.py` measures this. Note that its
-per-policy *cloner* estimate is not a ceiling and should not be read as one: a
-cloner trained on one policy's rows sees a third of the data and scores below
-the joint model, because the three policies share the shield, the override
-behaviour and the device dynamics.
+The general lesson is the one worth keeping: **a ceiling derived from how the
+data was supposed to be generated is not a measurement.** Check it against the
+data before quoting it as a limit.
 
 ### What the field actually reports
 
