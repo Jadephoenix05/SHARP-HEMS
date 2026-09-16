@@ -122,7 +122,8 @@ export default function Page() {
 
       <footer className="mt-8 border-t border-neutral-800 pt-4 text-xs text-neutral-500">
         <p>
-          Peak avoided today: 4.15 % — {homesNotBlackedOut(4.15)}.
+          Peak avoided: 10.7 % — {homesNotBlackedOut(10.7)}. Mean over 30
+          held-out household-days; the median day sees no change at all.
         </p>
         <p className="mt-1">
           Appliance wattages are <strong>simulated</strong>; no meter is fitted.

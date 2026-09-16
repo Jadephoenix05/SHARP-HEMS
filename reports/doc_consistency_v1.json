@@ -8,10 +8,11 @@
     "HARDWARE_PROTOTYPE_SPEC.md",
     "HOSTING_AND_CONNECTIVITY_PLAN.md",
     "INTEGRATION_GUIDE.md",
+    "PROJECT_COMPLETION_PLAN.md",
     "RELEASE_AND_UPLOAD_GUIDE.md",
     "RL_MODEL_SPEC.md"
   ],
-  "checks_run": 174,
+  "checks_run": 192,
   "decisions": [
     {
       "id": "D1",

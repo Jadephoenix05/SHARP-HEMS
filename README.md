@@ -25,6 +25,26 @@ official sources and configuration
 iAWE, RESIDE-AC, TUS, NASA POWER and Grid-India define, calibrate and validate
 the simulator. BDQ trains on the generated transition layer.
 
+## Where to start
+
+**[docs/PROJECT_COMPLETION_PLAN.md](docs/PROJECT_COMPLETION_PLAN.md)** — what is
+finished, what is left, the order to build it in, and the gate each piece must
+pass. Every other document covers one subsystem; that one covers the whole
+project. Read it first.
+
+| Document | Covers |
+|---|---|
+| [PROJECT_COMPLETION_PLAN.md](docs/PROJECT_COMPLETION_PLAN.md) | Status, remaining work, acceptance gates |
+| [RL_MODEL_SPEC.md](docs/RL_MODEL_SPEC.md) | State, action space, BDQ, offline RL, export |
+| [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) | Frozen contracts across model, Pi and dashboard |
+| [DASHBOARD_BUILD_PLAN.md](docs/DASHBOARD_BUILD_PLAN.md) | Who builds what, in what order |
+| [DASHBOARD_SPECIFICATION.md](docs/DASHBOARD_SPECIFICATION.md) | Panels, contracts, what must not be claimed |
+| [DASHBOARD_GUIDE.md](docs/DASHBOARD_GUIDE.md) | Architecture, FastAPI service, deploy |
+| [HARDWARE_PROTOTYPE_SPEC.md](docs/HARDWARE_PROTOTYPE_SPEC.md) | Ten appliances, GPIO map, interlocks |
+| [GRID_CONTROLLER_AND_TARIFF.md](docs/GRID_CONTROLLER_AND_TARIFF.md) | Peak events, the tariff, the law |
+| [HOSTING_AND_CONNECTIVITY_PLAN.md](docs/HOSTING_AND_CONNECTIVITY_PLAN.md) | Broker, topics, demo-day contingency |
+| [RELEASE_AND_UPLOAD_GUIDE.md](docs/RELEASE_AND_UPLOAD_GUIDE.md) | Building and uploading the private release |
+
 ## Key modules
 
 | Path | Role |

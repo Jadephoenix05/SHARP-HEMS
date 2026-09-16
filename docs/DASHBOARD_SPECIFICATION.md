@@ -176,10 +176,14 @@ The line that carries the project:
 > **We do not choose which village goes dark. We take the television from
 > everyone so that nobody goes dark.**
 
-Measured on 40 held-out household-days, SHARP cuts household peak by **4.65 %** —
-the same relief a rolling blackout would get by cutting supply to **4.7 homes in
-100**, delivered without cutting anyone. The shed-luxury-only ceiling is 10.96 %,
-equivalent to blacking out 11 homes in 100.
+Measured on 30 held-out household-days (seed 7), SHARP cuts household peak by
+**10.7 %** — the same relief a rolling blackout would get by cutting supply to
+**11 homes in 100**, delivered without cutting anyone.
+
+Two things must be said alongside that number, or the claim is overstated. The
+**median** per-household-day change is **0.0 %**: on most days SHARP changes
+nothing, and the gain is concentrated in a minority of days. And the figure is a
+mean over households, not a promise about any one home.
 
 Panel 10 should say that in those terms. "Peak avoided, equivalent to N homes
 not blacked out" is the number a DISCOM and a citizen both understand.
@@ -190,13 +194,13 @@ This is the most important design decision in the document.
 
 APCPDCL's domestic tariff is **telescopic on monthly units with no time-of-day
 rate** (`time_of_day_rates: false`). Shifting load in time therefore saves the
-household **nothing**. Measured on 40 held-out household-days:
+household **nothing**. Measured on 30 held-out household-days, seed 7:
 
 | Metric | No control | Rule-based | **SHARP** |
 |---|---|---|---|
-| Peak kW | 0.408 | 0.409 | **0.379** |
-| Peak-to-average | 2.593 | 2.803 | **2.558** |
-| Cost ₹/day | 19.18 | **18.06** | 19.00 |
+| Peak kW | 0.315 | 0.312 | **0.281** |
+| Peak-to-average | 2.805 | 2.967 | **2.650** |
+| Cost ₹/day | 11.53 | **11.08** | 11.39 |
 
 SHARP wins peak and PAR; the rule-based controller makes **both worse than
 doing nothing**. On cost the rule-based controller wins, and the dashboard must
