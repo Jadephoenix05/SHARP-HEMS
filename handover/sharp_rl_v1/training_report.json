@@ -3,18 +3,18 @@
   "checkpoint_selection": "BEST_CONSERVATIVE_PHASE_BY_BALANCED_ACCURACY",
   "checkpoint_selection_note": "Warm-start snapshots are excluded on purpose. Behaviour cloning optimises agreement with the logged action directly, so it always wins that metric; selecting across both phases exports a pure imitator whose Q values are not value estimates.",
   "warm_start_peak_for_reference": {
-    "balanced_accuracy": 0.6191442992705788,
-    "raw_agreement": 0.8991994265026272,
-    "unshielded_violations": 68200,
+    "balanced_accuracy": 0.6192159322280572,
+    "raw_agreement": 0.8994657503524286,
+    "unshielded_violations": 68242,
     "critical_shed_while_in_use": 0,
     "critical_dimmed_ever": 0,
-    "td_error_non_terminal": 0.7780875748005299,
-    "td_error_terminal": 5.66394576264516,
-    "td_error_pooled_do_not_quote": 0.8289819309239116,
+    "td_error_non_terminal": 0.7782763001630227,
+    "td_error_terminal": 5.66601506932773,
+    "td_error_pooled_do_not_quote": 0.829190245675155,
     "illegal_greedy_picks": 0,
     "recall_by_level": {
-      "off": 0.9232906193804029,
-      "on": 0.9218465704734905,
+      "off": 0.9236324593944617,
+      "on": 0.9217196293318665,
       "reduced": 0.012295707957843287
     },
     "logged_share": {
@@ -23,15 +23,15 @@
       "reduced": 0.026219883378187876
     },
     "greedy_share": {
-      "off": 0.7820229398949122,
-      "on": 0.21630102204280405,
-      "reduced": 0.0016760380622837371
+      "off": 0.78232530757401,
+      "on": 0.21598463731897988,
+      "reduced": 0.0016900551070101243
     },
     "step": 2000,
     "phase": "warm_start",
-    "train_loss": 0.05216640252501655
+    "train_loss": 0.34374024328561803
   },
-  "trained_at": "2026-09-15T00:45:23.131387+05:30",
+  "trained_at": "2026-09-16T07:34:47.841224+05:30",
   "training_rows": 279072,
   "validation_rows": 59616,
   "feature_count": 305,
@@ -44,25 +44,25 @@
     "learning_rate": 0.0003,
     "reward_scale": 10.0,
     "warm_start_updates": 2000,
-    "conservative_updates": 15000,
+    "conservative_updates": 5000,
     "cql_alpha": 1.0,
     "level_balanced": true,
     "seed": 42
   },
   "final_validation": {
-    "balanced_accuracy": 0.6172527010783951,
-    "raw_agreement": 0.8895156510316545,
-    "unshielded_violations": 105903,
+    "balanced_accuracy": 0.6232361167035035,
+    "raw_agreement": 0.9009355376137383,
+    "unshielded_violations": 90983,
     "critical_shed_while_in_use": 0,
     "critical_dimmed_ever": 0,
-    "td_error_non_terminal": 0.3284512185275893,
-    "td_error_terminal": 2.777468959365825,
-    "td_error_pooled_do_not_quote": 0.35396181999465426,
+    "td_error_non_terminal": 0.6034494688497871,
+    "td_error_terminal": 2.7395842734926346,
+    "td_error_pooled_do_not_quote": 0.6257008730648167,
     "illegal_greedy_picks": 0,
     "recall_by_level": {
-      "off": 0.9102669963095722,
-      "on": 0.9301118492503421,
-      "reduced": 0.011379257675271117
+      "off": 0.9232809900842323,
+      "on": 0.9341316520684354,
+      "reduced": 0.012295707957843287
     },
     "logged_share": {
       "off": 0.831809480328079,
@@ -70,24 +70,24 @@
       "reduced": 0.026219883378187876
     },
     "greedy_share": {
-      "off": 0.7692213731897988,
-      "on": 0.22926278354479046,
-      "reduced": 0.0015158432654107394
+      "off": 0.7792475650390875,
+      "on": 0.21912445533769062,
+      "reduced": 0.0016279796232218377
     }
   },
   "history": [
     {
-      "balanced_accuracy": 0.6153275045130802,
-      "raw_agreement": 0.8944096020761245,
-      "unshielded_violations": 68393,
+      "balanced_accuracy": 0.6153299118371228,
+      "raw_agreement": 0.8944156093810073,
+      "unshielded_violations": 68397,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.6643799218259859,
-      "td_error_terminal": 4.810994589635426,
-      "td_error_pooled_do_not_quote": 0.7075738246156676,
+      "td_error_non_terminal": 0.6643776476807037,
+      "td_error_terminal": 4.811058281316323,
+      "td_error_pooled_do_not_quote": 0.707572237614408,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9186396693299695,
+        "off": 0.9186468913020975,
         "on": 0.9154289905358327,
         "reduced": 0.011913853673438215
       },
@@ -97,27 +97,27 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.779511886453928,
-        "on": 0.21874399269511727,
-        "reduced": 0.001744120850954761
+        "off": 0.7795299083685762,
+        "on": 0.21872997565039087,
+        "reduced": 0.001740115981032936
       },
       "step": 1000,
       "phase": "warm_start",
-      "train_loss": 0.057533272605426955
+      "train_loss": 0.37907320224193597
     },
     {
-      "balanced_accuracy": 0.6191442992705788,
-      "raw_agreement": 0.8991994265026272,
-      "unshielded_violations": 68200,
+      "balanced_accuracy": 0.6192159322280572,
+      "raw_agreement": 0.8994657503524286,
+      "unshielded_violations": 68242,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.7780875748005299,
-      "td_error_terminal": 5.66394576264516,
-      "td_error_pooled_do_not_quote": 0.8289819309239116,
+      "td_error_non_terminal": 0.7782763001630227,
+      "td_error_terminal": 5.66601506932773,
+      "td_error_pooled_do_not_quote": 0.829190245675155,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9232906193804029,
-        "on": 0.9218465704734905,
+        "off": 0.9236324593944617,
+        "on": 0.9217196293318665,
         "reduced": 0.012295707957843287
       },
       "logged_share": {
@@ -126,28 +126,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7820229398949122,
-        "on": 0.21630102204280405,
-        "reduced": 0.0016760380622837371
+        "off": 0.78232530757401,
+        "on": 0.21598463731897988,
+        "reduced": 0.0016900551070101243
       },
       "step": 2000,
       "phase": "warm_start",
-      "train_loss": 0.05216640252501655
+      "train_loss": 0.34374024328561803
     },
     {
-      "balanced_accuracy": 0.6151839295783902,
-      "raw_agreement": 0.9018506503908753,
-      "unshielded_violations": 96528,
+      "balanced_accuracy": 0.6225679016166326,
+      "raw_agreement": 0.9059656542355504,
+      "unshielded_violations": 85227,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.2631236749207378,
-      "td_error_terminal": 4.222469115231076,
-      "td_error_pooled_do_not_quote": 0.30436685659063717,
+      "td_error_non_terminal": 0.4752133238407174,
+      "td_error_terminal": 3.977230406096376,
+      "td_error_pooled_do_not_quote": 0.5116926684475471,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9294124444209062,
-        "on": 0.9048364574958744,
-        "reduced": 0.011302886818390102
+        "off": 0.9310109075852373,
+        "on": 0.924244347593055,
+        "reduced": 0.012448449671605315
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -155,28 +155,28 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.790425156990901,
-        "on": 0.20810105087786748,
-        "reduced": 0.0014737921312315775
+        "off": 0.78772387222863,
+        "on": 0.21070621876201462,
+        "reduced": 0.001569909009355376
       },
       "step": 2500,
       "phase": "conservative",
-      "train_loss": 0.1536423713831509
+      "train_loss": 0.5326005167501151
     },
     {
-      "balanced_accuracy": 0.6172527010783951,
-      "raw_agreement": 0.8895156510316545,
-      "unshielded_violations": 105903,
+      "balanced_accuracy": 0.6232361167035035,
+      "raw_agreement": 0.9009355376137383,
+      "unshielded_violations": 90983,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.3284512185275893,
-      "td_error_terminal": 2.777468959365825,
-      "td_error_pooled_do_not_quote": 0.35396181999465426,
+      "td_error_non_terminal": 0.6034494688497871,
+      "td_error_terminal": 2.7395842734926346,
+      "td_error_pooled_do_not_quote": 0.6257008730648167,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9102669963095722,
-        "on": 0.9301118492503421,
-        "reduced": 0.011379257675271117
+        "off": 0.9232809900842323,
+        "on": 0.9341316520684354,
+        "reduced": 0.012295707957843287
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -184,129 +184,13 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7692213731897988,
-        "on": 0.22926278354479046,
-        "reduced": 0.0015158432654107394
+        "off": 0.7792475650390875,
+        "on": 0.21912445533769062,
+        "reduced": 0.0016279796232218377
       },
       "step": 5000,
       "phase": "conservative",
-      "train_loss": 0.16397820134623003
-    },
-    {
-      "balanced_accuracy": 0.6117380278716285,
-      "raw_agreement": 0.8739607362552865,
-      "unshielded_violations": 112531,
-      "critical_shed_while_in_use": 0,
-      "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.3779839949144214,
-      "td_error_terminal": 2.1895794798911896,
-      "td_error_pooled_do_not_quote": 0.39685478121626266,
-      "illegal_greedy_picks": 0,
-      "recall_by_level": {
-        "off": 0.8911359921424943,
-        "on": 0.932622462940239,
-        "reduced": 0.01145562853215213
-      },
-      "logged_share": {
-        "off": 0.831809480328079,
-        "on": 0.1419706362937332,
-        "reduced": 0.026219883378187876
-      },
-      "greedy_share": {
-        "off": 0.7525490997052415,
-        "on": 0.24605720556196334,
-        "reduced": 0.0013936947327950787
-      },
-      "step": 7500,
-      "phase": "conservative",
-      "train_loss": 0.18287530328965573
-    },
-    {
-      "balanced_accuracy": 0.6076094141558733,
-      "raw_agreement": 0.858137495194156,
-      "unshielded_violations": 115626,
-      "critical_shed_while_in_use": 0,
-      "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.4063901935372734,
-      "td_error_terminal": 2.015710518190255,
-      "td_error_pooled_do_not_quote": 0.42315394691907526,
-      "illegal_greedy_picks": 0,
-      "recall_by_level": {
-        "off": 0.870683367075992,
-        "on": 0.9410711011438807,
-        "reduced": 0.01107377424774706
-      },
-      "logged_share": {
-        "off": 0.831809480328079,
-        "on": 0.1419706362937332,
-        "reduced": 0.026219883378187876
-      },
-      "greedy_share": {
-        "off": 0.7340165641419967,
-        "on": 0.26468185313341025,
-        "reduced": 0.0013015827245931053
-      },
-      "step": 10000,
-      "phase": "conservative",
-      "train_loss": 0.18979063927240347
-    },
-    {
-      "balanced_accuracy": 0.604120802243168,
-      "raw_agreement": 0.8512290945790081,
-      "unshielded_violations": 115314,
-      "critical_shed_while_in_use": 0,
-      "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.42138511615581176,
-      "td_error_terminal": 2.100766849765863,
-      "td_error_pooled_do_not_quote": 0.4388786758809165,
-      "illegal_greedy_picks": 0,
-      "recall_by_level": {
-        "off": 0.8628740078815789,
-        "on": 0.9381091411726541,
-        "reduced": 0.011379257675271117
-      },
-      "logged_share": {
-        "off": 0.831809480328079,
-        "on": 0.1419706362937332,
-        "reduced": 0.026219883378187876
-      },
-      "greedy_share": {
-        "off": 0.7280953639625785,
-        "on": 0.27059504357298475,
-        "reduced": 0.0013095924644367552
-      },
-      "step": 12500,
-      "phase": "conservative",
-      "train_loss": 0.196391372528023
-    },
-    {
-      "balanced_accuracy": 0.6038346177635842,
-      "raw_agreement": 0.8487400679225938,
-      "unshielded_violations": 116216,
-      "critical_shed_while_in_use": 0,
-      "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.4283782717743349,
-      "td_error_terminal": 2.043856596269877,
-      "td_error_pooled_do_not_quote": 0.44520617098783016,
-      "illegal_greedy_picks": 0,
-      "recall_by_level": {
-        "off": 0.8593400561869432,
-        "on": 0.9413955062835865,
-        "reduced": 0.010768290820223002
-      },
-      "logged_share": {
-        "off": 0.831809480328079,
-        "on": 0.1419706362937332,
-        "reduced": 0.026219883378187876
-      },
-      "greedy_share": {
-        "off": 0.7245250224272716,
-        "on": 0.2742134435473536,
-        "reduced": 0.0012615340253748558
-      },
-      "step": 15000,
-      "phase": "conservative",
-      "train_loss": 0.20440363829076197
+      "train_loss": 0.5728670365950862
     }
   ],
   "ablations": {
@@ -337,19 +221,19 @@
       }
     },
     "warm start only": {
-      "balanced_accuracy": 0.5716933440576565,
-      "raw_agreement": 0.8823269095219787,
-      "unshielded_violations": 85597,
+      "balanced_accuracy": 0.5868806827010445,
+      "raw_agreement": 0.8816140426758939,
+      "unshielded_violations": 70893,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.11807702889921588,
-      "td_error_terminal": 4.230209666467934,
-      "td_error_pooled_do_not_quote": 0.16091174387389004,
+      "td_error_non_terminal": 0.1272100795023141,
+      "td_error_terminal": 4.27033745698659,
+      "td_error_pooled_do_not_quote": 0.17036765635110868,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9273084432076149,
-        "on": 0.7803636158478963,
-        "reduced": 0.007407973117458378
+        "off": 0.9172699019496917,
+        "on": 0.8337494181864342,
+        "reduced": 0.00962272796700779
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -357,25 +241,25 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.8145384787902089,
-        "on": 0.18442626233499937,
-        "reduced": 0.0010352588747917467
+        "off": 0.7950327598359606,
+        "on": 0.20371371587850826,
+        "reduced": 0.0012535242855312059
       }
     },
     "CQL only": {
-      "balanced_accuracy": 0.6071026608509197,
-      "raw_agreement": 0.8773148148148148,
-      "unshielded_violations": 103276,
+      "balanced_accuracy": 0.6213559526973665,
+      "raw_agreement": 0.8994997917467641,
+      "unshielded_violations": 98288,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.18247347300214725,
-      "td_error_terminal": 1.834406593820041,
-      "td_error_pooled_do_not_quote": 0.19968110967733363,
+      "td_error_non_terminal": 0.5095917089354685,
+      "td_error_terminal": 1.970537370199622,
+      "td_error_pooled_do_not_quote": 0.5248098929069701,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.8987190628768966,
-        "on": 0.9119733705694015,
-        "reduced": 0.010615549106460974
+        "off": 0.922334911735464,
+        "on": 0.9295899801125544,
+        "reduced": 0.012142966244081259
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -383,25 +267,25 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7632601243111624,
-        "on": 0.2353221517365116,
-        "reduced": 0.0014177239523260284
+        "off": 0.7793917403562732,
+        "on": 0.21896426054081763,
+        "reduced": 0.0016439991029091375
       }
     },
     "warm start + CQL": {
-      "balanced_accuracy": 0.6098801267194578,
-      "raw_agreement": 0.8991193291041907,
-      "unshielded_violations": 94569,
+      "balanced_accuracy": 0.6224930074157833,
+      "raw_agreement": 0.900871459694989,
+      "unshielded_violations": 95448,
       "critical_shed_while_in_use": 0,
       "critical_dimmed_ever": 0,
-      "td_error_non_terminal": 0.1982038094859246,
-      "td_error_terminal": 4.248097275882074,
-      "td_error_pooled_do_not_quote": 0.24039019976088447,
+      "td_error_non_terminal": 0.5091099332822316,
+      "td_error_terminal": 2.728817733645882,
+      "td_error_pooled_do_not_quote": 0.5322318895360199,
       "illegal_greedy_picks": 0,
       "recall_by_level": {
-        "off": 0.9285867322742712,
-        "on": 0.8905908404914032,
-        "reduced": 0.010462807392698946
+        "off": 0.9236469033387177,
+        "on": 0.9315364109507891,
+        "reduced": 0.012295707957843287
       },
       "logged_share": {
         "off": 0.831809480328079,
@@ -409,9 +293,9 @@
         "reduced": 0.026219883378187876
       },
       "greedy_share": {
-        "off": 0.7929121812123542,
-        "on": 0.205756199538639,
-        "reduced": 0.0013316192490067922
+        "off": 0.7800745706779444,
+        "on": 0.21822536204024093,
+        "reduced": 0.0017000672818146866
       }
     }
   },

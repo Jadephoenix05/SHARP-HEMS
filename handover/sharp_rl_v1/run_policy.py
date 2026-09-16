@@ -90,9 +90,34 @@ def check_golden_vector(policy, path='golden_vector.json'):
 
     print(f'golden vector OK  (Q matches to {difference:.1e}, '
           f'{int(present.sum())} live devices agree)')
+
+    # Label carefully. Protection is CONDITIONAL: a critical appliance the
+    # occupant is not asking for may legitimately be off, and printing
+    # "protected" beside "SHED" reads like a safety failure when it is correct
+    # behaviour. Someone who sees that either panics or learns to ignore this
+    # check, and both are worse than a clear label.
+    wants = g.get('occupant_wants_it')
     for slot in np.where(present)[0]:
-        print(f'  slot {slot}: {LEVEL_NAMES[int(action[slot])]}'
-              + ('   [critical - protected]' if g['is_necessity'][slot] else ''))
+        critical = bool(g['is_necessity'][slot])
+        wanted = bool(wants[slot]) if wants is not None else None
+        if critical and wanted:
+            note = '   [critical, in use - must stay ON]'
+        elif critical and wanted is False:
+            note = '   [critical, not requested - may be off]'
+        elif critical:
+            note = '   [critical]'
+        else:
+            note = ''
+        print(f'  slot {slot}: {LEVEL_NAMES[int(action[slot])]}{note}')
+
+    # The rule that actually matters, asserted rather than eyeballed.
+    if wants is not None:
+        entitled = present & np.asarray(wants, bool)
+        violated = np.where(entitled & (action != 1))[0]
+        if len(violated):
+            raise AssertionError(
+                f'Critical loads in use were not served: slots {violated.tolist()}')
+        print(f'  {int(entitled.sum())} critical loads in use, all served')
     return True
 
 
