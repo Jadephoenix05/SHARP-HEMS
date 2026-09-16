@@ -124,6 +124,18 @@ SHOULD_RUN_ABLATIONS = True
 # function is fitted on.
 USE_BALANCED_SAMPLING = False
 LEVEL_WEIGHT_NORM = 'min'          # 'mean' or 'min'; see level_weights()
+# Multiplier on the conservative term. This is the knob that controls CONTROL
+# quality - the accuracy metric barely moves with it. Swept on the simulator,
+# 90 episodes, seed 99, peak kW (lower is better):
+#
+#   effective CQL   1.0x  ->  0.302   (mean-normalised)
+#   effective CQL   6.6x  ->  0.264   <- shipped, min-normalised, scale 1.0
+#   effective CQL  16.5x  ->  0.295   (scale 2.5)
+#   effective CQL  33.0x  ->  0.295   (scale 5.0)
+#
+# It is not monotone: past ~6.6x the imitation term swamps the reward and the
+# controller regresses towards the logged behaviour. Do not raise this.
+LEVEL_WEIGHT_SCALE = 1.0
 
 MARKER = 'rl_transitions/splits/train.parquet'
 
@@ -699,11 +711,11 @@ def level_weights(train_data):
     share = counts / counts.sum()
     weights = 1.0 / np.maximum(share, 1e-9)
     if LEVEL_WEIGHT_NORM == 'mean':
-        return weights / weights.mean(), share
+        return weights / weights.mean() * LEVEL_WEIGHT_SCALE, share
     # 'min': scale so the commonest level sits near 0.4 rather than the mean
     # sitting at 1.0. Same ratios, about 6.6x the magnitude, which makes the
     # conservative term correspondingly stronger.
-    return weights * (0.401 / weights.min()), share
+    return weights * (0.401 / weights.min()) * LEVEL_WEIGHT_SCALE, share
 
 
 def sampling_probabilities(train_data, weights):
