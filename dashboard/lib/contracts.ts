@@ -1,242 +1,107 @@
 /**
- * SHARP data contracts. FROZEN.
+ * SHARP Data Contracts (Frozen v2)
  *
- * The Pi, the dashboard and the rig must all agree on these names and values.
- * Changing a field here without changing the Pi breaks the system silently -
- * nothing throws, the UI just renders stale or wrong state.
+ * Source of truth: docs/DASHBOARD_SPECIFICATION.md §5, docs/INTEGRATION_GUIDE.md §1.5,
+ * and docs/GRID_CONTROLLER_AND_TARIFF.md.
  *
- * Generated from the shipped dataset and the validated model. Where this file
- * and any document disagree, this file wins.
+ * Action levels:
+ *  0 = OFF       (shed luxury loads only)
+ *  1 = ON        (full power)
+ *  2 = REDUCED   (reserved/dimmed, not offered in current binary build)
  */
 
-// ---------------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------------
-
-/** 0 shed, 1 full power, 2 reduced. Level 2 is never selected in this build. */
 export type ActionLevel = 0 | 1 | 2;
-
-export const LEVEL_NAME: Record<ActionLevel, string> = {
-  0: 'SHED',
-  1: 'ON',
-  2: 'REDUCED',
-};
-
-/**
- * The idea book's four classes.
- *   critical      never interrupted
- *   thermostatic  adjusted inside comfort bands
- *   deferrable    moved to another time
- *   interruptible paused briefly
- *
- * `critical` is a PERMISSION; the other three are DYNAMICS. A refrigerator is
- * both critical and thermostatic, which is not a contradiction.
- */
-export type ServiceClass =
-  | 'critical'
-  | 'thermostatic'
-  | 'deferrable'
-  | 'interruptible';
 
 export type OperatingMode = 'grid_import' | 'self_sufficient' | 'islanded_outage';
 
-/** Closed set. Do not invent strings - the Pi will not send anything else. */
-export type RejectedReason =
-  | 'necessity_mask'
-  | 'compressor_protection'
-  | 'cycle_active'
-  | 'min_on_steps'
-  | 'min_off_steps'
-  | 'command_expired'
-  | 'level_not_supported'
-  | 'peak_lockout'
-  | 'watchdog_hold';
-
-export const REJECTION_TEXT: Record<RejectedReason, string> = {
-  necessity_mask: 'Essential load — cannot be shed',
-  compressor_protection: 'Compressor needs 3 minutes before restarting',
-  cycle_active: 'Mid-cycle — cannot be interrupted',
-  min_on_steps: 'Minimum run time not yet reached',
-  min_off_steps: 'Minimum off time not yet reached',
-  command_expired: 'Command arrived too late',
-  level_not_supported: 'This appliance has no such level',
-  peak_lockout: 'Unavailable during grid peak',
-  watchdog_hold: 'No valid command — holding last safe state',
-};
-
-// ---------------------------------------------------------------------------
-// Appliances — the ten ids are frozen
-// ---------------------------------------------------------------------------
-
-export const APPLIANCE_IDS = [
-  'ceiling_fan_01',
-  'table_fan_01',
-  'led_bulb_01',
-  'led_tube_01',
-  'refrigerator_01',
-  'air_conditioner_01',
-  'washing_machine_01',
-  'ev_charger_01',
-  'television_01',
-  'mixer_grinder_01',
-] as const;
-
-export type ApplianceId = (typeof APPLIANCE_IDS)[number];
+export type ServiceClass = 'necessity' | 'thermostatic' | 'deferrable' | 'interruptible';
 
 export interface ApplianceState {
-  appliance_id: ApplianceId;
-  /** Must match one of the dataset's 22 types, so the Pi finds the right flags. */
-  appliance_type: string;
+  appliance_id: string;            // e.g. 'fridge_01', 'fan_01', 'ac_01'
+  appliance_type: string;          // e.g. 'refrigerator', 'ceiling_fan', 'air_conditioner'
   service_class: ServiceClass;
-
-  /** true -> level 0 is NEVER offered while the occupant wants it. */
-  is_necessity: boolean;
-  /** true -> the appliance can physically dim. Never true for a critical load. */
-  supports_reduced: boolean;
-
-  level: ActionLevel;
-  /** The occupant is asking for it now. Protection is conditional on this. */
-  occupant_wants: boolean;
-
-  /** SIMULATED appliance wattage. Label it as simulated wherever it is shown. */
-  power_15min_mean_w: number;
-  /** null in this build - there is no meter fitted. Never put a simulated
-   *  number here, or a stuck relay becomes invisible. */
-  measured_w: number | null;
-  /** Real GPIO pin readback. This one IS a measurement. */
-  gpio_state: 0 | 1;
-  /** gpio_state agrees with what was commanded. */
-  actuation_verified: boolean;
-
+  is_necessity: boolean;           // true -> level 0 is NEVER offered / rendered
+  supports_reduced: boolean;       // true -> dim/eco capable
+  level: ActionLevel;              // 0: SHED, 1: ON, 2: REDUCED
+  power_15min_mean_w: number;      // SIMULATED appliance wattage (must be labelled simulated)
+  measured_w: number | null;       // null in this build - no meter fitted. NEVER fake this!
+  gpio_state: 0 | 1;               // real pin readback - true measurement
+  actuation_verified: boolean;     // gpio_state agrees with commanded action
   remaining_service_hours: number;
-  /** Set while a grid peak forbids energising this circuit. */
-  peak_locked_out: boolean;
+  display_name?: string;
+  shed_reason?: string | null;     // reason if level === 0 (e.g. 'GRID_PEAK', 'CAPACITY_SHED')
+  deferred_until?: string | null;  // e.g. '22:00' for washing machine
 }
-
-// ---------------------------------------------------------------------------
-// House state
-// ---------------------------------------------------------------------------
 
 export interface HomeState {
   house_id: string;
   timestamp_ist: string;
-
   aggregate_power_kw: number;
-  /** 61 % of household load, and the agent cannot touch it. Render it as a
-   *  distinct uncontrollable band or every result looks inexplicably small. */
-  background_load_kw: number;
+  background_load_kw: number;      // unmodelled, NOT controllable (~61% of household load)
   sanctioned_load_kw: number;
-
   indoor_temperature_c: number;
   outdoor_temperature_c: number;
-
   occupancy_adult_home_fraction: number;
   attention_available: boolean;
-
   marginal_tariff_inr_kwh: number;
   month_to_date_kwh: number;
-
-  /** 0..1. A declared grid event overrides the historical curve. */
-  grid_peak_severity: number;
-  peak_event_active: boolean;
-  peak_event_expires_at: string | null;
-
+  grid_peak_severity: number;      // 0..1, drives peak badge & grid response
   operating_mode: OperatingMode;
-  battery_state_of_charge: number;
-  grid_absent: boolean;
-
+  battery_state_of_charge: number; // 0..1 fraction
+  grid_absent: boolean;            // true in outage mode
   appliances: ApplianceState[];
+  data_age_seconds?: number;
+  step_id?: number;
 }
 
-/** What the agent proposed, and what the shield allowed. */
+export interface PeakEvent {
+  event_id: string;
+  sequence: number;
+  region: string;
+  severity: number;                // 0.00 .. 1.00
+  declared_at: string;             // ISO-8601 IST string
+  expires_at: string;              // ISO-8601 IST string
+  reason: string;                  // 'system_peak' | 'transmission_congestion' | 'manual_test'
+  is_active: boolean;
+  homes_responding?: number;
+  mw_relieved?: number;
+}
+
 export interface Intent {
   command_id: string;
-  proposed: Partial<Record<ApplianceId, ActionLevel>>;
-  executed: Partial<Record<ApplianceId, ActionLevel>>;
-  shield_reasons: Partial<Record<ApplianceId, RejectedReason[]>>;
-  policy_source: string;
+  proposed: Record<string, ActionLevel>;
+  executed: Record<string, ActionLevel>;
+  shield_reasons: Record<string, string[]>;
+  policy_source: string;          // e.g. 'bdq_v2_cql'
   decision_latency_ms: number;
+}
+
+export interface CommandAck {
+  command_id: string;
+  appliance_id: string;
+  accepted: boolean;
+  applied_level: ActionLevel;
+  rejected_reason: string | null; // e.g. 'NECESSITY_MASK', 'PEAK_LOCKOUT'
+  gpio_state: 0 | 1;
+  measured_w: number | null;
+  verification: 'MATCH' | 'MISMATCH_STILL_DRAWING' | 'MISMATCH_NOT_DRAWING' | 'MISMATCH_WRONG_LEVEL' | 'NO_METER';
+  acked_at: string;
+  latency_ms: number;
 }
 
 export interface OverrideRequest {
   override_id: string;
-  house_id: string;
-  appliance_id: ApplianceId;
+  appliance_id: string;
   requested_level: ActionLevel;
-  /** Time between the intent appearing and the tap. Feeds the preference
-   *  weight in the reward model, so it is worth measuring properly. */
+  issued_at: string;
+  user_id: string;
   client_latency_ms: number;
 }
 
-export interface OverrideResult {
-  override_id: string;
-  accepted: boolean;
-  applied_level: ActionLevel | null;
-  rejected_reason: RejectedReason | null;
-}
-
-// ---------------------------------------------------------------------------
-// Connection — the UI must be able to tell live from stale
-// ---------------------------------------------------------------------------
-
-export type ConnectionStatus = 'connecting' | 'live' | 'stale' | 'offline';
-
-export interface Feed {
-  status: ConnectionStatus;
-  /** Seconds since the last state message. Grey the UI past two intervals. */
-  dataAgeSeconds: number;
-  state: HomeState | null;
-  intent: Intent | null;
-}
-
-// ---------------------------------------------------------------------------
-// Derived helpers. Keep the rules here, not scattered through components.
-// ---------------------------------------------------------------------------
-
-export type DisplayGroup = 'PROTECTED' | 'RUNNING' | 'SHED' | 'DEFERRED';
-
-/**
- * Which group an appliance belongs in.
- *
- * PROTECTED is the important one: it must be visibly unchanged when a peak
- * starts. That is the project's whole claim, rendered.
- */
-export function displayGroup(a: ApplianceState): DisplayGroup {
-  if (a.is_necessity && a.occupant_wants) return 'PROTECTED';
-  if (a.service_class === 'deferrable' && a.level === 0) return 'DEFERRED';
-  if (a.level === 0) return 'SHED';
-  return 'RUNNING';
-}
-
-/**
- * Whether to show an off control at all.
- *
- * A critical appliance in use renders with NO off control - not greyed, absent.
- * The resident must never see a button that would cut their fan, because no
- * such action exists anywhere in the system.
- */
-export function canShowOffControl(a: ApplianceState): boolean {
-  return !(a.is_necessity && a.occupant_wants);
-}
-
-/**
- * Whether an override can even be attempted right now.
- *
- * A phone override needs the broker and the Pi reachable, and can fail
- * silently in a way a wall switch cannot. Disable the control and say why
- * rather than accepting a tap that will never arrive.
- */
-export function overrideAvailable(
-  a: ApplianceState,
-  status: ConnectionStatus,
-): { enabled: boolean; reason?: string } {
-  if (status !== 'live') return { enabled: false, reason: 'No connection' };
-  if (a.peak_locked_out) return { enabled: false, reason: 'Unavailable during grid peak' };
-  if (!canShowOffControl(a)) return { enabled: false, reason: 'Essential load' };
-  return { enabled: true };
-}
-
-/** Peak avoided, expressed the way a DISCOM and a citizen both understand. */
-export function homesNotBlackedOut(peakCutPercent: number): string {
-  return `equivalent to ${peakCutPercent.toFixed(1)} homes in 100 not blacked out`;
+export interface SystemConnectionStatus {
+  status: 'connected' | 'disconnected' | 'reconnecting';
+  data_age_seconds: number;
+  broker_endpoint: string;
+  last_verified_at: string;
+  is_fallback: boolean;
 }
