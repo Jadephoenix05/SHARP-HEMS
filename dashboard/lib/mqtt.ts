@@ -5,9 +5,7 @@
  * function drops a long-lived subscription, and you get intermittent missing
  * telemetry that is painful to diagnose. So the client lives here, in the page.
  *
- * Port 443, not 1883. Campus and hostel Wi-Fi frequently block plain MQTT;
- * MQTT over WebSockets Secure uses the same port as HTTPS and passes through
- * anything that allows web browsing. Test this on campus before demo day.
+ * MQTT over WebSockets Secure is used so the browser can connect to HiveMQ.
  */
 
 import mqtt, { MqttClient } from 'mqtt';
@@ -15,7 +13,7 @@ import { Feed, HomeState, Intent } from './contracts';
 
 const HOUSE = process.env.NEXT_PUBLIC_HOUSE_ID ?? 'demo';
 
-/** Two control intervals. Past this the data is stale and must look stale. */
+/** Past this point, received telemetry is considered stale. */
 const STALE_AFTER_SECONDS = 30 * 60;
 
 export interface FeedHandlers {
@@ -29,64 +27,209 @@ export function connectFeed({ onFeed }: FeedHandlers): () => void {
   let client: MqttClient | null = null;
 
   const url = process.env.NEXT_PUBLIC_MQTT_URL;
+
+  // ------------------------------------------------------------
+  // MQTT URL CHECK
+  // ------------------------------------------------------------
+
   if (!url) {
-    onFeed({ status: 'offline', dataAgeSeconds: 0, state: null, intent: null });
+    console.error('❌ NEXT_PUBLIC_MQTT_URL is not configured');
+
+    onFeed({
+      status: 'offline',
+      dataAgeSeconds: 0,
+      state: null,
+      intent: null,
+    });
+
     return () => undefined;
   }
 
+  console.log('🔌 Connecting to HiveMQ...');
+
+  // ------------------------------------------------------------
+  // MQTT CONFIG DIAGNOSTIC
+  // ------------------------------------------------------------
+
+  console.log('🔎 MQTT CONFIG:', {
+    url,
+    user: process.env.NEXT_PUBLIC_MQTT_USER,
+    hasPassword: !!process.env.NEXT_PUBLIC_MQTT_PASS,
+  });
+
+  // ------------------------------------------------------------
+  // FEED EMITTER
+  // ------------------------------------------------------------
+
   const emit = (status: Feed['status']) => {
-    const age = lastMessage ? (Date.now() - lastMessage) / 1000 : 0;
-    // Never report 'live' on data this old, whatever the socket thinks. A
-    // dashboard that renders stale data as live is worse than one showing
-    // nothing, because nobody knows to distrust it.
+    const age = lastMessage
+      ? (Date.now() - lastMessage) / 1000
+      : 0;
+
     const effective =
-      status === 'live' && lastMessage && age > STALE_AFTER_SECONDS ? 'stale' : status;
-    onFeed({ status: effective, dataAgeSeconds: age, state, intent });
+      status === 'live' &&
+      lastMessage &&
+      age > STALE_AFTER_SECONDS
+        ? 'stale'
+        : status;
+
+    onFeed({
+      status: effective,
+      dataAgeSeconds: age,
+      state,
+      intent,
+    });
   };
 
+  // ------------------------------------------------------------
+  // CONNECT TO HIVEMQ
+  // ------------------------------------------------------------
+
   client = mqtt.connect(url, {
-    // These credentials are PUBLIC - anything in NEXT_PUBLIC_* is visible to
-    // anyone who opens the page. This user must be subscribe-only on
-    // home/<house>/#. If it leaks, someone reads demo telemetry. Put the
-    // publishing credential here instead and they can command your relays.
     username: process.env.NEXT_PUBLIC_MQTT_USER,
     password: process.env.NEXT_PUBLIC_MQTT_PASS,
+
     reconnectPeriod: 2000,
     connectTimeout: 10_000,
+
     clean: true,
-    // One client id per session, or the free tier's connection limit is reached
-    // and new browsers are silently refused.
-    clientId: `sharp-dash-${Math.random().toString(16).slice(2, 10)}`,
+
+    clientId: `sharp-dash-${Math.random()
+      .toString(16)
+      .slice(2, 10)}`,
   });
+
+  // ------------------------------------------------------------
+  // CONNECT EVENT
+  // ------------------------------------------------------------
 
   client.on('connect', () => {
-    client?.subscribe([`home/${HOUSE}/state`, `home/${HOUSE}/intent`], { qos: 0 });
-    emit('live');
+    console.log('✅ MQTT CONNECTED TO HIVEMQ');
+
+    const topics = [
+      `home/${HOUSE}/state`,
+      `home/${HOUSE}/intent`,
+    ];
+
+    console.log('📡 Subscribing to:', topics);
+
+    client?.subscribe(
+      topics,
+      { qos: 0 },
+      (error) => {
+        if (error) {
+          console.error(
+            '❌ MQTT SUBSCRIBE ERROR:',
+            error
+          );
+          return;
+        }
+
+        console.log(
+          '✅ MQTT SUBSCRIBED:',
+          topics
+        );
+
+        emit('live');
+      }
+    );
   });
 
+  // ------------------------------------------------------------
+  // MESSAGE EVENT
+  // ------------------------------------------------------------
+
   client.on('message', (topic, payload) => {
+    console.log(
+      '📨 MQTT MESSAGE:',
+      topic,
+      payload.toString()
+    );
+
     try {
-      const parsed = JSON.parse(payload.toString());
-      if (topic.endsWith('/state')) state = parsed as HomeState;
-      else if (topic.endsWith('/intent')) intent = parsed as Intent;
+      const parsed = JSON.parse(
+        payload.toString()
+      );
+
+      if (topic.endsWith('/state')) {
+        state = parsed as HomeState;
+
+        console.log(
+          '🏠 HomeState received'
+        );
+      } else if (topic.endsWith('/intent')) {
+        intent = parsed as Intent;
+
+        console.log(
+          '🤖 Intent received'
+        );
+      }
+
       lastMessage = Date.now();
+
       emit('live');
-    } catch {
-      // A malformed message must not take the page down. Keep the last good
-      // state and let the age indicator show that nothing fresh has arrived.
+    } catch (error) {
+      console.error(
+        '❌ Invalid MQTT JSON:',
+        error
+      );
     }
   });
 
-  client.on('reconnect', () => emit('connecting'));
-  client.on('offline', () => emit('offline'));
-  client.on('error', () => emit('offline'));
+  // ------------------------------------------------------------
+  // RECONNECT
+  // ------------------------------------------------------------
 
-  // Re-emit on a timer so the age counter keeps moving even when no message
-  // arrives. Without this the UI looks live forever after the feed dies.
-  const tick = setInterval(() => emit(client?.connected ? 'live' : 'offline'), 1000);
+  client.on('reconnect', () => {
+    console.log('🔄 MQTT reconnecting...');
+    emit('connecting');
+  });
+
+  // ------------------------------------------------------------
+  // OFFLINE
+  // ------------------------------------------------------------
+
+  client.on('offline', () => {
+    console.log('⚠️ MQTT offline');
+    emit('offline');
+  });
+
+  // ------------------------------------------------------------
+  // ERROR
+  // ------------------------------------------------------------
+
+  client.on('error', (error) => {
+    console.error(
+      '❌ MQTT ERROR:',
+      error
+    );
+
+    emit('offline');
+  });
+
+  // ------------------------------------------------------------
+  // DATA AGE TIMER
+  // ------------------------------------------------------------
+
+  const tick = setInterval(() => {
+    emit(
+      client?.connected
+        ? 'live'
+        : 'offline'
+    );
+  }, 1000);
+
+  // ------------------------------------------------------------
+  // CLEANUP
+  // ------------------------------------------------------------
 
   return () => {
+    console.log(
+      '🔌 Disconnecting MQTT...'
+    );
+
     clearInterval(tick);
+
     client?.end(true);
   };
 }
