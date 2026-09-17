@@ -1,0 +1,73 @@
+{
+  "policy_version": "bdq_v2",
+  "architecture": {
+    "input": 305,
+    "hidden": 128,
+    "branches": 28,
+    "levels": 3,
+    "params_approx": 50133
+  },
+  "training": {
+    "bc_updates": 2000,
+    "cql_updates": 5000,
+    "batch_size": 256,
+    "alpha_cql": 1.0,
+    "gamma": 0.99,
+    "level_weight_off_on_reduced": [
+      0.4010004459670806,
+      2.2328008422209,
+      17.13232066028624
+    ]
+  },
+  "td_error": {
+    "non_terminal_windowed": 1.240922956757679,
+    "terminal_windowed": 19.203690661063703,
+    "note": "reported separately -- a falling pooled TD error is not evidence of policy quality (spec section 9)"
+  },
+  "validation_balanced_accuracy": {
+    "pooled": 0.7495461441229082,
+    "recalls_off_on_reduced": [
+      0.8949395641299088,
+      0.7690799588146519,
+      0.5846189094241637
+    ],
+    "illegal_action_rate": 0.0,
+    "by_behaviour_policy": {
+      "peak_aware": {
+        "balanced_accuracy": 0.6133677106902589,
+        "recalls": [
+          0.9306431908012935,
+          0.9074574381405721,
+          0.002002503128911139
+        ]
+      },
+      "random_binary": {
+        "balanced_accuracy": 0.6935693213479017,
+        "recalls": [
+          0.8222278923962966,
+          0.4160731948565776,
+          0.8424068767908309
+        ]
+      },
+      "serve_preferred": {
+        "balanced_accuracy": 0.6543187316604541,
+        "recalls": [
+          0.9309313411801926,
+          0.9120248538011696,
+          0.12
+        ]
+      }
+    },
+    "note": "sanity check against three scripted controllers, not a target metric"
+  },
+  "zero_variance_features_guarded": 36,
+  "reward_caveats": [
+    "Bellman targets use the logged sharp_reward_billing reward. The Bradley-Terry preference reward r_psi (fitted separately, see fit_preference_reward_v1.py) is NOT substituted into training, because every override_preference_pairs row compares preferred=ON against proposed=OFF -- the pair set has no direction variance yet."
+  ],
+  "known_gaps": [
+    "Next-action selection applies the flat level-legality mask only; the joint device shield is not re-applied to next-state candidates (shield-consistent targets), since the flat release does not carry nested device state.",
+    "apply_shield must still run on the exported policy's output before actuation on real hardware -- this script does not implement or call it.",
+    "Appliance power is a measurement-grounded proxy for only 685 of 4,124 devices (512 REFIT UK, 173 iAWE Delhi); the rest are declared assumptions. Do not report this model's numbers as generalising beyond the AP/Guntur simulator context.",
+    "Investigated: `random_binary` balanced accuracy (0.694) came out ABOVE `serve_preferred` (0.654) and above the spec's own ~0.49 enumerated ceiling for that policy. Ruled out: shield/human override (changes <0.01% of any policy's logged actions, confirmed here) and a state/action row-alignment bug (action varies step-to-step for most devices as expected). Found instead: for a subset of devices within `random_binary` episodes, the logged action is 80-99% persistent across all 96 steps of a day -- i.e. `policy_action_before_human` is not always the fresh per-step i.i.d. draw the spec's illustrative code snippet describes; some devices are evidently subject to additional minimum-run/cycle constraints even under the 'random' behaviour policy. That non-uniformity is real signal a state-reading model can legitimately learn, so it is consistent for a model to exceed the spec's enumerated ceiling, which assumes strict per-step i.i.d. noise. Treat that ceiling as a simplified lower bound, not a hard cap, until this is confirmed against the (unreleased) simulator source."
+  ]
+}
