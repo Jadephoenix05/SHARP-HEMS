@@ -12,32 +12,39 @@
 
 export type ActionLevel = 0 | 1 | 2;
 
-export type OperatingMode = 'grid_import' | 'self_sufficient' | 'islanded_outage';
+export type OperatingMode =
+  | 'grid_import'
+  | 'self_sufficient'
+  | 'islanded_outage';
 
-export type ServiceClass = 'necessity' | 'thermostatic' | 'deferrable' | 'interruptible';
+export type ServiceClass =
+  | 'necessity'
+  | 'thermostatic'
+  | 'deferrable'
+  | 'interruptible';
 
 export interface ApplianceState {
-  appliance_id: string;            // e.g. 'fridge_01', 'fan_01', 'ac_01'
-  appliance_type: string;          // e.g. 'refrigerator', 'ceiling_fan', 'air_conditioner'
+  appliance_id: string;
+  appliance_type: string;
   service_class: ServiceClass;
-  is_necessity: boolean;           // true -> level 0 is NEVER offered / rendered
-  supports_reduced: boolean;       // true -> dim/eco capable
-  level: ActionLevel;              // 0: SHED, 1: ON, 2: REDUCED
-  power_15min_mean_w: number;      // SIMULATED appliance wattage (must be labelled simulated)
-  measured_w: number | null;       // null in this build - no meter fitted. NEVER fake this!
-  gpio_state: 0 | 1;               // real pin readback - true measurement
-  actuation_verified: boolean;     // gpio_state agrees with commanded action
+  is_necessity: boolean;
+  supports_reduced: boolean;
+  level: ActionLevel;
+  power_15min_mean_w: number;
+  measured_w: number | null;
+  gpio_state: 0 | 1;
+  actuation_verified: boolean;
   remaining_service_hours: number;
   display_name?: string;
-  shed_reason?: string | null;     // reason if level === 0 (e.g. 'GRID_PEAK', 'CAPACITY_SHED')
-  deferred_until?: string | null;  // e.g. '22:00' for washing machine
+  shed_reason?: string | null;
+  deferred_until?: string | null;
 }
 
 export interface HomeState {
   house_id: string;
   timestamp_ist: string;
   aggregate_power_kw: number;
-  background_load_kw: number;      // unmodelled, NOT controllable (~61% of household load)
+  background_load_kw: number;
   sanctioned_load_kw: number;
   indoor_temperature_c: number;
   outdoor_temperature_c: number;
@@ -45,10 +52,10 @@ export interface HomeState {
   attention_available: boolean;
   marginal_tariff_inr_kwh: number;
   month_to_date_kwh: number;
-  grid_peak_severity: number;      // 0..1, drives peak badge & grid response
+  grid_peak_severity: number;
   operating_mode: OperatingMode;
-  battery_state_of_charge: number; // 0..1 fraction
-  grid_absent: boolean;            // true in outage mode
+  battery_state_of_charge: number;
+  grid_absent: boolean;
   appliances: ApplianceState[];
   data_age_seconds?: number;
   step_id?: number;
@@ -58,10 +65,10 @@ export interface PeakEvent {
   event_id: string;
   sequence: number;
   region: string;
-  severity: number;                // 0.00 .. 1.00
-  declared_at: string;             // ISO-8601 IST string
-  expires_at: string;              // ISO-8601 IST string
-  reason: string;                  // 'system_peak' | 'transmission_congestion' | 'manual_test'
+  severity: number;
+  declared_at: string;
+  expires_at: string;
+  reason: string;
   is_active: boolean;
   homes_responding?: number;
   mw_relieved?: number;
@@ -72,7 +79,7 @@ export interface Intent {
   proposed: Record<string, ActionLevel>;
   executed: Record<string, ActionLevel>;
   shield_reasons: Record<string, string[]>;
-  policy_source: string;          // e.g. 'bdq_v2_cql'
+  policy_source: string;
   decision_latency_ms: number;
 }
 
@@ -81,10 +88,15 @@ export interface CommandAck {
   appliance_id: string;
   accepted: boolean;
   applied_level: ActionLevel;
-  rejected_reason: string | null; // e.g. 'NECESSITY_MASK', 'PEAK_LOCKOUT'
+  rejected_reason: string | null;
   gpio_state: 0 | 1;
   measured_w: number | null;
-  verification: 'MATCH' | 'MISMATCH_STILL_DRAWING' | 'MISMATCH_NOT_DRAWING' | 'MISMATCH_WRONG_LEVEL' | 'NO_METER';
+  verification:
+    | 'MATCH'
+    | 'MISMATCH_STILL_DRAWING'
+    | 'MISMATCH_NOT_DRAWING'
+    | 'MISMATCH_WRONG_LEVEL'
+    | 'NO_METER';
   acked_at: string;
   latency_ms: number;
 }
@@ -104,4 +116,17 @@ export interface SystemConnectionStatus {
   broker_endpoint: string;
   last_verified_at: string;
   is_fallback: boolean;
+}
+
+/**
+ * MQTT feed status used by the browser dashboard.
+ *
+ * This is the connection/data layer status and is separate from
+ * SystemConnectionStatus, which is the dashboard-facing status contract.
+ */
+export interface Feed {
+  status: 'live' | 'stale' | 'connecting' | 'offline';
+  dataAgeSeconds: number;
+  state: HomeState | null;
+  intent: Intent | null;
 }
